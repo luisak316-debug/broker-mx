@@ -1,0 +1,16 @@
+BROKER.MX — ENLACE PUBLICO (activo mientras tu PC este encendida)
+================================================================
+
+broker.mx (clientes):
+  https://council-dealtime-generators-regulations.trycloudflare.com/
+
+admin (administradores):
+  https://council-dealtime-generators-regulations.trycloudflare.com/admin/
+
+Registro con SMS:
+  https://council-dealtime-generators-regulations.trycloudflare.com/registro
+
+Login admin:
+  admin@brokermx.com / Admin1234
+
+NOTA: Este enlace cambia si reinicias PUBLICAR_AHORA.bat o el tunel Cloudflare.
