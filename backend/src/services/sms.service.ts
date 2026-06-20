@@ -27,6 +27,12 @@ function mapTwilioError(err: unknown): HttpError {
   const code = e?.code;
   const detail = e?.message ?? 'Error al enviar SMS.';
 
+  if (detail.includes('Test Account Credentials') || code === 20008) {
+    return new HttpError(
+      503,
+      'Credenciales Twilio de prueba (Test). Usa Account SID y Auth Token LIVE en backend/.env.',
+    );
+  }
   if (code === 21211 || code === 21614) {
     return new HttpError(400, 'Número de celular inválido. Verifica los 10 dígitos.');
   }
@@ -38,12 +44,6 @@ function mapTwilioError(err: unknown): HttpError {
   }
   if (code === 21610) {
     return new HttpError(400, 'Este número no puede recibir SMS en este momento.');
-  }
-  if (msg.includes('Test Account Credentials') || code === 20008) {
-    return new HttpError(
-      503,
-      'Credenciales Twilio de prueba (Test). Usa Account SID y Auth Token LIVE en backend/.env.',
-    );
   }
   if (code === 20003 || code === 20403) {
     return new HttpError(503, 'Credenciales Twilio incorrectas. Revisa TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN.');

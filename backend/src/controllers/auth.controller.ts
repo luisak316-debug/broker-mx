@@ -14,11 +14,11 @@ function clientEmailFromPhone(phone: string): string {
   return `+52${phone}@celular.brokermx`;
 }
 
-function clientPayload(client: { id: string; email: string; displayName: string; phone: string; kycStatus: string }) {
+function clientPayload(client: { id: string; email: string; displayName: string; phone?: string; kycStatus: string }) {
   return {
     id: client.id,
     email: client.email,
-    phone: client.phone,
+    phone: client.phone ?? '',
     displayName: client.displayName,
     kycStatus: client.kycStatus,
   };

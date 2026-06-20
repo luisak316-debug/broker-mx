@@ -157,7 +157,7 @@ export function findClientByEmail(email: string): Client | undefined {
 }
 export function findClientByPhone(phone: string): Client | undefined {
   const digits = phone.replace(/\D/g, '').slice(-10);
-  return clients.find((c) => c.phone.replace(/\D/g, '').slice(-10) === digits);
+  return clients.find((c) => (c.phone ?? '').replace(/\D/g, '').slice(-10) === digits);
 }
 
 let nextClientSeq = 1001 + clients.length;
