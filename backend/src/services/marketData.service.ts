@@ -22,12 +22,12 @@ interface PriceState {
  * de datos real (REST/WebSocket de un exchange o vendor), conservando la misma
  * interfaz pública (getQuote, getCandles, subscribe).
  */
-class MarketDataService extends EventEmitter {
+class MarketDataService {
+  private emitter = new EventEmitter();
   private state = new Map<string, PriceState>();
   private timer: NodeJS.Timeout | null = null;
 
   constructor() {
-    super();
     for (const inst of ALL_INSTRUMENTS) {
       this.state.set(inst.symbol, {
         price: inst.basePrice,
@@ -65,7 +65,11 @@ class MarketDataService extends EventEmitter {
       s.volume24h += Math.round(Math.random() * 5000);
       quotes.push(this.buildQuote(inst, s));
     }
-    this.emit('tick', quotes);
+    this.emitter.emit('tick', quotes);
+  }
+
+  onTick(listener: (quotes: Quote[]) => void): void {
+    this.emitter.on('tick', listener);
   }
 
   private buildQuote(inst: Instrument, s: PriceState): Quote {

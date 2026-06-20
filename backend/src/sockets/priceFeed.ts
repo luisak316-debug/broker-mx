@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer, WebSocket, type RawData } from 'ws';
 import { marketData } from '../services/marketData.service';
 import type { Quote } from '../types/market';
 
@@ -19,13 +19,13 @@ export function attachPriceFeed(server: Server): WebSocketServer {
   const wss = new WebSocketServer({ server, path: '/ws/prices' });
   const clients = new Map<WebSocket, ClientState>();
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws: WebSocket) => {
     clients.set(ws, { symbols: null });
 
     // Envía un snapshot inmediato al conectar.
     ws.send(JSON.stringify({ type: 'quotes', data: marketData.getQuotes() }));
 
-    ws.on('message', (raw) => {
+    ws.on('message', (raw: RawData) => {
       try {
         const msg = JSON.parse(raw.toString());
         if (msg.type === 'subscribe') {
@@ -44,7 +44,7 @@ export function attachPriceFeed(server: Server): WebSocketServer {
     ws.on('error', () => clients.delete(ws));
   });
 
-  marketData.on('tick', (quotes: Quote[]) => {
+  marketData.onTick((quotes: Quote[]) => {
     for (const [ws, state] of clients) {
       if (ws.readyState !== WebSocket.OPEN) continue;
       const payload = state.symbols
