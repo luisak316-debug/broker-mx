@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { api } from '../../api/client';
+import { useClientAuth } from '../../auth/ClientAuthContext';
 import type { PositionDirection, Quote } from '../../types';
 import { fmtNum } from '../../lib/format';
 
 /** Panel de simulación de compra/venta con soporte de posiciones largas y cortas. */
 export function TradePanel({ symbol, quote }: { symbol: string; quote?: Quote }) {
+  const { client } = useClientAuth();
   const [quantity, setQuantity] = useState(1);
   const [direction, setDirection] = useState<PositionDirection>('long');
   const [status, setStatus] = useState<string | null>(null);
@@ -14,7 +16,7 @@ export function TradePanel({ symbol, quote }: { symbol: string; quote?: Quote })
     setBusy(true);
     setStatus(null);
     try {
-      await api.placeOrder({ symbol, side, direction, quantity });
+      await api.placeOrder({ userId: client?.id, symbol, side, direction, quantity });
       setStatus(`Orden ${side === 'buy' ? 'de compra' : 'de venta'} ejecutada (simulada).`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Error al ejecutar la orden.');

@@ -1,16 +1,30 @@
-BROKER.MX — ENLACE PUBLICO (activo mientras tu PC este encendida)
-================================================================
+TUS 2 PAGINAS — NOMBRES Y RUTAS UNICAS
+======================================
 
-broker.mx (clientes):
-  https://council-dealtime-generators-regulations.trycloudflare.com/
+1) Broker.mx  (clientes)
+   Nombre: Broker.mx
+   Ruta:   /
+   Fijo:   https://brokermx.com/
 
-admin (administradores):
-  https://council-dealtime-generators-regulations.trycloudflare.com/admin/
+2) admin  (panel interno)
+   Nombre: admin
+   Ruta:   /admin847/   (numeros unicos, solo tuya)
+   Fijo:   https://brokermx.com/admin847/
 
-Registro con SMS:
-  https://council-dealtime-generators-regulations.trycloudflare.com/registro
+Mismo dominio brokermx.com. Sin tercer enlace. Sin /registro aparte.
+Nadie adivina admin847. Al hacer clic vas a TU pagina, no a otra.
 
-Login admin:
-  admin@brokermx.com / Admin1234
 
-NOTA: Este enlace cambia si reinicias PUBLICAR_AHORA.bat o el tunel Cloudflare.
+VERCEL (paginas web en la nube):
+  1) Broker.mx  https://brokermx-alpha.vercel.app/
+  2) admin        https://brokermxadmin-khaki.vercel.app/
+
+PERMANENTE - SMS 24/7 SIN TU PC (Render):
+  1) Ejecuta DESPLEGAR_RENDER.bat (una sola vez)
+  2) API queda en la nube con Twilio
+  3) Ya no uses LANZAR_WEB ni túnel Cloudflare
+
+TEMPORAL (solo si Render no esta listo):
+  Túnel Cloudflare - requiere PC encendida
+
+Login demo admin: admin@brokermx.com / Admin1234

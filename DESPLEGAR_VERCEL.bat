@@ -10,9 +10,9 @@ echo.
 echo Tu cuenta Vercel (inicia sesion con tu correo).
 echo.
 echo IMPORTANTE - Arquitectura:
-echo   1) API + SMS (backend)  - Render.com  (render.yaml)
-echo   broker.mx
-echo   admin
+echo   1) Broker.mx  - https://brokermx.vercel.app/
+echo   2) admin        - https://brokermx.admin.vercel.app/
+echo   API + SMS       - Render.com (render.yaml)
 echo.
 echo Vercel NO puede correr el backend con SMS y WebSocket.
 echo Primero despliega la API en Render, luego pega aqui la URL.
@@ -44,22 +44,27 @@ if "%API_URL%"=="" (
 )
 
 echo.
-echo --- broker.mx ---
+echo --- 1) Broker.mx ---
 cd frontend
-call vercel --prod --yes --name broker-dot-mx -e VITE_API_URL=%API_URL%
+call vercel link --yes --project brokermx 2>nul
+call vercel --prod --yes -e VITE_API_URL=%API_URL%
 cd ..
 
 echo.
-echo --- admin ---
+echo --- 2) admin ---
 cd admin
-call vercel --prod --yes --name admin -e VITE_API_URL=%API_URL%
+call vercel link --yes --project brokermx.admin 2>nul
+call vercel --prod --yes -e VITE_API_URL=%API_URL%
 cd ..
 
 echo.
 echo ============================================
-echo   Listo. Guarda las URLs que mostro Vercel.
-echo   broker.mx
-echo   admin
+echo   Listo. Tus 2 enlaces Vercel:
+echo   1) https://brokermx.vercel.app/
+echo   2) https://brokermx.admin.vercel.app/
+echo.
+echo   En Vercel Dashboard agrega VITE_API_URL=%API_URL%
+echo   en AMBOS proyectos si el login no conecta.
 echo ============================================
 echo.
 pause

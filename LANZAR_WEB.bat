@@ -10,7 +10,7 @@ echo.
 echo Esto compila la web y la expone con un enlace
 echo publico HTTPS para que cualquiera pueda entrar:
 echo   broker.mx:  https://TU-ENLACE/
-echo   admin:      https://TU-ENLACE/admin/
+echo   admin:      https://TU-ENLACE/admin847/
 echo.
 echo Requisitos: Node.js, Twilio configurado en backend\.env
 echo.
@@ -50,7 +50,7 @@ echo ============================================
 echo   CUANDO APAREZCA EL ENLACE, COPIALO:
 echo.
 echo   broker.mx:  ENLACE/
-echo   admin:      ENLACE/admin/
+echo   admin:      ENLACE/admin847/
 echo   Login admin:   admin@brokermx.com / Admin1234
 echo ============================================
 echo.

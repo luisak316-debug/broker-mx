@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { PasswordField } from '../components/common/PasswordField';
 
 export function Login() {
   const { staff, login } = useAuth();
@@ -49,17 +50,13 @@ export function Login() {
               required
             />
           </div>
-          <div>
-            <label className="label">Contraseña</label>
-            <input
-              type="password"
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </div>
+          <PasswordField
+            label="Contraseña"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            required
+          />
           {error && (
             <p className="rounded-lg bg-danger/15 px-3 py-2 text-sm text-danger">{error}</p>
           )}
@@ -71,7 +68,7 @@ export function Login() {
         <div className="mt-4 rounded-lg border border-ink-600 bg-ink-800/60 p-3 text-xs text-slate-400">
           <p className="mb-1 font-semibold text-slate-300">Cuentas de demostración (contraseña: Admin1234)</p>
           <ul className="space-y-0.5">
-            <li>admin@brokermx.com — Administrador</li>
+            <li>admin@brokermx.com — Administración</li>
             <li>juan.perez@brokermx.com — Asesor / Trader</li>
             <li>laura.cumplimiento@brokermx.com — Cumplimiento</li>
             <li>soporte@brokermx.com — Soporte (solo lectura)</li>

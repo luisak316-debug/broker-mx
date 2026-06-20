@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
+import { PasswordField } from '../components/common/PasswordField';
 
 interface Errors {
   fullName?: string;
@@ -195,9 +196,8 @@ export function Register() {
             placeholder="Ej. María Fernanda López"
             autoComplete="name"
           />
-          <Field
+          <PasswordField
             label="Contraseña segura"
-            type="password"
             value={form.password}
             onChange={(v) => setForm({ ...form, password: v })}
             error={errors.password}

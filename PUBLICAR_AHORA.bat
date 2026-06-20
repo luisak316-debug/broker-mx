@@ -44,7 +44,7 @@ echo.
 echo [4/4] Enlace publico HTTPS...
 echo.
 echo   broker.mx:  TU-ENLACE/
-echo   admin:      TU-ENLACE/admin/
+echo   admin:      TU-ENLACE/admin847/
 echo.
 echo COPIA el enlace https que aparezca abajo.
 echo Deja esta ventana ABIERTA.

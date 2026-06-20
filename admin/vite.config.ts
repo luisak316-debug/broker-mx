@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'web' ? '/admin/' : mode === 'vercel' ? '/' : './',
+  base: mode === 'web' ? '/admin847/' : mode === 'vercel' ? '/' : './',
   server: {
     port: 5174,
     proxy: {

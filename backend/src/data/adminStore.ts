@@ -19,11 +19,19 @@ import type { AssetClass } from '../types/market';
 const DEMO_PASSWORD = 'Admin1234';
 
 export const staff: Staff[] = [
-  mkStaff('admin@brokermx.com', 'María Admin', 'ADMIN'),
+  mkStaff('admin@brokermx.com', 'Administración', 'ADMIN'),
   mkStaff('juan.perez@brokermx.com', 'Juan Pérez', 'ADVISOR'),
   mkStaff('laura.cumplimiento@brokermx.com', 'Laura Cumplimiento', 'COMPLIANCE'),
   mkStaff('soporte@brokermx.com', 'Carlos Soporte', 'SUPPORT'),
 ];
+
+/** Nombre visible del administrador principal. */
+export function normalizeStaffDisplay(staff: Staff): Staff {
+  if (staff.email === 'admin@brokermx.com') staff.displayName = 'Administración';
+  return staff;
+}
+
+staff.forEach(normalizeStaffDisplay);
 
 function mkStaff(email: string, displayName: string, role: Staff['role']): Staff {
   return {

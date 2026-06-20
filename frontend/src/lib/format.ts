@@ -16,3 +16,10 @@ export const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: '2-digit' });
 export const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+/** Formato legible del celular mexicano (10 dígitos). */
+export const fmtPhone = (phone?: string) => {
+  const digits = (phone ?? '').replace(/\D/g, '').slice(-10);
+  if (digits.length !== 10) return phone ?? '';
+  return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+};

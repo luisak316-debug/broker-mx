@@ -44,7 +44,7 @@ class PortfolioService {
   getOrCreate(userId: string): Portfolio {
     let p = this.portfolios.get(userId);
     if (!p) {
-      p = { userId, cashMxn: 100_000, positions: [], orders: [] };
+      p = { userId, cashMxn: 0, positions: [], orders: [] };
       this.portfolios.set(userId, p);
     }
     return p;

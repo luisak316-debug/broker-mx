@@ -8,6 +8,7 @@ import { env } from './config/env';
 import { router } from './routes';
 import { adminRouter } from './routes/admin';
 import { errorHandler, notFound } from './middleware/errorHandler';
+import { ADMIN_WEB_PATH } from './config/paths';
 
 function repoRoot(): string {
   return path.resolve(__dirname, '..', '..');
@@ -30,6 +31,8 @@ export function createApp(): express.Express {
         const allowed = new Set([
           ...env.corsOrigin,
           'https://localhost',
+          'https://brokermx.com',
+          'https://www.brokermx.com',
           'capacitor://localhost',
           'http://localhost',
         ]);
@@ -53,14 +56,15 @@ export function createApp(): express.Express {
     const adminDist = path.join(repoRoot(), 'admin', 'dist');
 
     if (distExists('admin')) {
-      app.use('/admin', express.static(adminDist, { index: false }));
-      app.get(/^\/admin(\/.*)?$/, (_req, res) => {
+      app.use(ADMIN_WEB_PATH, express.static(adminDist, { index: false }));
+      app.get(new RegExp(`^${ADMIN_WEB_PATH}(\\/.*)?$`), (_req, res) => {
         res.sendFile(path.join(adminDist, 'index.html'));
       });
     }
 
     app.use(express.static(clientDist, { index: false }));
-    app.get(/^(?!\/api|\/admin|\/uploads|\/ws).*/, (_req, res) => {
+    const adminEsc = ADMIN_WEB_PATH.replace(/\//g, '\\/');
+    app.get(new RegExp(`^(?!\\/api|${adminEsc}|\\/uploads|\\/ws).*`), (_req, res) => {
       res.sendFile(path.join(clientDist, 'index.html'));
     });
   }

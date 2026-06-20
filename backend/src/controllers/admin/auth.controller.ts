@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { findStaffByEmail, findStaffById } from '../../data/adminStore';
+import { findStaffByEmail, findStaffById, normalizeStaffDisplay } from '../../data/adminStore';
 import { signToken, verifyPassword } from '../../services/security.service';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
@@ -19,6 +19,7 @@ export function login(req: Request, res: Response): void {
     throw new HttpError(401, 'Credenciales inválidas.');
   }
 
+  normalizeStaffDisplay(staff);
   staff.lastLoginAt = new Date().toISOString();
   const token = signToken({
     sub: staff.id,
@@ -50,6 +51,7 @@ export function login(req: Request, res: Response): void {
 export function me(req: Request, res: Response): void {
   const staff = findStaffById(req.staff!.sub);
   if (!staff) throw new HttpError(404, 'Personal no encontrado.');
+  normalizeStaffDisplay(staff);
   res.json({
     data: {
       id: staff.id,

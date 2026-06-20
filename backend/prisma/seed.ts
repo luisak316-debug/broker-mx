@@ -28,7 +28,7 @@ async function main() {
     create: {
       email: 'admin@brokermx.com',
       passwordHash: hashPassword('Admin1234'),
-      displayName: 'María Admin',
+      displayName: 'Administración',
       role: 'ADMIN',
     },
   });

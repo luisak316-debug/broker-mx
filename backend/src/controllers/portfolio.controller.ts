@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
+import { findClient } from '../data/adminStore';
 import { portfolioService } from '../services/portfolio.service';
 import { marketData } from '../services/marketData.service';
 import { findInstrument } from '../data/instruments';
@@ -21,6 +22,8 @@ export function placeOrder(req: Request, res: Response): void {
 export function getPortfolio(req: Request, res: Response): void {
   const userId = req.params.userId || 'demo-user';
   const portfolio = portfolioService.getOrCreate(userId);
+  const client = findClient(userId);
+  if (client) portfolio.cashMxn = client.cashMxn;
 
   // Valuación a mercado (P&L no realizado) de las posiciones abiertas.
   const positions = portfolio.positions.map((pos) => {

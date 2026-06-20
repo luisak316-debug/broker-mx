@@ -34,6 +34,11 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
     tokenStore.clear();
     throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
   }
+  if (res.status === 405) {
+    throw new Error(
+      'La API no esta conectada. En Vercel agrega VITE_API_URL con la URL del backend y vuelve a publicar.',
+    );
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error ?? `Error ${res.status}`);

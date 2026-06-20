@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
-import { fmtMxn } from '../../lib/format';
+import { fmtMxn, fmtPhone } from '../../lib/format';
 import { useClientAuth } from '../../auth/ClientAuthContext';
 
 export function Topbar({ connected }: { connected: boolean }) {
@@ -17,8 +17,9 @@ export function Topbar({ connected }: { connected: boolean }) {
     .toUpperCase();
 
   useEffect(() => {
-    api.portfolio().then((p) => setCash(p.cashMxn)).catch(() => setCash(null));
-  }, []);
+    if (!client?.id) return;
+    api.portfolio(client.id).then((p) => setCash(p.cashMxn)).catch(() => setCash(null));
+  }, [client?.id]);
 
   function onLogout() {
     logout();
@@ -38,12 +39,12 @@ export function Topbar({ connected }: { connected: boolean }) {
         <div className="text-right">
           <p className="text-xs text-slate-400">Saldo simulado</p>
           <p className="text-sm font-semibold text-white">
-            {cash !== null ? fmtMxn(cash) : '—'}
+            {cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—'}
           </p>
         </div>
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-white">{client?.displayName ?? 'Cliente'}</p>
-          <p className="text-xs text-slate-400">{client?.email ?? ''}</p>
+          <p className="text-xs text-slate-400">{client?.phone ? fmtPhone(client.phone) : ''}</p>
         </div>
         <div className="grid h-9 w-9 place-items-center rounded-full bg-ink-600 text-sm font-semibold text-white">
           {initials}

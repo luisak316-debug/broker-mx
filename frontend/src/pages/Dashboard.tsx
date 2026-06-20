@@ -24,8 +24,9 @@ export function Dashboard() {
 
   useEffect(() => {
     api.instruments().then(setInstruments).catch(() => setInstruments([]));
-    api.portfolio().then(setPortfolio).catch(() => setPortfolio(null));
-  }, []);
+    if (!client?.id) return;
+    api.portfolio(client.id).then(setPortfolio).catch(() => setPortfolio(null));
+  }, [client?.id]);
 
   const featured = instruments
     .filter((i) => ['AAPL', 'XAU', 'USD/MXN', 'BTC'].includes(i.symbol));
@@ -53,7 +54,11 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Saldo disponible" value={portfolio ? fmtMxn(portfolio.cashMxn) : '—'} sub="Simulado en MXN" />
+        <StatTile
+          label="Saldo disponible"
+          value={portfolio ? fmtMxn(portfolio.cashMxn) : client ? fmtMxn(0) : '—'}
+          sub="Simulado en MXN"
+        />
         <StatTile
           label="Exposición en mercado"
           value={portfolio ? fmtMxn(portfolio.equityExposureMxn) : '—'}

@@ -4,6 +4,7 @@ import { env } from './config/env';
 import { marketData } from './services/marketData.service';
 import { attachPriceFeed } from './sockets/priceFeed';
 import { smsStatusLabel } from './services/sms.service';
+import { ADMIN_WEB_PATH } from './config/paths';
 
 const app = createApp();
 const server = createServer(app);
@@ -20,7 +21,7 @@ server.listen(env.port, () => {
   console.log(`  ➜ SMS registro: ${smsStatusLabel()}`);
   if (env.isProd) {
     console.log(`  ➜ Web clientes: http://localhost:${env.port}/`);
-    console.log(`  ➜ Web admin:    http://localhost:${env.port}/admin/`);
+    console.log(`  ➜ Web admin:    http://localhost:${env.port}${ADMIN_WEB_PATH}/`);
   }
   console.log('');
 });
