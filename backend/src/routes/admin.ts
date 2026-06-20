@@ -1,0 +1,65 @@
+import { Router } from 'express';
+import { asyncHandler } from '../middleware/errorHandler';
+import { requireAuth, requireRole } from '../middleware/auth';
+import * as auth from '../controllers/admin/auth.controller';
+import * as clientsCtrl from '../controllers/admin/clients.controller';
+import * as finance from '../controllers/admin/finance.controller';
+import * as deposit from '../controllers/admin/depositAccount.controller';
+import * as documents from '../controllers/admin/documents.controller';
+import * as txns from '../controllers/admin/transactions.controller';
+import * as cash from '../controllers/admin/cashRequests.controller';
+import * as audit from '../controllers/admin/audit.controller';
+import * as metrics from '../controllers/admin/metrics.controller';
+
+export const adminRouter = Router();
+
+// --- Público ---
+adminRouter.post('/auth/login', asyncHandler(auth.login));
+
+// --- Protegido (requiere sesión de personal interno) ---
+adminRouter.use(requireAuth);
+
+adminRouter.get('/auth/me', asyncHandler(auth.me));
+adminRouter.get('/metrics', asyncHandler(metrics.dashboardMetrics));
+
+// Módulo 1: Gestión de clientes (CRM)
+adminRouter.get('/clients', asyncHandler(clientsCtrl.listClients));
+adminRouter.get('/clients/:id', asyncHandler(clientsCtrl.getClient));
+
+// Módulo 2: Control de saldos y finanzas (edición crítica)
+adminRouter.patch(
+  '/clients/:id/balance',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(finance.updateBalance),
+);
+adminRouter.post(
+  '/clients/:id/funds',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(finance.adjustFunds),
+);
+
+// Cuenta de depósito bancaria asignada por cliente
+adminRouter.put(
+  '/clients/:id/deposit-account',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(deposit.updateDepositAccount),
+);
+
+// Documentos de identidad (carga por el asesor)
+adminRouter.post(
+  '/clients/:id/documents',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(documents.uploadDocument),
+);
+
+// Módulo 3: Historial de transacciones y solicitudes de efectivo
+adminRouter.get('/transactions', asyncHandler(txns.listTransactions));
+adminRouter.get('/cash-requests', asyncHandler(cash.listCashRequests));
+adminRouter.patch(
+  '/cash-requests/:id',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(cash.reviewCashRequest),
+);
+
+// Módulo 4: Bitácora de auditoría (solo cumplimiento / admin)
+adminRouter.get('/audit', requireRole('COMPLIANCE'), asyncHandler(audit.listAudit));

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Broker MX Asesores</string>
+    <string name="title_activity_main">Broker MX Asesores</string>
+    <string name="package_name">com.brokermx.asesores</string>
+    <string name="custom_url_scheme">com.brokermx.asesores</string>
+</resources>

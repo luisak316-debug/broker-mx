@@ -1,0 +1,28 @@
+# Despliegue permanente en Render.com (gratis para pruebas)
+# 1) Sube este repo a GitHub
+# 2) render.com → New → Blueprint → conecta el repo
+# 3) Agrega variables de entorno Twilio en el dashboard de Render
+
+services:
+  - type: web
+    name: broker-mx
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:prod
+    startCommand: NODE_ENV=production npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BASE_CURRENCY
+        value: MXN
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false

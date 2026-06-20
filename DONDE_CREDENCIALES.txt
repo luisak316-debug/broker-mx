@@ -1,0 +1,56 @@
+BROKER MX — Donde estan las credenciales (NUNCA en GitHub)
+============================================================
+
+Este archivo NO contiene secretos. Solo indica DONDE guardarlos.
+
+
+1) TWILIO (SMS al registrarse)
+   Archivo:  backend\.env
+   Variables:
+     TWILIO_ACCOUNT_SID
+     TWILIO_AUTH_TOKEN
+     TWILIO_FROM_NUMBER
+   Obtenerlas en: https://console.twilio.com  (Account Info LIVE)
+   En Git: NO se sube (.gitignore)
+
+
+2) VERCEL (publicar web clientes y admin)
+   Token CLI:
+     https://vercel.com/account/tokens
+     Crea un token y usalo si el CLI lo pide.
+   Login normal:
+     Ejecuta DESPLEGAR_VERCEL.bat  o  vercel login
+     El token queda guardado en tu PC (carpeta de usuario .vercel)
+   Variable en Vercel (dashboard del proyecto):
+     VITE_API_URL = URL de tu API en Render
+
+
+3) RENDER (API + SMS en servidor)
+   Dashboard: https://dashboard.render.com
+   En tu servicio broker-mx -> Environment:
+     TWILIO_ACCOUNT_SID
+     TWILIO_AUTH_TOKEN
+     TWILIO_FROM_NUMBER
+     JWT_SECRET
+     NODE_ENV=production
+
+
+4) GITHUB (subir codigo)
+   Token personal (si Git pide contraseña):
+     https://github.com/settings/tokens
+   O usa: gh auth login  (GitHub CLI)
+
+
+5) BACKOFFICE ADMIN (demo)
+   Usuario: admin@brokermx.com
+   Password: Admin1234
+   (esta es demo, no es secreto de produccion)
+
+
+IMPORTANTE PARA EL ASISTENTE (Cursor/IA)
+----------------------------------------
+La IA NO guarda tus tokens. Solo lee archivos en tu proyecto.
+Para que funcione SMS en produccion, TU debes pegar Twilio en:
+  - backend\.env  (local)
+  - Render Environment  (nube)
+Nunca pegues Auth Token en el chat.

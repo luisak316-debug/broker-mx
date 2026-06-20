@@ -1,0 +1,41 @@
+# Dependencias
+node_modules/
+.pnp/
+.pnp.js
+
+# Builds
+dist/
+build/
+.vite/
+out/
+
+# Entornos
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.android
+admin/.env.android
+
+# Bases de datos locales
+*.sqlite
+*.sqlite-journal
+backend/prisma/dev.db*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Uploads (documentos KYC)
+backend/uploads/
+uploads/

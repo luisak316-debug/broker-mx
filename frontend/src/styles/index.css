@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #0b1120;
+  color: #e5e9f0;
+  font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-ink-600/60 bg-ink-800/60 p-4 shadow-sm backdrop-blur;
+  }
+  .card-title {
+    @apply text-sm font-semibold text-slate-200;
+  }
+  .stat-up {
+    @apply text-bull;
+  }
+  .stat-down {
+    @apply text-bear;
+  }
+  .table-base {
+    @apply w-full border-collapse text-sm;
+  }
+  .table-base thead th {
+    @apply border-b border-ink-600 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .table-base tbody td {
+    @apply border-b border-ink-700/60 px-3 py-2 text-slate-200;
+  }
+  .table-base tbody tr:hover {
+    @apply bg-ink-700/40;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition;
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+  }
+  .btn-ghost {
+    @apply btn text-slate-200 ring-1 ring-ink-600 hover:bg-ink-700;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  .btn-buy {
+    @apply btn bg-bull/90 text-white hover:bg-bull;
+  }
+  .btn-sell {
+    @apply btn bg-bear/90 text-white hover:bg-bear;
+  }
+  .nav-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-ink-700 hover:text-white;
+  }
+  .nav-link-active {
+    @apply bg-brand-600/20 text-brand-100 ring-1 ring-brand-500/40;
+  }
+}

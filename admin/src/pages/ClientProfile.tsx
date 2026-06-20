@@ -1,0 +1,629 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { api } from '../api/client';
+import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { useAuth } from '../auth/AuthContext';
+import type { ClientProfile as Profile, Transaction } from '../types';
+import { CATEGORY_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, parseMoneyInput } from '../lib/format';
+import { resolveUploadUrl } from '../lib/apiConfig';
+
+export function ClientProfile() {
+  const { id = '' } = useParams();
+  const { can } = useAuth();
+  const canEdit = can('ADVISOR', 'COMPLIANCE');
+
+  const [client, setClient] = useState<Profile | null>(null);
+  const [txns, setTxns] = useState<Transaction[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Formularios de edición crítica
+  const [cashMxn, setCashMxn] = useState('');
+  const [invested, setInvested] = useState('');
+  const [balanceReason, setBalanceReason] = useState('');
+  const [fundsOp, setFundsOp] = useState<'add' | 'remove'>('add');
+  const [fundsAmount, setFundsAmount] = useState('');
+  const [fundsReason, setFundsReason] = useState('');
+
+  // Cuenta de depósito bancaria asignada
+  const [deposit, setDeposit] = useState({
+    beneficiary: '',
+    bank: '',
+    accountNumber: '',
+    clabe: '',
+    reference: '',
+  });
+  const [initialInvestment, setInitialInvestment] = useState(''); // opcional
+  const [depositBusy, setDepositBusy] = useState(false);
+  const [depositError, setDepositError] = useState<string | null>(null);
+
+  const [docType, setDocType] = useState('INE');
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [docBusy, setDocBusy] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [confirm, setConfirm] = useState<null | 'balance' | 'funds'>(null);
+  const [busy, setBusy] = useState(false);
+
+  function load() {
+    api.client(id).then((c) => {
+      setClient(c);
+      setCashMxn(String(c.cashMxn));
+      setInvested(String(c.totalInvestedMxn));
+      setDeposit({
+        beneficiary: c.depositAccount?.beneficiary ?? '',
+        bank: c.depositAccount?.bank ?? '',
+        accountNumber: c.depositAccount?.accountNumber ?? '',
+        clabe: c.depositAccount?.clabe ?? '',
+        reference: c.depositAccount?.reference ?? '',
+      });
+      setInitialInvestment(
+        c.depositAccount?.initialInvestmentMxn !== undefined
+          ? formatMoneyDisplay(c.depositAccount.initialInvestmentMxn)
+          : '',
+      );
+    }).catch((e) => setError(e.message));
+    api.transactions({ userId: id }).then(setTxns).catch(() => setTxns([]));
+  }
+
+  const clabeValid = /^\d{18}$/.test(deposit.clabe);
+  const accountValid = /^\d{5,20}$/.test(deposit.accountNumber);
+  const depositReady =
+    deposit.beneficiary.trim().length >= 3 &&
+    deposit.bank.trim().length >= 2 &&
+    accountValid &&
+    clabeValid &&
+    deposit.reference.trim().length >= 1;
+
+  const investmentParsed = parseMoneyInput(initialInvestment);
+  const investmentValid =
+    initialInvestment.trim() === '' || (investmentParsed !== undefined && investmentParsed >= 0);
+
+  async function submitDeposit() {
+    setDepositBusy(true);
+    setDepositError(null);
+    try {
+      const amount = parseMoneyInput(initialInvestment);
+      await api.updateDepositAccount(id, {
+        ...deposit,
+        ...(amount !== undefined ? { initialInvestmentMxn: amount } : {}),
+      });
+      setFeedback('Cuenta de depósito guardada y registrada en la bitácora de auditoría.');
+      load();
+    } catch (e) {
+      setDepositError(e instanceof Error ? e.message : 'Error al guardar la cuenta.');
+    } finally {
+      setDepositBusy(false);
+    }
+  }
+
+  async function uploadDocument() {
+    if (!docFile) {
+      setDocError('Selecciona un archivo PDF o imagen.');
+      return;
+    }
+    setDocBusy(true);
+    setDocError(null);
+    try {
+      const data = await readFileAsBase64(docFile);
+      await api.uploadDocument(id, {
+        type: docType,
+        fileName: docFile.name,
+        mimeType: docFile.type,
+        data,
+      });
+      setDocFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setFeedback('Documento de identidad cargado correctamente.');
+      load();
+    } catch (e) {
+      setDocError(e instanceof Error ? e.message : 'Error al subir el documento.');
+    } finally {
+      setDocBusy(false);
+    }
+  }
+
+  function onDocumentFileChange(file: File | null) {
+    if (!file) {
+      setDocFile(null);
+      return;
+    }
+    const ok =
+      /\.(pdf|png|jpe?g|webp|gif)$/i.test(file.name) ||
+      /^(application\/pdf|image\/(png|jpeg|jpg|webp|gif))$/i.test(file.type);
+    if (!ok) {
+      setDocError('Formato no permitido. Usa PDF, PNG, JPG o WEBP.');
+      setDocFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setDocError('El archivo no debe superar 10 MB.');
+      setDocFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    setDocError(null);
+    setDocFile(file);
+  }
+
+  useEffect(load, [id]);
+
+  if (error) return <p className="text-danger">{error}</p>;
+  if (!client) return <p className="text-slate-400">Cargando ficha…</p>;
+
+  async function submitBalance() {
+    setBusy(true);
+    try {
+      await api.updateBalance(id, {
+        cashMxn: Number(cashMxn),
+        totalInvestedMxn: Number(invested),
+        reason: balanceReason,
+      });
+      setFeedback('Saldo actualizado y registrado en la bitácora de auditoría.');
+      setBalanceReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al actualizar.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitFunds() {
+    setBusy(true);
+    try {
+      await api.adjustFunds(id, {
+        operation: fundsOp,
+        amountMxn: Number(fundsAmount),
+        reason: fundsReason,
+      });
+      setFeedback(
+        `${fundsOp === 'add' ? 'Fondos agregados' : 'Fondos removidos'} y registrados en auditoría.`,
+      );
+      setFundsAmount('');
+      setFundsReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al ajustar fondos.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Link to="/clientes" className="text-sm text-brand-400 hover:underline">
+            ← Volver a clientes
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold text-white">{client.displayName}</h1>
+          <p className="text-sm text-slate-400">
+            {client.id} · {client.email}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Badge value={client.accountStatus} />
+          <Badge value={client.kycStatus} />
+        </div>
+      </div>
+
+      {feedback && (
+        <div className="rounded-lg border border-brand-500/40 bg-brand-600/15 px-3 py-2 text-sm text-brand-100">
+          {feedback}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Información personal */}
+        <Card title="Información personal">
+          <dl className="space-y-2 text-sm">
+            <Row label="Teléfono" value={client.phone} />
+            <Row label="CURP" value={client.curp} />
+            <Row label="RFC" value={client.rfc} />
+            <Row label="Perfil de riesgo" value={client.riskProfile} />
+            <Row label="Fecha de registro" value={fmtDate(client.createdAt)} />
+            <Row label="Asesor asignado" value={client.advisorName} />
+            <Row label="Correo del asesor" value={client.advisorEmail} />
+          </dl>
+        </Card>
+
+        {/* Documentos */}
+        <Card title="Documentos de identidad">
+          {canEdit && (
+            <div className="mb-4 space-y-3 rounded-lg border border-ink-600 bg-ink-900/40 p-3">
+              <p className="text-xs text-slate-400">
+                Carga la identificación oficial del cliente (INE, pasaporte, etc.) en PDF o imagen.
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="label">Tipo de documento</span>
+                  <select
+                    className="input"
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                  >
+                    {Object.entries(DOCUMENT_TYPE_LABEL).map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="label">Archivo (PDF, PNG, JPG, WEBP · máx. 10 MB)</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf"
+                    className="input cursor-pointer file:mr-2 file:rounded file:border-0 file:bg-brand-600 file:px-2 file:py-1 file:text-xs file:text-white"
+                    onChange={(e) => onDocumentFileChange(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+              </div>
+              {docFile && (
+                <p className="text-xs text-slate-400">
+                  Seleccionado: <span className="text-slate-200">{docFile.name}</span> (
+                  {(docFile.size / 1024).toFixed(0)} KB)
+                </p>
+              )}
+              {docError && (
+                <p className="rounded-lg bg-danger/15 px-3 py-2 text-xs text-danger">{docError}</p>
+              )}
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={!docFile || docBusy}
+                onClick={uploadDocument}
+              >
+                {docBusy ? 'Subiendo…' : 'Subir documento'}
+              </button>
+            </div>
+          )}
+
+          {client.documents.length === 0 ? (
+            <p className="text-sm text-slate-400">Aún no hay documentos en el expediente.</p>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {client.documents.map((d) => (
+                <li
+                  key={d.id}
+                  className="flex flex-col gap-2 rounded-lg bg-ink-900/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-200">
+                      {DOCUMENT_TYPE_LABEL[d.type] ?? d.type.replace(/_/g, ' ')}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">{d.fileName}</p>
+                    <p className="text-xs text-slate-600">
+                      {fmtDateTime(d.uploadedAt)}
+                      {d.uploadedByName ? ` · ${d.uploadedByName}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <a
+                      href={resolveUploadUrl(d.fileUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-ghost px-2 py-1 text-xs"
+                    >
+                      Ver / Descargar
+                    </a>
+                    <Badge value={d.status} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        {/* Resumen financiero */}
+        <Card title="Resumen financiero">
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs uppercase text-slate-400">Saldo disponible</p>
+              <p className="text-2xl font-bold text-white">{fmtMxn(client.cashMxn)}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-slate-400">Total invertido</p>
+              <p className="text-xl font-semibold text-ok">{fmtMxn(client.totalInvestedMxn)}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Edición crítica */}
+      {canEdit ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card title="Editar saldo / total invertido (modo crítico)">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Saldo disponible (MXN)</label>
+                  <input className="input" type="number" value={cashMxn} onChange={(e) => setCashMxn(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label">Total invertido (MXN)</label>
+                  <input className="input" type="number" value={invested} onChange={(e) => setInvested(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label">Razón del ajuste (obligatoria)</label>
+                <input
+                  className="input"
+                  placeholder="Ej. Corrección por depósito conciliado #SPEI-2231"
+                  value={balanceReason}
+                  onChange={(e) => setBalanceReason(e.target.value)}
+                />
+              </div>
+              <button
+                className="btn-primary"
+                disabled={balanceReason.trim().length < 5}
+                onClick={() => setConfirm('balance')}
+              >
+                Guardar cambios
+              </button>
+            </div>
+          </Card>
+
+          <Card title="Agregar / remover fondos manualmente">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Operación</label>
+                  <select className="input" value={fundsOp} onChange={(e) => setFundsOp(e.target.value as 'add' | 'remove')}>
+                    <option value="add">Agregar fondos</option>
+                    <option value="remove">Remover fondos</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Monto (MXN)</label>
+                  <input className="input" type="number" value={fundsAmount} onChange={(e) => setFundsAmount(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label">Razón del ajuste (obligatoria)</label>
+                <input
+                  className="input"
+                  placeholder="Ej. Bono de bienvenida autorizado por gerencia"
+                  value={fundsReason}
+                  onChange={(e) => setFundsReason(e.target.value)}
+                />
+              </div>
+              <button
+                className={fundsOp === 'add' ? 'btn-ok' : 'btn-danger'}
+                disabled={fundsReason.trim().length < 5 || Number(fundsAmount) <= 0}
+                onClick={() => setConfirm('funds')}
+              >
+                {fundsOp === 'add' ? 'Agregar fondos' : 'Remover fondos'}
+              </button>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <Card title="Edición de saldos">
+          <p className="text-sm text-slate-400">
+            Tu rol no tiene permisos para modificar saldos. Esta sección es de solo lectura.
+          </p>
+        </Card>
+      )}
+
+      {/* Cuenta de Depósito Asignada */}
+      <Card
+        title="Cuenta de Depósito Asignada"
+        action={
+          client.depositAccount?.updatedAt ? (
+            <span className="text-xs text-slate-500">
+              Última actualización: {fmtDate(client.depositAccount.updatedAt)}
+              {client.depositAccount.updatedByName ? ` · ${client.depositAccount.updatedByName}` : ''}
+            </span>
+          ) : (
+            <span className="text-xs text-warn">Sin cuenta asignada</span>
+          )
+        }
+      >
+        {canEdit ? (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-400">
+              Estos datos los verá el cliente en su sección "Fondear Cuenta / Invertir" en tiempo real.
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="label">Razón social / Beneficiario</label>
+                <input
+                  className="input"
+                  placeholder="Ej. Inversionistas S.A. de C.V."
+                  value={deposit.beneficiary}
+                  onChange={(e) => setDeposit({ ...deposit, beneficiary: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Banco receptor</label>
+                <input
+                  className="input"
+                  placeholder="Ej. BBVA, Banamex, Santander"
+                  value={deposit.bank}
+                  onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Número de cuenta</label>
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  placeholder="Solo dígitos"
+                  value={deposit.accountNumber}
+                  onChange={(e) =>
+                    setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
+                  }
+                />
+                {deposit.accountNumber && !accountValid && (
+                  <p className="mt-1 text-xs text-danger">El número de cuenta debe tener entre 5 y 20 dígitos.</p>
+                )}
+              </div>
+              <div>
+                <label className="label">CLABE interbancaria (18 dígitos)</label>
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  maxLength={18}
+                  placeholder="18 dígitos"
+                  value={deposit.clabe}
+                  onChange={(e) => setDeposit({ ...deposit, clabe: e.target.value.replace(/\D/g, '') })}
+                />
+                <p className={`mt-1 text-xs ${deposit.clabe && !clabeValid ? 'text-danger' : 'text-slate-500'}`}>
+                  {deposit.clabe.length}/18 dígitos
+                </p>
+              </div>
+              <div>
+                <label className="label">Referencia única de pago</label>
+                <input
+                  className="input"
+                  placeholder="Ej. INV-1001"
+                  value={deposit.reference}
+                  onChange={(e) => setDeposit({ ...deposit, reference: e.target.value })}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label">Monto inicial de inversión (MXN) · opcional</label>
+                <input
+                  className="input"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Déjalo vacío si no aplica. Ej. 10,000 o 5,000.50"
+                  value={initialInvestment}
+                  onChange={(e) => setInitialInvestment(formatMoneyInput(e.target.value))}
+                />
+                <p className={`mt-1 text-xs ${investmentValid ? 'text-slate-500' : 'text-danger'}`}>
+                  {investmentValid
+                    ? 'Si capturas un monto, el cliente lo verá en su pantalla "Fondear Cuenta".'
+                    : 'El monto no puede ser negativo.'}
+                </p>
+              </div>
+            </div>
+            {depositError && (
+              <p className="rounded-lg bg-danger/15 px-3 py-2 text-sm text-danger">{depositError}</p>
+            )}
+            <button
+              className="btn-primary"
+              disabled={!depositReady || !investmentValid || depositBusy}
+              onClick={submitDeposit}
+            >
+              {depositBusy ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+        ) : client.depositAccount ? (
+          <dl className="space-y-2 text-sm">
+            <Row label="Beneficiario" value={client.depositAccount.beneficiary} />
+            <Row label="Banco" value={client.depositAccount.bank} />
+            <Row label="Cuenta" value={client.depositAccount.accountNumber} />
+            <Row label="CLABE" value={client.depositAccount.clabe} />
+            <Row label="Referencia" value={client.depositAccount.reference} />
+            <Row
+              label="Monto inicial de inversión"
+              value={
+                client.depositAccount.initialInvestmentMxn !== undefined
+                  ? fmtMxn(client.depositAccount.initialInvestmentMxn)
+                  : undefined
+              }
+            />
+          </dl>
+        ) : (
+          <p className="text-sm text-slate-400">Tu rol no tiene permisos para asignar cuentas de depósito.</p>
+        )}
+      </Card>
+
+      {/* Transacciones del cliente */}
+      <Card title="Movimientos recientes del cliente">
+        <div className="overflow-x-auto">
+          <table className="table-base">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Categoría</th>
+                <th>Símbolo</th>
+                <th>Operación</th>
+                <th className="text-right">Monto (MXN)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txns.slice(0, 15).map((t) => (
+                <tr key={t.id}>
+                  <td className="text-slate-300">{fmtDate(t.createdAt)}</td>
+                  <td className="text-slate-300">{CATEGORY_LABEL[t.category]}</td>
+                  <td className="font-medium text-white">{t.symbol}</td>
+                  <td className="text-slate-300">
+                    {t.side === 'buy' ? 'Compra' : 'Venta'} · {t.direction === 'long' ? 'Largo' : 'Corto'}
+                  </td>
+                  <td className="text-right text-slate-200">{fmtMxn(t.amountMxn)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <ConfirmDialog
+        open={confirm === 'balance'}
+        title="¿Confirmar cambio de saldo?"
+        confirmLabel="Sí, guardar cambios"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitBalance}
+      >
+        ¿Estás seguro de que deseas cambiar los datos financieros de{' '}
+        <strong className="text-white">{client.displayName}</strong>?
+        <div className="mt-2 rounded-lg bg-ink-900/60 p-2 text-xs">
+          Saldo: {fmtMxn(client.cashMxn)} → <strong className="text-white">{fmtMxn(Number(cashMxn))}</strong>
+          <br />
+          Invertido: {fmtMxn(client.totalInvestedMxn)} →{' '}
+          <strong className="text-white">{fmtMxn(Number(invested))}</strong>
+        </div>
+        Esta acción quedará registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirm === 'funds'}
+        title={fundsOp === 'add' ? '¿Confirmar ingreso de fondos?' : '¿Confirmar retiro de fondos?'}
+        confirmLabel="Sí, continuar"
+        tone={fundsOp === 'add' ? 'ok' : 'danger'}
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitFunds}
+      >
+        Vas a {fundsOp === 'add' ? 'agregar' : 'remover'}{' '}
+        <strong className="text-white">{fmtMxn(Number(fundsAmount) || 0)}</strong>{' '}
+        {fundsOp === 'add' ? 'a' : 'de'} la cuenta de{' '}
+        <strong className="text-white">{client.displayName}</strong>. Esta acción quedará
+        registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <dt className="text-slate-400">{label}</dt>
+      <dd className="text-right text-slate-200">{value ?? '—'}</dd>
+    </div>
+  );
+}
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(',')[1] ?? '');
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+    reader.readAsDataURL(file);
+  });
+}

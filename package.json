@@ -1,0 +1,33 @@
+{
+  "name": "broker-mx",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dashboard financiero unificado para broker profesional (mercado mexicano): Acciones, Commodities, Forex y Cripto.",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "admin"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB,ADMIN -c blue,green,magenta \"npm:dev:api\" \"npm:dev:web\" \"npm:dev:admin\"",
+    "dev:api": "npm --workspace backend run dev",
+    "dev:web": "npm --workspace frontend run dev",
+    "dev:admin": "npm --workspace admin run dev",
+    "build": "npm --workspace backend run build && npm --workspace frontend run build && npm --workspace admin run build",
+    "build:prod": "npm --workspace frontend run build:web && npm --workspace admin run build:web && npm --workspace backend run build",
+    "start:prod": "npm --workspace backend run start",
+    "start": "npm --workspace backend run start",
+    "android:client:init": "npm --workspace frontend run android:init",
+    "android:client:sync": "npm --workspace frontend run android:sync",
+    "android:client:open": "npm --workspace frontend run android:open",
+    "android:admin:init": "npm --workspace admin run android:init",
+    "android:admin:sync": "npm --workspace admin run android:sync",
+    "android:admin:open": "npm --workspace admin run android:open"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

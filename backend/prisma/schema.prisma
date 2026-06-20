@@ -1,0 +1,251 @@
+// Esquema de base de datos para Broker MX.
+// Por defecto SQLite (desarrollo). En producción cambiar provider a "postgresql".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Perfil de usuario / cliente potencial (lead) del broker.
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  displayName   String
+  phone         String?
+  // Estado de cumplimiento (KYC) requerido por normativa mexicana.
+  kycStatus     KycStatus @default(PENDING)
+  riskProfile   RiskProfile @default(MODERADO)
+  accountStatus AccountStatus @default(ACTIVA)
+  isLead        Boolean  @default(true)
+  totalInvestedMxn Decimal @default(0)
+  curp          String?
+  rfc           String?
+
+  // Cuenta bancaria de depósito personalizada y reemplazable por cliente.
+  depositBeneficiary    String?
+  depositBank           String?
+  depositAccountNumber  String?
+  depositClabe          String?
+  depositReference      String?
+  depositUpdatedAt      DateTime?
+  depositUpdatedById    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Asesor financiero interno asignado al cliente.
+  advisorId     String?
+  advisor       Staff?   @relation("AdvisorClients", fields: [advisorId], references: [id])
+
+  balance       Balance?
+  transactions  Transaction[]
+  positions     Position[]
+  watchlist     WatchlistItem[]
+  documents     ClientDocument[]
+  cashRequests  CashRequest[]
+  auditLogs     AuditLog[]
+}
+
+/// Personal interno (asesores, administradores, cumplimiento). Acceso al backoffice.
+model Staff {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  displayName   String
+  role          StaffRole  @default(ADVISOR)
+  active        Boolean    @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime   @default(now())
+
+  clients       User[]     @relation("AdvisorClients")
+  auditLogs     AuditLog[]
+  reviewedRequests CashRequest[] @relation("RequestReviewer")
+}
+
+/// Documentos de identidad cargados por el cliente (KYC).
+model ClientDocument {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       DocumentType
+  fileName   String
+  status     DocumentStatus @default(EN_REVISION)
+  uploadedAt DateTime @default(now())
+}
+
+/// Solicitudes de depósito o retiro de efectivo realizadas desde la app.
+model CashRequest {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        CashRequestType
+  amountMxn   Decimal
+  method      String?      // SPEI, tarjeta, etc.
+  status      RequestStatus @default(PENDIENTE)
+  note        String?
+  reviewedById String?
+  reviewedBy  Staff?       @relation("RequestReviewer", fields: [reviewedById], references: [id])
+  reviewedAt  DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([status, createdAt])
+}
+
+/// Bitácora de auditoría: registra toda acción sensible del personal interno.
+model AuditLog {
+  id           String   @id @default(cuid())
+  staffId      String
+  staff        Staff    @relation(fields: [staffId], references: [id])
+  action       String   // p. ej. BALANCE_UPDATE, REQUEST_APPROVE
+  targetUserId String?
+  targetUser   User?    @relation(fields: [targetUserId], references: [id])
+  description  String
+  beforeJson   String?  // estado previo (JSON serializado)
+  afterJson    String?  // estado posterior (JSON serializado)
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  @@index([staffId, createdAt])
+  @@index([targetUserId, createdAt])
+}
+
+/// Balance simulado en pesos mexicanos (MXN).
+model Balance {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cashMxn    Decimal  @default(100000)
+  currency   String   @default("MXN")
+  updatedAt  DateTime @updatedAt
+}
+
+/// Instrumentos disponibles para operar (cache local del catálogo de mercado).
+model Instrument {
+  id          String     @id @default(cuid())
+  symbol      String     @unique
+  name        String
+  assetClass  AssetClass
+  currency    String
+  group       String?    // metals | energy | agricultural (commodities)
+  exchange    String?
+  transactions Transaction[]
+  positions    Position[]
+}
+
+/// Historial de transacciones (órdenes simuladas ejecutadas).
+model Transaction {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instrumentId  String
+  instrument    Instrument @relation(fields: [instrumentId], references: [id])
+  side          OrderSide
+  direction     PositionDirection
+  quantity      Decimal
+  price         Decimal    // moneda del instrumento
+  notionalMxn   Decimal    // valor en MXN al momento de la operación
+  createdAt     DateTime   @default(now())
+
+  @@index([userId, createdAt])
+}
+
+/// Posiciones abiertas (largas o cortas).
+model Position {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instrumentId  String
+  instrument    Instrument @relation(fields: [instrumentId], references: [id])
+  direction     PositionDirection
+  quantity      Decimal
+  avgPrice      Decimal
+  notionalMxn   Decimal
+  openedAt      DateTime   @default(now())
+
+  @@unique([userId, instrumentId, direction])
+}
+
+/// Lista de seguimiento del usuario.
+model WatchlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, symbol])
+}
+
+enum AssetClass {
+  stock
+  commodity
+  forex
+  crypto
+}
+
+enum OrderSide {
+  buy
+  sell
+}
+
+enum PositionDirection {
+  long
+  short
+}
+
+enum KycStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum RiskProfile {
+  CONSERVADOR
+  MODERADO
+  AGRESIVO
+}
+
+enum AccountStatus {
+  ACTIVA
+  SUSPENDIDA
+  BLOQUEADA
+  CERRADA
+}
+
+/// Roles del personal interno (RBAC).
+enum StaffRole {
+  ADMIN       // acceso total, gestión de personal
+  ADVISOR     // asesor/trader: gestiona sus clientes
+  COMPLIANCE  // cumplimiento: auditoría y aprobación de movimientos
+  SUPPORT     // soporte: solo lectura
+}
+
+enum DocumentType {
+  INE
+  PASAPORTE
+  COMPROBANTE_DOMICILIO
+  CONSTANCIA_FISCAL
+}
+
+enum DocumentStatus {
+  EN_REVISION
+  VALIDADO
+  RECHAZADO
+}
+
+enum CashRequestType {
+  DEPOSITO
+  RETIRO
+}
+
+enum RequestStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
