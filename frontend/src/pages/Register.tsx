@@ -247,7 +247,7 @@ export function AuthShell({
       <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-700 to-ink-900 p-10 lg:flex">
         <Link to="/" className="flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15 font-bold text-white">B</span>
-          <span className="text-lg font-semibold text-white">Broker MX</span>
+          <span className="text-lg font-semibold text-white">Broker.mx</span>
         </Link>
         <div>
           <h2 className="text-3xl font-bold leading-tight text-white">

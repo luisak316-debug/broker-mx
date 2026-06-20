@@ -4,8 +4,8 @@ cd /d "%~dp0"
 
 echo ============================================
 echo   BROKER MX - Apps Android
-echo   1) Clientes (inversionistas)
-echo   2) Asesores (administradores)
+echo   1) Broker MX
+echo   2) Admin
 echo ============================================
 echo.
 

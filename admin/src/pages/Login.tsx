@@ -31,10 +31,10 @@ export function Login() {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-brand-500 text-xl font-bold text-white">
-            B
+            A
           </div>
-          <h1 className="text-xl font-bold text-white">Broker MX · Backoffice</h1>
-          <p className="text-sm text-slate-400">Acceso exclusivo para personal interno</p>
+          <h1 className="text-xl font-bold text-white">admin</h1>
+          <p className="text-sm text-slate-400">Acceso para personal interno</p>
         </div>
 
         <form onSubmit={submit} className="card space-y-4">

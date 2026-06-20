@@ -65,7 +65,7 @@ function mapTwilioError(err: unknown): HttpError {
  */
 export async function sendOtpSms(phone10: string, code: string): Promise<{ mock: boolean }> {
   const to = toE164Mx(phone10);
-  const body = `Broker MX: tu codigo de verificacion es ${code}. Valido 10 min. No lo compartas.`;
+  const body = `Broker.mx: tu codigo de verificacion es ${code}. Valido 10 min. No lo compartas.`;
 
   const client = getTwilioClient();
   const { fromNumber, messagingServiceSid } = env.sms;

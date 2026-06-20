@@ -36,7 +36,7 @@ export function Landing() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <a href="#top" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">B</span>
-            <span className="text-lg font-semibold text-white">Broker MX</span>
+            <span className="text-lg font-semibold text-white">Broker.mx</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
             <a href="#quienes" className="hover:text-white">Quiénes Somos</a>
@@ -180,7 +180,7 @@ export function Landing() {
             Entorno de simulación / intermediación financiera profesional. Invertir implica riesgos,
             incluida la posible pérdida de capital. No constituye asesoría de inversión.
           </p>
-          <p>© {new Date().getFullYear()} Broker MX · Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} Broker.mx · Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

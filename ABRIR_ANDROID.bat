@@ -9,8 +9,8 @@ echo  ============================================
 echo.
 echo  Elige que app quieres abrir:
 echo.
-echo    [1] CLIENTES  (inversionistas - Broker MX)
-echo    [2] ASESORES  (panel admin - Broker MX Asesores)
+echo   broker.mx
+echo   admin
 echo    [3] Salir
 echo.
 set /p opcion="Escribe 1 o 2 y presiona Enter: "

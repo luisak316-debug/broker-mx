@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title Broker MX - Desplegar en Vercel
+title broker.mx - Vercel
 cd /d "%~dp0"
 
 echo ============================================
@@ -11,8 +11,8 @@ echo Tu cuenta Vercel (inicia sesion con tu correo).
 echo.
 echo IMPORTANTE - Arquitectura:
 echo   1) API + SMS (backend)  - Render.com  (render.yaml)
-echo   2) Web clientes         - Vercel      (este script)
-echo   3) Web admin            - Vercel      (este script)
+echo   broker.mx
+echo   admin
 echo.
 echo Vercel NO puede correr el backend con SMS y WebSocket.
 echo Primero despliega la API en Render, luego pega aqui la URL.
@@ -36,7 +36,7 @@ if errorlevel 1 (
 )
 
 echo.
-set /p API_URL="URL de tu API en Render (ej. https://broker-mx.onrender.com): "
+set /p API_URL="URL de la API en Render: "
 if "%API_URL%"=="" (
   echo Necesitas la URL del backend en Render primero.
   pause
@@ -44,22 +44,22 @@ if "%API_URL%"=="" (
 )
 
 echo.
-echo --- Paso 2: Desplegar web CLIENTES (Broker MX) ---
+echo --- broker.mx ---
 cd frontend
-call vercel --prod --yes --name broker-mx -e VITE_API_URL=%API_URL%
+call vercel --prod --yes --name broker-dot-mx -e VITE_API_URL=%API_URL%
 cd ..
 
 echo.
-echo --- Paso 3: Desplegar web ADMIN (Broker MX Backoffice) ---
+echo --- admin ---
 cd admin
-call vercel --prod --yes --name broker-mx-admin -e VITE_API_URL=%API_URL%
+call vercel --prod --yes --name admin -e VITE_API_URL=%API_URL%
 cd ..
 
 echo.
 echo ============================================
 echo   Listo. Guarda las URLs que mostro Vercel.
-echo   Clientes: broker-mx.vercel.app (o similar)
-echo   Admin:    broker-mx-admin.vercel.app
+echo   broker.mx
+echo   admin
 echo ============================================
 echo.
 pause

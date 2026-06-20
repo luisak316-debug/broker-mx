@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Broker MX - Dashboard de Inversion
+title broker.mx
 cd /d "%~dp0"
 
 set "LOG=%~dp0_inicio.log"
@@ -72,8 +72,8 @@ if not errorlevel 1 (
   echo.
 )
 echo   API:           http://localhost:4000/api
-echo   App clientes:  http://localhost:5173
-echo   Backoffice:    http://localhost:5174   (admin@brokermx.com / Admin1234)
+echo   broker.mx:  http://localhost:5173
+echo   admin:      http://localhost:5174
 echo.
 echo   Para DETENER todo: cierra esta ventana o presiona Ctrl+C
 echo.

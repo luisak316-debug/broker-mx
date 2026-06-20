@@ -5,7 +5,7 @@
 
 services:
   - type: web
-    name: broker-mx
+    name: broker.mx
     runtime: node
     plan: free
     buildCommand: npm install && npm run build:prod

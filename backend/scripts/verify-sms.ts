@@ -30,7 +30,7 @@ if (!from || !from.startsWith('+')) {
 }
 
 async function main(): Promise<void> {
-  console.log('\n  Broker MX — Verificacion SMS Twilio\n');
+  console.log('\n  Broker.mx — SMS\n');
 
   const client = twilio(sid!, token!);
   const account = await client.api.accounts(sid!).fetch();
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
   await client.messages.create({
     to,
     from: from!,
-    body: `Broker MX prueba: tu codigo es ${code}. Si lo recibes, SMS esta listo.`,
+    body: `Broker.mx prueba: tu codigo es ${code}.`,
   });
 
   console.log(`\n  [OK] SMS de prueba enviado a ${to}`);

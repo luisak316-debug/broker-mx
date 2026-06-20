@@ -14,7 +14,7 @@ export function Footer() {
           Aviso de Riesgo y Términos y Condiciones
         </p>
         <p>
-          <strong className="text-amber-300">Broker MX</strong> es un entorno de{' '}
+          <strong className="text-amber-300">Broker.mx</strong> es un entorno de{' '}
           <strong>simulación e intermediación financiera profesional</strong>. La
           información, cotizaciones y resultados mostrados son{' '}
           <strong>simulados</strong> y no representan operaciones reales ni constituyen
@@ -48,7 +48,7 @@ export function Footer() {
             {open ? 'Ocultar aviso completo' : 'Leer aviso completo'}
           </button>
           <span className="text-slate-600">·</span>
-          <span>© {new Date().getFullYear()} Broker MX · Simulación educativa</span>
+          <span>© {new Date().getFullYear()} Broker.mx · Simulación educativa</span>
         </div>
       </div>
     </footer>

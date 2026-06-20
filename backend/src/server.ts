@@ -13,7 +13,7 @@ marketData.start();
 
 server.listen(env.port, () => {
   /* eslint-disable no-console */
-  console.log(`\n  Broker MX API`);
+  console.log(`\n  broker.mx API`);
   console.log(`  ➜ REST:      http://localhost:${env.port}/api`);
   console.log(`  ➜ WebSocket: ws://localhost:${env.port}/ws/prices`);
   console.log(`  ➜ Moneda base: ${env.baseCurrency}`);

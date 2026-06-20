@@ -1,12 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 /**
- * App Android para ASESORES / administradores (backoffice).
+ * App Android Admin.
  * Package ID Play Store: com.brokermx.asesores
  */
 const config: CapacitorConfig = {
   appId: 'com.brokermx.asesores',
-  appName: 'Broker MX Asesores',
+  appName: 'admin',
   webDir: 'dist',
   android: {
     allowMixedContent: true,

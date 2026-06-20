@@ -17,7 +17,7 @@ export function Sidebar() {
           B
         </span>
         <div>
-          <p className="text-sm font-semibold text-white">Broker MX</p>
+          <p className="text-sm font-semibold text-white">Broker.mx</p>
           <p className="text-xs text-slate-400">Entorno de simulación</p>
         </div>
       </div>

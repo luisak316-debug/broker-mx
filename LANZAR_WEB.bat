@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Broker MX - Lanzar Web Publica
+title broker.mx
 cd /d "%~dp0"
 
 echo ============================================
@@ -9,8 +9,8 @@ echo ============================================
 echo.
 echo Esto compila la web y la expone con un enlace
 echo publico HTTPS para que cualquiera pueda entrar:
-echo   - Clientes:  https://TU-ENLACE/
-echo   - Admin:     https://TU-ENLACE/admin/
+echo   broker.mx:  https://TU-ENLACE/
+echo   admin:      https://TU-ENLACE/admin/
 echo.
 echo Requisitos: Node.js, Twilio configurado en backend\.env
 echo.
@@ -28,7 +28,7 @@ if not errorlevel 1 (
   echo.
 )
 
-echo [1/3] Compilando Broker MX para produccion...
+echo [1/3] Compilando broker.mx...
 call npm run build:prod
 if errorlevel 1 (
   echo [ERROR] Fallo la compilacion.
@@ -39,7 +39,7 @@ echo       Listo.
 echo.
 
 echo [2/3] Iniciando servidor Broker MX (puerto 4000)...
-start "Broker MX - Servidor" cmd /k "cd /d "%~dp0" && set NODE_ENV=production&& npm run start:prod"
+start "broker.mx" cmd /k "cd /d "%~dp0" && set NODE_ENV=production&& npm run start:prod"
 echo       Esperando que el servidor arranque...
 timeout /t 8 /nobreak >nul
 echo.
@@ -49,8 +49,8 @@ echo.
 echo ============================================
 echo   CUANDO APAREZCA EL ENLACE, COPIALO:
 echo.
-echo   App clientes:  ENLACE/
-echo   Backoffice:    ENLACE/admin/
+echo   broker.mx:  ENLACE/
+echo   admin:      ENLACE/admin/
 echo   Login admin:   admin@brokermx.com / Admin1234
 echo ============================================
 echo.

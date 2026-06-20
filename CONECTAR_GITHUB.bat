@@ -1,86 +1,64 @@
 @echo off
 setlocal
-title Broker MX - Conectar con GitHub
+title broker.mx - GitHub
 cd /d "%~dp0"
 
 echo ============================================
-echo   BROKER MX - Ya tienes repo local
-echo   Conectar y subir a GitHub
+echo   Subir a GitHub
+echo   Repo: broker.mx
 echo ============================================
 echo.
 
 where git >nul 2>&1
 if errorlevel 1 (
-  echo [ERROR] Git no encontrado en PATH.
+  echo Instala Git: INSTALAR_GIT.bat
   pause
   exit /b 1
 )
 
-if not exist ".git" (
-  echo [AVISO] No hay carpeta .git en:
-  echo   %~dp0
-  echo.
-  echo Si creaste broker-mx en otra ruta, abre ESA carpeta en Git
-  echo o ejecuta aqui:  git init
-  echo.
-  pause
-  exit /b 1
-)
+if not exist ".git" git init
 
-echo Carpeta del repo: %~dp0
-echo.
-git status -sb
-echo.
-
-echo [1/3] Agregando archivos (backend\.env NO se sube)...
+echo [1/3] Archivos (backend\.env NO se sube)...
 git add .
-git status --short
-echo.
-
-echo [2/3] Commit...
 git diff --cached --quiet 2>nul
-if errorlevel 1 (
-  git commit -m "Broker MX: web clientes, admin, SMS Twilio y despliegue"
+if not errorlevel 1 (
+  echo Sin cambios nuevos.
 ) else (
-  echo Sin cambios nuevos para commit.
+  git commit -m "broker.mx y admin"
 )
 echo.
 
-echo [3/3] Subir a GitHub...
-git remote -v 2>nul | findstr origin >nul
-if errorlevel 1 (
-  echo.
-  set /p GH_USER="Tu usuario de GitHub (ej. luisak316): "
-  echo.
-  echo Conectando con https://github.com/%GH_USER%/broker-mx.git
-  git branch -M main
-  git remote add origin https://github.com/%GH_USER%/broker-mx.git
-  echo.
-  echo ANTES del push: crea el repo vacio en GitHub:
-  echo   https://github.com/new  -  nombre: broker-mx  -  SIN README
-  echo.
+echo [2/3] Conectar repo broker.mx
+echo.
+echo En GitHub crea repo VACIO llamado:  broker.mx
+echo   https://github.com/new
+echo.
+echo Copia la URL que te da GitHub y pegala aqui.
+echo (solo la URL, nada mas)
+echo.
+set /p REPO_URL="URL del repo: "
+if "%REPO_URL%"=="" (
+  echo Falta la URL.
   pause
-  git push -u origin main
-) else (
-  git push -u origin HEAD
+  exit /b 1
 )
 
+git branch -M main
+git remote remove origin 2>nul
+git remote add origin "%REPO_URL%"
+echo.
+
+echo [3/3] Subiendo...
+git push -u origin main
 if errorlevel 1 (
   echo.
-  echo Si fallo el push:
-  echo   - Crea el repo broker-mx en github.com/new
-  echo   - O revisa usuario/token de GitHub
+  echo Revisa que el repo broker.mx exista en GitHub y vuelve a intentar.
   pause
   exit /b 1
 )
 
 echo.
-echo ============================================
-echo   Listo en GitHub: broker-mx
-echo.
-echo   Siguiente paso: Render.com
-echo   New - Blueprint - conecta el repo broker-mx
-echo   Agrega variables Twilio en Environment
-echo ============================================
+echo Listo. Repo: broker.mx
+echo Siguiente: Render.com con el mismo repo.
 echo.
 pause

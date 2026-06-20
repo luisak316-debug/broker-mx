@@ -16,11 +16,10 @@ export function Sidebar() {
     <aside className="hidden w-64 shrink-0 flex-col border-r border-ink-600/60 bg-ink-900/80 p-4 md:flex">
       <div className="mb-6 flex items-center gap-2 px-2">
         <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
-          B
+          A
         </span>
         <div>
-          <p className="text-sm font-semibold text-white">Broker MX</p>
-          <p className="text-xs text-slate-400">Backoffice / CRM</p>
+          <p className="text-sm font-semibold text-white">admin</p>
         </div>
       </div>
       <nav className="flex flex-col gap-1">
