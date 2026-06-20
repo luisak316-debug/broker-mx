@@ -9,8 +9,8 @@ services:
     name: broker-mx-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:prod
-    startCommand: NODE_ENV=production npm run start:prod
+    buildCommand: npm install && npm --workspace backend run build
+    startCommand: npm run start:prod
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:

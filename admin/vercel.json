@@ -5,7 +5,7 @@
   "framework": "vite",
   "build": {
     "env": {
-      "VITE_API_URL": "https://council-dealtime-generators-regulations.trycloudflare.com"
+      "VITE_API_URL": "https://broker-mx-api.onrender.com"
     }
   },
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]

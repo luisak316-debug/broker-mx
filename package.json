@@ -14,6 +14,7 @@
     "dev:web": "npm --workspace frontend run dev",
     "dev:admin": "npm --workspace admin run dev",
     "build": "npm --workspace backend run build && npm --workspace frontend run build && npm --workspace admin run build",
+    "build:api": "npm --workspace backend run build",
     "build:prod": "npm --workspace frontend run build:web && npm --workspace admin run build:web && npm --workspace backend run build",
     "start:prod": "npm --workspace backend run start",
     "start": "npm --workspace backend run start",
