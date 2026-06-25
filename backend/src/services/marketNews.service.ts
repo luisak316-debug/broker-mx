@@ -11,7 +11,6 @@ export interface MarketNewsItem {
   publishedAt: string;
 }
 
-/** Titulares curados en español (México) — rotación diaria, tono positivo. */
 const CURATED: Record<
   Exclude<MarketNewsCategory, 'featured'>,
   Omit<MarketNewsItem, 'id' | 'category' | 'categoryLabel'>[]
@@ -135,27 +134,21 @@ function todayKey(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
 }
 
-function dayIndex(): number {
-  const d = new Date();
-  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000);
-}
-
-function pickCurated(
-  category: Exclude<MarketNewsCategory, 'featured'>,
-  offset = 0,
-): MarketNewsItem {
-  const pool = CURATED[category];
-  const picked = pool[(dayIndex() + offset) % pool.length]!;
-  return {
-    id: `${category}-${todayKey()}`,
-    category,
-    categoryLabel: LABELS[category],
-    ...picked,
-    publishedAt: new Date().toISOString(),
-  };
-}
-
 function buildDailyNews(): MarketNewsItem[] {
+  const mk = (
+    category: Exclude<MarketNewsCategory, 'featured'>,
+    index: number,
+  ): MarketNewsItem => {
+    const picked = CURATED[category][index]!;
+    return {
+      id: `${category}-${todayKey()}`,
+      category,
+      categoryLabel: LABELS[category],
+      ...picked,
+      publishedAt: new Date().toISOString(),
+    };
+  };
+
   const salinas = CURATED.crypto[0]!;
   const featured: MarketNewsItem = {
     id: `featured-${todayKey()}`,
@@ -168,13 +161,7 @@ function buildDailyNews(): MarketNewsItem[] {
     publishedAt: new Date().toISOString(),
   };
 
-  return [
-    featured,
-    pickCurated('crypto', 1),
-    pickCurated('stocks', 0),
-    pickCurated('commodities', 0),
-    pickCurated('forex', 0),
-  ];
+  return [featured, mk('crypto', 1), mk('stocks', 0), mk('commodities', 0), mk('forex', 0)];
 }
 
 export async function getDailyMarketNews(): Promise<MarketNewsItem[]> {
@@ -187,8 +174,4 @@ export async function getDailyMarketNews(): Promise<MarketNewsItem[]> {
 
 export function warmMarketNewsCache(): void {
   void getDailyMarketNews().catch(() => undefined);
-}
-
-export function clearMarketNewsCache(): void {
-  cache = null;
 }
