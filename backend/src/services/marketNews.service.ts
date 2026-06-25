@@ -25,7 +25,14 @@ const POSITIVE =
   /alcista|avanza|sube|crece|recupera|récord|record|high|surge|rally|gain|gains|bull|optim|strong|rise|rises|jump|boom|aprob|adopt|inflow|milestone|positiv|outperform|upgrade|beat|profit|demanda|fortalece|impulso/i;
 
 const NEGATIVE =
-  /crash|caída|caida|plunge|colaps|bear|pánico|panico|crisis|war|guerra|hack|fraude|scam|loss|losses|fall|falls|drop|drops|decline|recesi|default|bankrupt|liquid/i;
+  /crash|caída|caida|plunge|colaps|bear|pánico|panico|crisis|war|guerra|hack|fraude|scam|loss|losses|fall|falls|drop|drops|decline|recesi|default|bankrupt|liquid|pain|fear|worst|slump|selloff|sell-off|tariff|layoff|deuda|riesgo alto/i;
+
+const CATEGORY_HINTS: Record<Exclude<MarketNewsCategory, 'featured'>, RegExp> = {
+  crypto: /bitcoin|btc|ethereum|eth|crypto|blockchain|token|defi|etf|coin|stablecoin|salinas|pliego/i,
+  stocks: /stock|accion|acciones|bolsa|s&p|dow|nasdaq|wall street|earnings|mercado|shares|emisor|trimest/i,
+  commodities: /gold|oro|silver|plata|oil|petr|crude|copper|cobre|commodit|metal|wheat|corn|gas natural|materia/i,
+  forex: /forex|fx|dollar|dólar|peso|mxn|usd|eur|currency|divisa|cambio|central bank|banxico|fed/i,
+};
 
 const CATEGORIES: CategoryFeed[] = [
   {
@@ -57,7 +64,7 @@ const CATEGORIES: CategoryFeed[] = [
     label: 'Divisas (Forex)',
     feeds: [
       'https://www.dailyfx.com/feeds/market-news',
-      'https://feeds.marketwatch.com/marketwatch/topstories/',
+      'https://www.fxstreet.com/rss/news',
     ],
   },
 ];
@@ -149,17 +156,16 @@ const CURATED: Record<Exclude<MarketNewsCategory, 'featured'>, Omit<MarketNewsIt
       publishedAt: new Date().toISOString(),
     },
     {
-      title: 'Bancos centrales mantienen enfoque en estabilidad cambiaria regional',
-      summary: 'La política monetaria global favorece mercados de divisas transparentes.',
-      source: 'MarketWatch',
-      url: 'https://www.marketwatch.com/',
+      title: 'Divisas globales muestran estabilidad en cruces clave para inversionistas',
+      summary: 'La liquidez internacional favorece operaciones de cobertura en MXN.',
+      source: 'DailyFX',
+      url: 'https://www.dailyfx.com/market-news',
       publishedAt: new Date().toISOString(),
     },
   ],
 };
 
 let cache: { dateKey: string; items: MarketNewsItem[] } | null = null;
-let refreshPromise: Promise<MarketNewsItem[]> | null = null;
 
 function todayKey(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
@@ -175,7 +181,16 @@ function dayIndex(): number {
 function isPositive(title: string, summary?: string): boolean {
   const text = `${title} ${summary ?? ''}`;
   if (NEGATIVE.test(text)) return false;
-  return POSITIVE.test(text) || !NEGATIVE.test(text);
+  return POSITIVE.test(text);
+}
+
+function matchesCategory(
+  category: Exclude<MarketNewsCategory, 'featured'>,
+  title: string,
+  summary?: string,
+): boolean {
+  const text = `${title} ${summary ?? ''}`;
+  return CATEGORY_HINTS[category].test(text);
 }
 
 function pickCurated(category: Exclude<MarketNewsCategory, 'featured'>): MarketNewsItem {
@@ -208,8 +223,13 @@ async function fetchFromFeed(url: string): Promise<{ title: string; link?: strin
 async function fetchCategoryNews(cat: CategoryFeed): Promise<MarketNewsItem | null> {
   for (const feedUrl of cat.feeds) {
     const items = await fetchFromFeed(feedUrl);
-    const positive = items.filter((i) => i.title && isPositive(i.title, i.contentSnippet));
-    const best = positive[0] ?? items.find((i) => i.title && isPositive(i.title, i.contentSnippet));
+    const positive = items.filter(
+      (i) =>
+        i.title &&
+        isPositive(i.title, i.contentSnippet) &&
+        matchesCategory(cat.category, i.title, i.contentSnippet),
+    );
+    const best = positive[0];
     if (best?.title) {
       return {
         id: `${cat.category}-${todayKey()}`,
@@ -256,19 +276,9 @@ async function refreshNews(): Promise<MarketNewsItem[]> {
 export async function getDailyMarketNews(): Promise<MarketNewsItem[]> {
   const dateKey = todayKey();
   if (cache?.dateKey === dateKey) return cache.items;
-
-  if (!refreshPromise) {
-    refreshPromise = refreshNews()
-      .then((items) => {
-        cache = { dateKey, items };
-        return items;
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
+  const items = await refreshNews();
+  cache = { dateKey, items };
+  return items;
 }
 
 /** Precarga al arrancar el servidor (Render). */
