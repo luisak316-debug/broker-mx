@@ -37,7 +37,7 @@ export function Topbar({ connected }: { connected: boolean }) {
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="text-xs text-slate-400">Saldo simulado</p>
+          <p className="text-xs text-slate-400">Saldo disponible</p>
           <p className="text-sm font-semibold text-white">
             {cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—'}
           </p>

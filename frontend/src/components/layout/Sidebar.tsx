@@ -18,7 +18,7 @@ export function Sidebar() {
         </span>
         <div>
           <p className="text-sm font-semibold text-white">Broker.mx</p>
-          <p className="text-xs text-slate-400">Entorno de simulación</p>
+          <p className="text-xs text-slate-400">Intermediación financiera</p>
         </div>
       </div>
       <nav className="flex flex-col gap-1">
@@ -36,8 +36,9 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="mt-auto rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-        Operas con saldo <strong>simulado</strong> en MXN. Ninguna operación es real.
+      <div className="mt-auto rounded-lg border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-100">
+        Cuenta en <strong>MXN</strong>. Opera con respaldo y procesos conforme a la normativa
+        mexicana.
       </div>
     </aside>
   );

@@ -67,7 +67,7 @@ export function InstrumentDetail({
         )}
       </Card>
 
-      <Card title="Operar (simulado)">
+      <Card title="Operar">
         <TradePanel symbol={instrument.symbol} quote={quote} />
       </Card>
     </div>

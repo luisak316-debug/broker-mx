@@ -119,3 +119,22 @@ export interface PortfolioSummary {
     createdAt: string;
   }>;
 }
+
+export type MarketNewsCategory = 'featured' | 'crypto' | 'stocks' | 'commodities' | 'forex';
+
+export interface MarketNewsItem {
+  id: string;
+  category: MarketNewsCategory;
+  categoryLabel: string;
+  title: string;
+  summary: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+}
+
+export interface MarketNewsResponse {
+  updatedAt: string;
+  dateKey: string;
+  items: MarketNewsItem[];
+}

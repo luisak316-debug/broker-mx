@@ -258,7 +258,7 @@ export function AuthShell({
             en México.
           </p>
         </div>
-        <p className="text-xs text-white/60">Entorno de simulación / intermediación profesional.</p>
+        <p className="text-xs text-white/60">Intermediación financiera profesional en México.</p>
       </div>
 
       <div className="flex items-center justify-center px-4 py-10">

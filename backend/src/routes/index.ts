@@ -5,6 +5,7 @@ import * as stocks from '../controllers/stocks.controller';
 import * as forex from '../controllers/forex.controller';
 import * as commodities from '../controllers/commodities.controller';
 import * as portfolio from '../controllers/portfolio.controller';
+import * as marketNews from '../controllers/marketNews.controller';
 import * as auth from '../controllers/auth.controller';
 import * as deposit from '../controllers/depositAccount.controller';
 
@@ -12,6 +13,9 @@ export const router = Router();
 
 // Salud
 router.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+
+// Noticias diarias (landing — 4 mercados + destacado)
+router.get('/market-news', asyncHandler(marketNews.getMarketNews));
 
 // Catálogo y mercado (compartido por los 4 módulos)
 router.get('/instruments', asyncHandler(market.listInstruments));

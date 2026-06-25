@@ -57,7 +57,7 @@ export function Dashboard() {
         <StatTile
           label="Saldo disponible"
           value={portfolio ? fmtMxn(portfolio.cashMxn) : client ? fmtMxn(0) : '—'}
-          sub="Simulado en MXN"
+          sub="Cuenta en MXN"
         />
         <StatTile
           label="Exposición en mercado"

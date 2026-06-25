@@ -4,7 +4,7 @@ import { useClientAuth } from '../../auth/ClientAuthContext';
 import type { PositionDirection, Quote } from '../../types';
 import { fmtNum } from '../../lib/format';
 
-/** Panel de simulación de compra/venta con soporte de posiciones largas y cortas. */
+/** Panel de compra/venta con soporte de posiciones largas y cortas. */
 export function TradePanel({ symbol, quote }: { symbol: string; quote?: Quote }) {
   const { client } = useClientAuth();
   const [quantity, setQuantity] = useState(1);
@@ -17,7 +17,7 @@ export function TradePanel({ symbol, quote }: { symbol: string; quote?: Quote })
     setStatus(null);
     try {
       await api.placeOrder({ userId: client?.id, symbol, side, direction, quantity });
-      setStatus(`Orden ${side === 'buy' ? 'de compra' : 'de venta'} ejecutada (simulada).`);
+      setStatus(`Orden ${side === 'buy' ? 'de compra' : 'de venta'} registrada correctamente.`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Error al ejecutar la orden.');
     } finally {
@@ -77,7 +77,7 @@ export function TradePanel({ symbol, quote }: { symbol: string; quote?: Quote })
 
       {status && <p className="text-xs text-slate-300">{status}</p>}
       <p className="text-[11px] leading-tight text-slate-500">
-        Operación simulada. Liquidación en saldo MXN ficticio para fines educativos.
+        Las operaciones se liquidan en su saldo disponible en MXN.
       </p>
     </div>
   );

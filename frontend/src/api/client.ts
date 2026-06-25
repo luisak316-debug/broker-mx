@@ -5,6 +5,7 @@ import type {
   DepositAccountInfo,
   DividendRecord,
   Instrument,
+  MarketNewsResponse,
   PortfolioSummary,
   Quote,
 } from '../types';
@@ -64,6 +65,8 @@ export const api = {
   portfolio: (userId = 'demo-user') => http<PortfolioSummary>(`/portfolio/${userId}`),
   depositAccount: (clientId: string) =>
     http<DepositAccountInfo>(`/deposit-account/${encodeURIComponent(clientId)}`),
+
+  marketNews: () => http<MarketNewsResponse>('/market-news'),
 
   sendOtp: (payload: { phone: string }) =>
     http<import('../types').SendOtpResult>(`/auth/send-otp`, {

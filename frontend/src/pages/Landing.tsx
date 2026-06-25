@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { MarketNewsSection } from '../components/landing/MarketNewsSection';
 
 const MARKETS = [
   { icon: '📈', title: 'Bolsa de Valores', desc: 'Acciones de las empresas más grandes del mundo.' },
@@ -41,6 +42,7 @@ export function Landing() {
           <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
             <a href="#quienes" className="hover:text-white">Quiénes Somos</a>
             <a href="#mercados" className="hover:text-white">Mercados</a>
+            <a href="#noticias" className="hover:text-white">Noticias</a>
             <a href="#testimonios" className="hover:text-white">Testimonios</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -133,6 +135,8 @@ export function Landing() {
           </div>
         </section>
 
+        <MarketNewsSection />
+
         {/* TESTIMONIOS */}
         <section id="testimonios" className="border-t border-ink-700/60 bg-ink-800/30 py-20">
           <div className="mx-auto max-w-7xl px-4">
@@ -177,8 +181,8 @@ export function Landing() {
       <footer className="border-t border-ink-700/60 py-8 text-center text-xs text-slate-500">
         <div className="mx-auto max-w-7xl px-4">
           <p className="mb-2">
-            Entorno de simulación / intermediación financiera profesional. Invertir implica riesgos,
-            incluida la posible pérdida de capital. No constituye asesoría de inversión.
+            Broker.mx — intermediación financiera profesional en México. Operamos con transparencia
+            y conforme a la normativa aplicable.
           </p>
           <p>© {new Date().getFullYear()} Broker.mx · Todos los derechos reservados.</p>
         </div>

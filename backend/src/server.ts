@@ -4,6 +4,7 @@ import { env } from './config/env';
 import { marketData } from './services/marketData.service';
 import { attachPriceFeed } from './sockets/priceFeed';
 import { smsStatusLabel } from './services/sms.service';
+import { warmMarketNewsCache } from './services/marketNews.service';
 import { ADMIN_WEB_PATH } from './config/paths';
 
 const app = createApp();
@@ -11,6 +12,7 @@ const server = createServer(app);
 
 attachPriceFeed(server);
 marketData.start();
+warmMarketNewsCache();
 
 server.listen(env.port, () => {
   /* eslint-disable no-console */
