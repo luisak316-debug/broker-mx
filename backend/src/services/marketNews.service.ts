@@ -1,5 +1,3 @@
-import Parser from 'rss-parser';
-
 export type MarketNewsCategory = 'featured' | 'crypto' | 'stocks' | 'commodities' | 'forex';
 
 export interface MarketNewsItem {
@@ -13,156 +11,122 @@ export interface MarketNewsItem {
   publishedAt: string;
 }
 
-interface CategoryFeed {
-  category: Exclude<MarketNewsCategory, 'featured'>;
-  label: string;
-  feeds: string[];
-}
-
-const parser = new Parser({ timeout: 12000 });
-
-const POSITIVE =
-  /alcista|avanza|sube|crece|recupera|récord|record|high|surge|rally|gain|gains|bull|optim|strong|rise|rises|jump|boom|aprob|adopt|inflow|milestone|positiv|outperform|upgrade|beat|profit|demanda|fortalece|impulso/i;
-
-const NEGATIVE =
-  /crash|caída|caida|plunge|colaps|bear|pánico|panico|crisis|war|guerra|hack|fraude|scam|loss|losses|fall|falls|drop|drops|decline|recesi|default|bankrupt|liquid|pain|fear|worst|slump|selloff|sell-off|tariff|layoff|deuda|riesgo alto/i;
-
-const CATEGORY_HINTS: Record<Exclude<MarketNewsCategory, 'featured'>, RegExp> = {
-  crypto: /bitcoin|btc|ethereum|eth|crypto|blockchain|token|defi|etf|coin|stablecoin|salinas|pliego/i,
-  stocks: /stock|accion|acciones|bolsa|s&p|dow|nasdaq|wall street|earnings|mercado|shares|emisor|trimest/i,
-  commodities: /gold|oro|silver|plata|oil|petr|crude|copper|cobre|commodit|metal|wheat|corn|gas natural|materia/i,
-  forex: /forex|fx|dollar|dólar|peso|mxn|usd|eur|currency|divisa|cambio|central bank|banxico|fed/i,
-};
-
-const CATEGORIES: CategoryFeed[] = [
-  {
-    category: 'crypto',
-    label: 'Criptomonedas',
-    feeds: [
-      'https://www.coindesk.com/arc/outboundfeeds/rss/',
-      'https://cointelegraph.com/rss',
-    ],
-  },
-  {
-    category: 'stocks',
-    label: 'Bolsa de Valores',
-    feeds: [
-      'https://feeds.finance.yahoo.com/rss/2.0/headline?s=^MXX,^GSPC,AAPL&region=US&lang=en-US',
-      'https://feeds.marketwatch.com/marketwatch/topstories/',
-    ],
-  },
-  {
-    category: 'commodities',
-    label: 'Materias Primas',
-    feeds: [
-      'https://www.kitco.com/rss/KitcoNewsRSS.xml',
-      'https://feeds.marketwatch.com/marketwatch/marketpulse/',
-    ],
-  },
-  {
-    category: 'forex',
-    label: 'Divisas (Forex)',
-    feeds: [
-      'https://www.dailyfx.com/feeds/market-news',
-      'https://www.fxstreet.com/rss/news',
-    ],
-  },
-];
-
-/** Titulares curados (positivos) — rotación diaria si RSS no responde. */
-const CURATED: Record<Exclude<MarketNewsCategory, 'featured'>, Omit<MarketNewsItem, 'id' | 'category' | 'categoryLabel'>[]> = {
+/** Titulares curados en español (México) — rotación diaria, tono positivo. */
+const CURATED: Record<
+  Exclude<MarketNewsCategory, 'featured'>,
+  Omit<MarketNewsItem, 'id' | 'category' | 'categoryLabel'>[]
+> = {
   crypto: [
     {
       title: 'Ricardo Salinas Pliego reafirma su confianza en Bitcoin como activo de largo plazo',
-      summary: 'El empresario mexicano destaca la diversificación digital dentro de una estrategia patrimonial moderna.',
-      source: 'Medios financieros',
+      summary:
+        'El empresario mexicano destaca la diversificación digital dentro de una estrategia patrimonial moderna.',
+      source: 'Medios financieros · MX',
       url: 'https://www.facebook.com/share/1FvLsLtL9K/',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
     {
       title: 'Bitcoin mantiene interés institucional con nuevos flujos hacia ETFs spot',
-      summary: 'Los fondos cotizados continúan atrayendo capital de inversionistas de largo plazo.',
+      summary:
+        'Los fondos cotizados continúan atrayendo capital de inversionistas de largo plazo en mercados globales.',
       source: 'CoinDesk',
       url: 'https://www.coindesk.com/',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
     {
       title: 'Ethereum consolida ecosistema DeFi con adopción creciente en finanzas digitales',
-      summary: 'La red líder en contratos inteligentes sigue expandiendo casos de uso institucionales.',
+      summary:
+        'La red líder en contratos inteligentes amplía casos de uso para inversionistas institucionales.',
       source: 'Cointelegraph',
       url: 'https://cointelegraph.com/',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
   ],
   stocks: [
     {
-      title: 'Wall Street cierra en terreno positivo impulsada por resultados corporativos sólidos',
-      summary: 'Grandes emisoras reportan ingresos por encima de expectativas, reforzando la confianza del mercado.',
-      source: 'Yahoo Finance',
-      url: 'https://finance.yahoo.com/',
-      publishedAt: new Date().toISOString(),
+      title: 'La Bolsa Mexicana muestra fortaleza con sectores exportadores en alza',
+      summary:
+        'Emisoras ligadas al nearshoring reflejan optimismo y liquidez favorable para inversionistas nacionales.',
+      source: 'BMV · MX',
+      url: 'https://www.facebook.com/share/1CwH13b7Bi/',
+      publishedAt: '',
     },
     {
-      title: 'Mercado mexicano muestra fortaleza con sectores exportadores en alza',
-      summary: 'La Bolsa Mexicana de Valores refleja optimismo en emisoras ligadas a nearshoring.',
-      source: 'MarketWatch',
-      url: 'https://www.marketwatch.com/',
-      publishedAt: new Date().toISOString(),
+      title: 'Wall Street cierra en terreno positivo impulsada por resultados corporativos sólidos',
+      summary:
+        'Grandes emisoras reportan ingresos por encima de expectativas, reforzando la confianza del mercado.',
+      source: 'Yahoo Finance',
+      url: 'https://finance.yahoo.com/',
+      publishedAt: '',
     },
     {
       title: 'Tecnología lidera ganancias trimestrales en mercados globales',
-      summary: 'Las acciones de innovación mantienen momentum con perspectivas de crecimiento.',
+      summary:
+        'Las acciones de innovación mantienen momentum con perspectivas de crecimiento para el segundo semestre.',
       source: 'MarketWatch',
-      url: 'https://www.facebook.com/share/1CwH13b7Bi/',
-      publishedAt: new Date().toISOString(),
+      url: 'https://www.marketwatch.com/',
+      publishedAt: '',
     },
   ],
   commodities: [
     {
       title: 'El oro refuerza su papel como resguardo patrimonial ante escenarios globales',
-      summary: 'La demanda de metales preciosos sigue apoyada por inversionistas institucionales.',
+      summary:
+        'La demanda de metales preciosos sigue apoyada por inversionistas institucionales en México y el mundo.',
       source: 'Kitco',
       url: 'https://www.kitco.com/',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
     {
       title: 'Plata y cobre muestran demanda industrial estable en mercados emergentes',
-      summary: 'Los metales industriales se benefician de la transición energética global.',
+      summary:
+        'Los metales industriales se benefician de la transición energética y la expansión manufacturera regional.',
       source: 'Kitco',
       url: 'https://www.kitco.com/news/',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
     {
       title: 'Commodities agrícolas mantienen perspectiva favorable por demanda alimentaria',
-      summary: 'Los mercados de materias primas agrícolas reflejan dinamismo en exportaciones.',
+      summary:
+        'Los mercados de materias primas agrícolas reflejan dinamismo en exportaciones latinoamericanas.',
       source: 'MarketWatch',
       url: 'https://www.marketwatch.com/',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
   ],
   forex: [
     {
-      title: 'Mercado de divisas presenta oportunidades en pares principales con volatilidad ordenada',
-      summary: 'Operadores encuentran liquidez favorable en cruces con el peso mexicano.',
-      source: 'DailyFX',
-      url: 'https://www.dailyfx.com/',
-      publishedAt: new Date().toISOString(),
+      title: 'Dólar-peso mantiene niveles operativos atractivos para diversificación',
+      summary:
+        'El mercado Forex ofrece ventanas favorables para estrategias de cobertura patrimonial en pesos.',
+      source: 'DailyFX · MX',
+      url: 'https://www.facebook.com/share/p/1EEUrFd29p/',
+      publishedAt: '',
     },
     {
-      title: 'Dólar-peso mantiene niveles operativos atractivos para diversificación',
-      summary: 'El mercado Forex ofrece ventanas para estrategias de cobertura patrimonial.',
+      title: 'Mercado de divisas presenta oportunidades en pares principales con volatilidad ordenada',
+      summary:
+        'Operadores encuentran liquidez favorable en cruces con el peso mexicano y divisas globales.',
       source: 'DailyFX',
-      url: 'https://www.facebook.com/share/p/1EEUrFd29p/',
-      publishedAt: new Date().toISOString(),
+      url: 'https://www.dailyfx.com/',
+      publishedAt: '',
     },
     {
       title: 'Divisas globales muestran estabilidad en cruces clave para inversionistas',
-      summary: 'La liquidez internacional favorece operaciones de cobertura en MXN.',
+      summary:
+        'La liquidez internacional favorece operaciones de cobertura en MXN con spreads competitivos.',
       source: 'DailyFX',
       url: 'https://www.dailyfx.com/market-news',
-      publishedAt: new Date().toISOString(),
+      publishedAt: '',
     },
   ],
+};
+
+const LABELS: Record<Exclude<MarketNewsCategory, 'featured'>, string> = {
+  crypto: 'Criptomonedas',
+  stocks: 'Bolsa de Valores',
+  commodities: 'Materias Primas',
+  forex: 'Divisas (Forex)',
 };
 
 let cache: { dateKey: string; items: MarketNewsItem[] } | null = null;
@@ -173,115 +137,58 @@ function todayKey(): string {
 
 function dayIndex(): number {
   const d = new Date();
-  return Math.floor(
-    Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000,
-  );
+  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000);
 }
 
-function isPositive(title: string, summary?: string): boolean {
-  const text = `${title} ${summary ?? ''}`;
-  if (NEGATIVE.test(text)) return false;
-  return POSITIVE.test(text);
-}
-
-function matchesCategory(
+function pickCurated(
   category: Exclude<MarketNewsCategory, 'featured'>,
-  title: string,
-  summary?: string,
-): boolean {
-  const text = `${title} ${summary ?? ''}`;
-  return CATEGORY_HINTS[category].test(text);
-}
-
-function pickCurated(category: Exclude<MarketNewsCategory, 'featured'>): MarketNewsItem {
+  offset = 0,
+): MarketNewsItem {
   const pool = CURATED[category];
-  const picked = pool[dayIndex() % pool.length]!;
+  const picked = pool[(dayIndex() + offset) % pool.length]!;
   return {
     id: `${category}-${todayKey()}`,
     category,
-    categoryLabel: CATEGORIES.find((c) => c.category === category)!.label,
+    categoryLabel: LABELS[category],
     ...picked,
     publishedAt: new Date().toISOString(),
   };
 }
 
-async function fetchFromFeed(url: string): Promise<{ title: string; link?: string; contentSnippet?: string; isoDate?: string; creator?: string }[]> {
-  try {
-    const feed = await parser.parseURL(url);
-    return (feed.items ?? []).slice(0, 12).map((item) => ({
-      title: item.title ?? '',
-      link: item.link,
-      contentSnippet: item.contentSnippet ?? item.content,
-      isoDate: item.isoDate,
-      creator: item.creator ?? feed.title,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-async function fetchCategoryNews(cat: CategoryFeed): Promise<MarketNewsItem | null> {
-  for (const feedUrl of cat.feeds) {
-    const items = await fetchFromFeed(feedUrl);
-    const positive = items.filter(
-      (i) =>
-        i.title &&
-        isPositive(i.title, i.contentSnippet) &&
-        matchesCategory(cat.category, i.title, i.contentSnippet),
-    );
-    const best = positive[0];
-    if (best?.title) {
-      return {
-        id: `${cat.category}-${todayKey()}`,
-        category: cat.category,
-        categoryLabel: cat.label,
-        title: best.title.trim(),
-        summary:
-          (best.contentSnippet ?? '').slice(0, 160).trim() ||
-          `Actualización positiva del mercado de ${cat.label.toLowerCase()}.`,
-        source: best.creator ?? new URL(feedUrl).hostname.replace(/^www\./, ''),
-        url: best.link ?? '#',
-        publishedAt: best.isoDate ?? new Date().toISOString(),
-      };
-    }
-  }
-  return null;
-}
-
-function buildFeatured(items: MarketNewsItem[]): MarketNewsItem {
-  const pool = items.filter((i) => i.category !== 'featured');
-  const best =
-    pool.find((i) => /bitcoin|oro|record|récord|wall street|etf|salinas/i.test(i.title)) ??
-    pool[0] ??
-    pickCurated('crypto');
-
-  return {
-    ...best,
+function buildDailyNews(): MarketNewsItem[] {
+  const salinas = CURATED.crypto[0]!;
+  const featured: MarketNewsItem = {
     id: `featured-${todayKey()}`,
     category: 'featured',
     categoryLabel: 'Destacado del día',
-    summary:
-      best.summary ||
-      'Titular positivo del mercado financiero global para inspirar tu próxima decisión de inversión.',
+    title: salinas.title,
+    summary: salinas.summary,
+    source: salinas.source,
+    url: salinas.url,
+    publishedAt: new Date().toISOString(),
   };
-}
 
-async function refreshNews(): Promise<MarketNewsItem[]> {
-  const results = await Promise.all(CATEGORIES.map((cat) => fetchCategoryNews(cat)));
-  const byCategory = results.map((item, idx) => item ?? pickCurated(CATEGORIES[idx]!.category));
-  const featured = buildFeatured(byCategory);
-  return [featured, ...byCategory];
+  return [
+    featured,
+    pickCurated('crypto', 1),
+    pickCurated('stocks', 0),
+    pickCurated('commodities', 0),
+    pickCurated('forex', 0),
+  ];
 }
 
 export async function getDailyMarketNews(): Promise<MarketNewsItem[]> {
   const dateKey = todayKey();
   if (cache?.dateKey === dateKey) return cache.items;
-  const items = await refreshNews();
+  const items = buildDailyNews();
   cache = { dateKey, items };
   return items;
 }
 
-/** Precarga al arrancar el servidor (Render). */
 export function warmMarketNewsCache(): void {
   void getDailyMarketNews().catch(() => undefined);
+}
+
+export function clearMarketNewsCache(): void {
+  cache = null;
 }
