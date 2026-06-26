@@ -125,6 +125,8 @@ export type MarketNewsCategory = 'featured' | 'crypto' | 'stocks' | 'commodities
 export interface MarketNewsItem {
   id: string;
   category: MarketNewsCategory;
+  /** Color/icon del badge cuando category es "featured" (mercado del titular). */
+  themeCategory?: MarketNewsCategory;
   categoryLabel: string;
   title: string;
   summary: string;

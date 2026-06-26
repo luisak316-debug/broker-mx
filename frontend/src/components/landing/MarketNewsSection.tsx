@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  DEFAULT_MARKET_NEWS,
+  FEATURED_DAILY_NEWS,
+  MARKET_NEWS_GRID,
   MARKET_NEWS_ROTATION_MS,
-  MARKET_NEWS_ROTATION_SETS,
 } from '../../data/marketNews.default';
 import type { MarketNewsItem } from '../../types';
 
@@ -42,18 +42,28 @@ const CARD_THEME: Record<string, { badge: string; border: string; icon: string }
   },
 };
 
+function resolveTheme(item: MarketNewsItem) {
+  const key = item.themeCategory ?? item.category;
+  return CARD_THEME[key] ?? CARD_THEME.featured;
+}
+
 function NewsCard({ item, featured }: { item: MarketNewsItem; featured?: boolean }) {
-  const theme = CARD_THEME[item.category] ?? CARD_THEME.featured;
+  const theme = resolveTheme(item);
+  const imageKey = item.themeCategory ?? item.category;
   const image =
-    item.imageUrl || FALLBACK_IMAGES[item.category] || FALLBACK_IMAGES.featured;
+    item.imageUrl || FALLBACK_IMAGES[imageKey] || FALLBACK_IMAGES.featured;
 
   return (
     <article
-      className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-ink-950 shadow-xl transition duration-300 hover:shadow-2xl ${theme.border}`}
+      className={`group flex flex-col overflow-hidden rounded-2xl border bg-ink-950 shadow-xl transition duration-300 hover:shadow-2xl ${
+        featured ? 'h-auto lg:h-full lg:min-h-0' : 'h-full'
+      } ${theme.border}`}
     >
       <div
-        className={`relative shrink-0 overflow-hidden ${
-          featured ? 'h-52 sm:h-60 lg:h-72 xl:h-80' : 'h-40 sm:h-44'
+        className={`relative overflow-hidden ${
+          featured
+            ? 'h-52 shrink-0 sm:h-60 lg:min-h-0 lg:min-h-[280px] lg:flex-1'
+            : 'h-40 shrink-0 sm:h-44'
         }`}
       >
         <img
@@ -64,8 +74,8 @@ function NewsCard({ item, featured }: { item: MarketNewsItem; featured?: boolean
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           onError={(e) => {
             const img = e.currentTarget;
-            const fb = FALLBACK_IMAGES[item.category] ?? FALLBACK_IMAGES.featured;
-            if (fb && img.src !== fb) img.src = fb;
+            const fb = FALLBACK_IMAGES[imageKey] ?? FALLBACK_IMAGES.featured;
+            if (fb && !img.src.endsWith(fb)) img.src = fb;
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent" />
@@ -77,7 +87,11 @@ function NewsCard({ item, featured }: { item: MarketNewsItem; featured?: boolean
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
+      <div
+        className={`flex shrink-0 flex-col p-4 sm:p-5 ${
+          featured ? 'lg:p-5' : 'flex-1'
+        }`}
+      >
         <h3
           className={`font-semibold leading-snug text-white ${
             featured ? 'text-base sm:text-lg lg:text-xl' : 'text-sm sm:text-base'
@@ -86,13 +100,19 @@ function NewsCard({ item, featured }: { item: MarketNewsItem; featured?: boolean
           {item.title}
         </h3>
         <p
-          className={`mt-2 flex-1 text-slate-400 ${
-            featured ? 'text-sm leading-relaxed' : 'text-xs leading-relaxed sm:text-sm'
+          className={`mt-2 text-slate-400 ${
+            featured
+              ? 'text-sm leading-relaxed lg:line-clamp-3'
+              : 'flex-1 text-xs leading-relaxed sm:text-sm'
           }`}
         >
           {item.summary}
         </p>
-        <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/5 pt-3 text-[11px] text-slate-500">
+        <div
+          className={`flex items-center justify-between gap-2 border-t border-white/5 text-[11px] text-slate-500 ${
+            featured ? 'mt-3 pt-3' : 'mt-4 pt-3'
+          }`}
+        >
           <span className="truncate">{item.source}</span>
           {item.url && item.url !== '#' ? (
             <a
@@ -110,17 +130,18 @@ function NewsCard({ item, featured }: { item: MarketNewsItem; featured?: boolean
   );
 }
 
-function NewsGrid({ items }: { items: MarketNewsItem[] }) {
-  const featured = items.find((i) => i.category === 'featured');
-  const markets = items.filter((i) => i.category !== 'featured');
-
+function NewsGrid({
+  featured,
+  markets,
+}: {
+  featured: MarketNewsItem;
+  markets: MarketNewsItem[];
+}) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
-      {featured ? (
-        <div className="lg:min-h-[520px]">
-          <NewsCard item={featured} featured />
-        </div>
-      ) : null}
+      <div className="flex min-h-0 flex-col lg:h-full">
+        <NewsCard item={featured} featured />
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {markets.map((item) => (
           <NewsCard key={item.id} item={item} />
@@ -131,16 +152,16 @@ function NewsGrid({ items }: { items: MarketNewsItem[] }) {
 }
 
 export function MarketNewsSection() {
-  const [setIndex, setSetIndex] = useState(0);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
-  const items = MARKET_NEWS_ROTATION_SETS[setIndex] ?? DEFAULT_MARKET_NEWS;
+  const featured = FEATURED_DAILY_NEWS[featuredIndex] ?? FEATURED_DAILY_NEWS[0];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(false);
       window.setTimeout(() => {
-        setSetIndex((prev) => (prev + 1) % MARKET_NEWS_ROTATION_SETS.length);
+        setFeaturedIndex((prev) => (prev + 1) % FEATURED_DAILY_NEWS.length);
         setVisible(true);
       }, 400);
     }, MARKET_NEWS_ROTATION_MS);
@@ -165,7 +186,7 @@ export function MarketNewsSection() {
           </h2>
           <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
             Titulares visuales de cripto, bolsa, materias primas y forex — en español, con rotación
-            automática cada 2 minutos.
+            automática del destacado cada 2 minutos.
           </p>
         </div>
 
@@ -174,7 +195,7 @@ export function MarketNewsSection() {
             visible ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <NewsGrid items={items} />
+          <NewsGrid featured={featured} markets={MARKET_NEWS_GRID} />
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-2 text-center">
