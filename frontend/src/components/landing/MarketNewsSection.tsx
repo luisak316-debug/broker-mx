@@ -4,16 +4,11 @@ import { DEFAULT_MARKET_NEWS } from '../../data/marketNews.default';
 import type { MarketNewsItem } from '../../types';
 
 const FALLBACK_IMAGES: Record<string, string> = {
-  featured:
-    'https://images.unsplash.com/photo-1642790106117-e829e014591b?auto=format&fit=crop&w=900&q=80',
-  crypto:
-    'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=700&q=80',
-  stocks:
-    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=700&q=80',
-  commodities:
-    'https://images.unsplash.com/photo-1610375461244-83ae109a751e?auto=format&fit=crop&w=700&q=80',
-  forex:
-    'https://images.unsplash.com/photo-1624996377900-f678ede0927a?auto=format&fit=crop&w=700&q=80',
+  featured: '/news/featured.jpg',
+  crypto: '/news/crypto.jpg',
+  stocks: '/news/stocks.jpg',
+  commodities: '/news/commodities.jpg',
+  forex: '/news/forex.jpg',
 };
 
 const CARD_THEME: Record<string, { badge: string; border: string; icon: string }> = {
