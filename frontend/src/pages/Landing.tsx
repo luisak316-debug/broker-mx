@@ -57,7 +57,7 @@ export function Landing() {
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-600/20 via-ink-900 to-ink-900" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 lg:grid-cols-2 lg:py-28">
+          <div className="relative mx-auto max-w-3xl px-4 py-20 text-center lg:py-28">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-600/10 px-3 py-1 text-xs font-medium text-brand-100">
                 Firma de intermediación profesional · México
@@ -65,52 +65,20 @@ export function Landing() {
               <h1 className="mt-5 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
                 No dejes que la inflación devore tu esfuerzo.
               </h1>
-              <p className="mt-4 max-w-xl text-lg text-slate-300">
+              <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
                 Pon tu dinero a trabajar en los grandes mercados globales y construye la{' '}
                 <strong className="text-white">libertad financiera</strong> que tu familia merece hoy.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link to="/registro" className="btn-primary px-6 py-3 text-base">
                   Comienza a invertir desde hoy
                 </Link>
                 <a href="#mercados" className="btn-ghost px-6 py-3 text-base">Ver mercados</a>
               </div>
-              <div className="mt-8 flex flex-wrap gap-6 text-sm text-slate-400">
+              <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-slate-400">
                 <span>✓ Asesor personal asignado</span>
                 <span>✓ Respaldo legal</span>
                 <span>✓ Depósitos por SPEI</span>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="rounded-2xl border border-brand-500/25 bg-gradient-to-br from-ink-800/90 via-ink-800/70 to-brand-900/20 p-6 shadow-2xl">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-brand-200">Tu futuro patrimonial</p>
-                  <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
-                    Retira cuando quieras
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold leading-snug text-white sm:text-2xl">
-                  Así puede verse tu portafolio en 8 meses, si inviertes con estrategia y con nosotros.
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                  Invierte de forma inteligente con un{' '}
-                  <strong className="text-white">asesor personal</strong> que te acompaña en bolsa,
-                  materias primas, forex y cripto — con transparencia y respaldo legal.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-                  <span>✓ Asesoría profesional</span>
-                  <span>✓ Liquidez flexible</span>
-                  <span>✓ Depósitos por SPEI</span>
-                </div>
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  {MARKET_CATEGORIES.map((m) => (
-                    <div key={m.id} className="rounded-lg border border-white/5 bg-ink-900/60 p-3">
-                      <div className="text-xl">{m.icon}</div>
-                      <p className="mt-1 text-xs text-slate-300">{m.title}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
