@@ -8,5 +8,10 @@
       "VITE_API_URL": "https://broker-mx-api.onrender.com"
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/((?!news/|assets/|favicon\\.ico|manifest\\.json|robots\\.txt).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
