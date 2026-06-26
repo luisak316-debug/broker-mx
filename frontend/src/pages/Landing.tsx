@@ -1,12 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
 import { MarketNewsSection } from '../components/landing/MarketNewsSection';
-
-const MARKETS = [
-  { icon: '📈', title: 'Bolsa de Valores', desc: 'Acciones de las empresas más grandes del mundo.' },
-  { icon: '🛢️', title: 'Materias Primas', desc: 'Oro, plata, petróleo y commodities agrícolas.' },
-  { icon: '💱', title: 'Divisas (Forex)', desc: 'Pares internacionales frente al peso mexicano.' },
-  { icon: '₿', title: 'Criptomonedas', desc: 'Bitcoin, Ethereum y más, operando 24/7.' },
-];
+import { MARKET_CATEGORIES, type MarketCategoryId } from '../data/marketCategories';
 
 const TESTIMONIALS = [
   {
@@ -30,6 +26,11 @@ const TESTIMONIALS = [
 ];
 
 export function Landing() {
+  const [activeMarket, setActiveMarket] = useState<MarketCategoryId | null>(null);
+  const selectedMarket = activeMarket
+    ? MARKET_CATEGORIES.find((m) => m.id === activeMarket)
+    : null;
+
   return (
     <div className="min-h-screen bg-ink-900 text-slate-100">
       {/* Menú superior */}
@@ -89,8 +90,8 @@ export function Landing() {
                 </div>
                 <p className="text-3xl font-bold text-white">$650,000 <span className="text-base text-slate-400">MXN</span></p>
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  {MARKETS.map((m) => (
-                    <div key={m.title} className="rounded-lg bg-ink-900/60 p-3">
+                  {MARKET_CATEGORIES.map((m) => (
+                    <div key={m.id} className="rounded-lg bg-ink-900/60 p-3">
                       <div className="text-xl">{m.icon}</div>
                       <p className="mt-1 text-xs text-slate-300">{m.title}</p>
                     </div>
@@ -122,14 +123,22 @@ export function Landing() {
               Acceso a las 4 grandes categorías de mercados
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {MARKETS.map((m) => (
-                <div key={m.title} className="card text-center transition hover:border-brand-500/60">
-                  <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-xl bg-brand-600/15 text-2xl">
+              {MARKET_CATEGORIES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setActiveMarket(m.id)}
+                  className="card group w-full cursor-pointer text-center transition hover:border-brand-500/60 hover:bg-ink-700/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                >
+                  <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-xl bg-brand-600/15 text-2xl transition group-hover:scale-105">
                     {m.icon}
                   </div>
                   <h4 className="font-semibold text-white">{m.title}</h4>
-                  <p className="mt-1 text-sm text-slate-400">{m.desc}</p>
-                </div>
+                  <p className="mt-1 text-sm text-slate-400">{m.shortDesc}</p>
+                  <p className="mt-3 text-xs font-semibold text-brand-300 opacity-80 transition group-hover:opacity-100">
+                    Ver simulador →
+                  </p>
+                </button>
               ))}
             </div>
           </div>
@@ -187,6 +196,10 @@ export function Landing() {
           <p>© {new Date().getFullYear()} Broker.mx · Todos los derechos reservados.</p>
         </div>
       </footer>
+
+      {selectedMarket ? (
+        <MarketCategoryModal market={selectedMarket} onClose={() => setActiveMarket(null)} />
+      ) : null}
     </div>
   );
 }
