@@ -130,6 +130,7 @@ export interface MarketNewsItem {
   summary: string;
   source: string;
   url: string;
+  imageUrl?: string;
   publishedAt: string;
 }
 

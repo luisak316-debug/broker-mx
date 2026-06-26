@@ -8,8 +8,23 @@ export interface MarketNewsItem {
   summary: string;
   source: string;
   url: string;
+  imageUrl: string;
   publishedAt: string;
 }
+
+/** Imágenes temáticas de alta calidad (Unsplash) — atractivo visual por mercado. */
+const NEWS_IMAGES = {
+  featured:
+    'https://images.unsplash.com/photo-1642790106117-e829e014591b?auto=format&fit=crop&w=900&q=80',
+  crypto:
+    'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=700&q=80',
+  stocks:
+    'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=700&q=80',
+  commodities:
+    'https://images.unsplash.com/photo-1610375461244-83ae109a751e?auto=format&fit=crop&w=700&q=80',
+  forex:
+    'https://images.unsplash.com/photo-1624996377900-f678ede0927a?auto=format&fit=crop&w=700&q=80',
+} as const;
 
 const CURATED: Record<
   Exclude<MarketNewsCategory, 'featured'>,
@@ -22,6 +37,7 @@ const CURATED: Record<
         'El empresario mexicano destaca la diversificación digital dentro de una estrategia patrimonial moderna.',
       source: 'Medios financieros · MX',
       url: 'https://www.facebook.com/share/1FvLsLtL9K/',
+      imageUrl: NEWS_IMAGES.featured,
       publishedAt: '',
     },
     {
@@ -30,6 +46,7 @@ const CURATED: Record<
         'Los fondos cotizados continúan atrayendo capital de inversionistas de largo plazo en mercados globales.',
       source: 'CoinDesk',
       url: 'https://www.coindesk.com/',
+      imageUrl: NEWS_IMAGES.crypto,
       publishedAt: '',
     },
     {
@@ -38,6 +55,7 @@ const CURATED: Record<
         'La red líder en contratos inteligentes amplía casos de uso para inversionistas institucionales.',
       source: 'Cointelegraph',
       url: 'https://cointelegraph.com/',
+      imageUrl: NEWS_IMAGES.crypto,
       publishedAt: '',
     },
   ],
@@ -48,6 +66,7 @@ const CURATED: Record<
         'Emisoras ligadas al nearshoring reflejan optimismo y liquidez favorable para inversionistas nacionales.',
       source: 'BMV · MX',
       url: 'https://www.facebook.com/share/1CwH13b7Bi/',
+      imageUrl: NEWS_IMAGES.stocks,
       publishedAt: '',
     },
     {
@@ -56,6 +75,7 @@ const CURATED: Record<
         'Grandes emisoras reportan ingresos por encima de expectativas, reforzando la confianza del mercado.',
       source: 'Yahoo Finance',
       url: 'https://finance.yahoo.com/',
+      imageUrl: NEWS_IMAGES.stocks,
       publishedAt: '',
     },
     {
@@ -64,6 +84,7 @@ const CURATED: Record<
         'Las acciones de innovación mantienen momentum con perspectivas de crecimiento para el segundo semestre.',
       source: 'MarketWatch',
       url: 'https://www.marketwatch.com/',
+      imageUrl: NEWS_IMAGES.stocks,
       publishedAt: '',
     },
   ],
@@ -74,6 +95,7 @@ const CURATED: Record<
         'La demanda de metales preciosos sigue apoyada por inversionistas institucionales en México y el mundo.',
       source: 'Kitco',
       url: 'https://www.kitco.com/',
+      imageUrl: NEWS_IMAGES.commodities,
       publishedAt: '',
     },
     {
@@ -82,6 +104,7 @@ const CURATED: Record<
         'Los metales industriales se benefician de la transición energética y la expansión manufacturera regional.',
       source: 'Kitco',
       url: 'https://www.kitco.com/news/',
+      imageUrl: NEWS_IMAGES.commodities,
       publishedAt: '',
     },
     {
@@ -90,6 +113,7 @@ const CURATED: Record<
         'Los mercados de materias primas agrícolas reflejan dinamismo en exportaciones latinoamericanas.',
       source: 'MarketWatch',
       url: 'https://www.marketwatch.com/',
+      imageUrl: NEWS_IMAGES.commodities,
       publishedAt: '',
     },
   ],
@@ -100,6 +124,7 @@ const CURATED: Record<
         'El mercado Forex ofrece ventanas favorables para estrategias de cobertura patrimonial en pesos.',
       source: 'DailyFX · MX',
       url: 'https://www.facebook.com/share/p/1EEUrFd29p/',
+      imageUrl: NEWS_IMAGES.forex,
       publishedAt: '',
     },
     {
@@ -108,6 +133,7 @@ const CURATED: Record<
         'Operadores encuentran liquidez favorable en cruces con el peso mexicano y divisas globales.',
       source: 'DailyFX',
       url: 'https://www.dailyfx.com/',
+      imageUrl: NEWS_IMAGES.forex,
       publishedAt: '',
     },
     {
@@ -116,6 +142,7 @@ const CURATED: Record<
         'La liquidez internacional favorece operaciones de cobertura en MXN con spreads competitivos.',
       source: 'DailyFX',
       url: 'https://www.dailyfx.com/market-news',
+      imageUrl: NEWS_IMAGES.forex,
       publishedAt: '',
     },
   ],
@@ -158,6 +185,7 @@ function buildDailyNews(): MarketNewsItem[] {
     summary: salinas.summary,
     source: salinas.source,
     url: salinas.url,
+    imageUrl: NEWS_IMAGES.featured,
     publishedAt: new Date().toISOString(),
   };
 
