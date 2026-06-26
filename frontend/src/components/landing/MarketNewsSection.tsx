@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../api/client';
-import { DEFAULT_MARKET_NEWS } from '../../data/marketNews.default';
+import {
+  DEFAULT_MARKET_NEWS,
+  MARKET_NEWS_ROTATION_MS,
+  MARKET_NEWS_ROTATION_SETS,
+} from '../../data/marketNews.default';
 import type { MarketNewsItem } from '../../types';
 
 const FALLBACK_IMAGES: Record<string, string> = {
@@ -128,29 +131,21 @@ function NewsGrid({ items }: { items: MarketNewsItem[] }) {
 }
 
 export function MarketNewsSection() {
-  const [items, setItems] = useState<MarketNewsItem[]>(DEFAULT_MARKET_NEWS);
+  const [setIndex, setSetIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  const items = MARKET_NEWS_ROTATION_SETS[setIndex] ?? DEFAULT_MARKET_NEWS;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      api
-        .marketNews()
-        .then((res) => {
-          if (res.items?.length >= 5) {
-            setItems(
-              res.items.map((item) => ({
-                ...item,
-                imageUrl:
-                  item.imageUrl && !item.imageUrl.includes('unsplash.com')
-                    ? item.imageUrl
-                    : FALLBACK_IMAGES[item.category] ?? FALLBACK_IMAGES.featured,
-              })),
-            );
-          }
-        })
-        .catch(() => undefined);
-    }, 0);
+    const interval = setInterval(() => {
+      setVisible(false);
+      window.setTimeout(() => {
+        setSetIndex((prev) => (prev + 1) % MARKET_NEWS_ROTATION_SETS.length);
+        setVisible(true);
+      }, 400);
+    }, MARKET_NEWS_ROTATION_MS);
 
-    return () => clearTimeout(timer);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -169,12 +164,16 @@ export function MarketNewsSection() {
             Noticias que impulsan tu inversión
           </h2>
           <p className="mt-3 max-w-2xl text-sm text-slate-400 sm:text-base">
-            Titulares visuales de cripto, bolsa, materias primas y forex — en español, renovados cada
-            día para motivarte a invertir con confianza.
+            Titulares visuales de cripto, bolsa, materias primas y forex — en español, con rotación
+            automática cada 2 minutos.
           </p>
         </div>
 
-        <div className="mt-10">
+        <div
+          className={`mt-10 transition-opacity duration-500 ${
+            visible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
           <NewsGrid items={items} />
         </div>
 
