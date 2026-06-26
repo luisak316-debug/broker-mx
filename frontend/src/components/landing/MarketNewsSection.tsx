@@ -135,7 +135,17 @@ export function MarketNewsSection() {
       api
         .marketNews()
         .then((res) => {
-          if (res.items?.length >= 5) setItems(res.items);
+          if (res.items?.length >= 5) {
+            setItems(
+              res.items.map((item) => ({
+                ...item,
+                imageUrl:
+                  item.imageUrl && !item.imageUrl.includes('unsplash.com')
+                    ? item.imageUrl
+                    : FALLBACK_IMAGES[item.category] ?? FALLBACK_IMAGES.featured,
+              })),
+            );
+          }
         })
         .catch(() => undefined);
     }, 0);
