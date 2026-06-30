@@ -267,3 +267,23 @@ export async function getInternalUserId(idOrCode: string): Promise<string | unde
   });
   return user?.id;
 }
+
+export async function updateClientPassword(
+  idOrCode: string,
+  passwordHash: string,
+  plainPassword: string,
+): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) {
+    return legacy.updateClientPassword(idOrCode, passwordHash, plainPassword);
+  }
+
+  const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
+  if (!user) return undefined;
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, plainPassword },
+  });
+
+  return findClient(user.clientCode);
+}

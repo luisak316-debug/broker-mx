@@ -5,14 +5,16 @@ export function Card({
   action,
   children,
   className = '',
+  id,
 }: {
   title?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
-    <section className={`card ${className}`}>
+    <section id={id} className={`card ${className}`}>
       {(title || action) && (
         <header className="mb-3 flex items-center justify-between gap-2">
           {title && <h2 className="card-title">{title}</h2>}

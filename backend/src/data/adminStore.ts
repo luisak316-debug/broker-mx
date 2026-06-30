@@ -268,3 +268,16 @@ export function createClient(input: {
   persistSnapshot();
   return client;
 }
+
+export function updateClientPassword(
+  idOrCode: string,
+  passwordHash: string,
+  plainPassword: string,
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  client.passwordHash = passwordHash;
+  client.plainPassword = plainPassword;
+  persistSnapshot();
+  return client;
+}

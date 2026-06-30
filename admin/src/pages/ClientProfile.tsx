@@ -152,6 +152,14 @@ export function ClientProfile() {
 
   useEffect(load, [id]);
 
+  useEffect(() => {
+    if (window.location.hash !== '#gestion-fondos') return;
+    const t = setTimeout(() => {
+      document.getElementById('gestion-fondos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [id, client]);
+
   if (error) return <p className="text-danger">{error}</p>;
   if (!client) return <p className="text-slate-400">Cargando ficha…</p>;
 
@@ -422,7 +430,7 @@ export function ClientProfile() {
             </div>
           </Card>
 
-          <Card title="Agregar / remover fondos manualmente">
+          <Card title="Agregar / remover fondos manualmente" id="gestion-fondos">
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>

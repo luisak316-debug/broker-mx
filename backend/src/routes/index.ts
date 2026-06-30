@@ -64,3 +64,5 @@ router.post('/auth/send-otp', asyncHandler(auth.sendOtp));
 router.post('/auth/verify-otp', asyncHandler(auth.verifyOtpCode));
 router.post('/auth/login', asyncHandler(auth.login));
 router.post('/auth/register', asyncHandler(auth.register));
+router.post('/auth/recovery/send-otp', asyncHandler(auth.sendRecoveryOtp));
+router.post('/auth/recovery/reset-password', asyncHandler(auth.resetPassword));

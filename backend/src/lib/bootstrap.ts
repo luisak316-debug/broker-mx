@@ -96,12 +96,17 @@ export async function bootstrapDatabase(): Promise<{ mode: StorageMode; dbOk: bo
 }
 
 async function seedInstruments(): Promise<void> {
-  const count = await prisma.instrument.count();
-  if (count > 0) return;
-
   for (const inst of ALL_INSTRUMENTS) {
-    await prisma.instrument.create({
-      data: {
+    await prisma.instrument.upsert({
+      where: { symbol: inst.symbol },
+      update: {
+        name: inst.name,
+        assetClass: inst.assetClass,
+        currency: inst.currency,
+        group: (inst.meta?.group as string) ?? null,
+        exchange: (inst.meta?.exchange as string) ?? null,
+      },
+      create: {
         symbol: inst.symbol,
         name: inst.name,
         assetClass: inst.assetClass,

@@ -30,8 +30,8 @@ export function Clients() {
       <header>
         <h1 className="text-2xl font-bold text-white">Directorio de clientes</h1>
         <p className="text-sm text-slate-400">
-          Todos los clientes registrados persisten en base de datos. Solo se revoca el acceso desde
-          aquí.
+          Todos los clientes registrados persisten en base de datos. Para agregar o quitar dinero,
+          abre el perfil del cliente → sección <strong className="text-slate-300">Agregar / remover fondos</strong>.
         </p>
       </header>
 
@@ -77,8 +77,10 @@ export function Clients() {
                 <th>Contraseña</th>
                 <th>Registro</th>
                 <th>Estado</th>
+                <th className="text-right">Saldo</th>
                 <th className="text-right">Invertido</th>
                 <th>Solicitud retiro</th>
+                <th className="text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -100,17 +102,30 @@ export function Clients() {
                   <td>
                     <Badge value={c.accountStatus} />
                   </td>
-                  <td className="text-right font-semibold text-white">
+                  <td className="text-right font-semibold text-white">{fmtMxn(c.cashMxn)}</td>
+                  <td className="text-right font-semibold text-slate-300">
                     {fmtMxn(c.totalInvestedMxn)}
                   </td>
                   <td className="text-xs text-slate-400">
                     {c.lastWithdrawalRequestAt ? fmtDate(c.lastWithdrawalRequestAt) : '—'}
                   </td>
+                  <td className="text-right">
+                    <button
+                      type="button"
+                      className="btn-primary px-2 py-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/clientes/${c.id}#gestion-fondos`);
+                      }}
+                    >
+                      Gestionar fondos
+                    </button>
+                  </td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-400">
+                  <td colSpan={9} className="py-6 text-center text-slate-400">
                     No se encontraron clientes con esos criterios.
                   </td>
                 </tr>

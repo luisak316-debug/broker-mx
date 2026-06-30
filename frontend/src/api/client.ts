@@ -77,6 +77,16 @@ export const api = {
     http<AuthResult>(`/auth/register`, { method: 'POST', body: JSON.stringify(payload) }),
   login: (payload: { phone: string; password: string }) =>
     http<AuthResult>(`/auth/login`, { method: 'POST', body: JSON.stringify(payload) }),
+  sendRecoveryOtp: (payload: { phone: string }) =>
+    http<import('../types').SendOtpResult>(`/auth/recovery/send-otp`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  resetPassword: (payload: { phone: string; otpCode: string; password: string }) =>
+    http<{ message: string }>(`/auth/recovery/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   requestWithdrawal: (payload: {
     clientId: string;
     amountMxn: number;

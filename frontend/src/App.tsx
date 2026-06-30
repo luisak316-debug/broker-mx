@@ -5,6 +5,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { Landing } from './pages/Landing';
 import { Register } from './pages/Register';
 import { LoginClient } from './pages/LoginClient';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard';
 import { Stocks } from './pages/Stocks';
 import { Commodities } from './pages/Commodities';
@@ -20,6 +21,7 @@ function RequireClient({ children }: { children: ReactNode }) {
 const router = createBrowserRouter([
   { path: '/', element: <Landing /> },
   { path: '/login', element: <LoginClient /> },
+  { path: '/recuperar', element: <ForgotPassword /> },
   { path: '/registro', element: <Register /> },
   {
     path: '/app',

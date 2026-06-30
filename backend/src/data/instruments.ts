@@ -30,6 +30,11 @@ export const COMMODITIES: Instrument[] = [
 export const FOREX: Instrument[] = [
   { symbol: 'USD/MXN', name: 'Dólar / Peso Mexicano', assetClass: 'forex', currency: 'MXN', basePrice: 18.45, volatility: 0.006, meta: { base: 'USD', quote: 'MXN', defaultSpread: 0.04 } },
   { symbol: 'EUR/MXN', name: 'Euro / Peso Mexicano', assetClass: 'forex', currency: 'MXN', basePrice: 19.95, volatility: 0.007, meta: { base: 'EUR', quote: 'MXN', defaultSpread: 0.05 } },
+  { symbol: 'EUR/USD', name: 'Euro / Dólar', assetClass: 'forex', currency: 'USD', basePrice: 1.0812, volatility: 0.005, meta: { base: 'EUR', quote: 'USD', defaultSpread: 0.00015 } },
+  { symbol: 'GBP/USD', name: 'Libra / Dólar', assetClass: 'forex', currency: 'USD', basePrice: 1.2685, volatility: 0.006, meta: { base: 'GBP', quote: 'USD', defaultSpread: 0.0002 } },
+  { symbol: 'USD/JPY', name: 'Dólar / Yen', assetClass: 'forex', currency: 'JPY', basePrice: 149.85, volatility: 0.006, meta: { base: 'USD', quote: 'JPY', defaultSpread: 0.02 } },
+  { symbol: 'EUR/GBP', name: 'Euro / Libra', assetClass: 'forex', currency: 'GBP', basePrice: 0.8525, volatility: 0.005, meta: { base: 'EUR', quote: 'GBP', defaultSpread: 0.00012 } },
+  { symbol: 'USD/CAD', name: 'Dólar / Dólar Canadiense', assetClass: 'forex', currency: 'CAD', basePrice: 1.3625, volatility: 0.005, meta: { base: 'USD', quote: 'CAD', defaultSpread: 0.00018 } },
   { symbol: 'JPY/MXN', name: 'Yen / Peso Mexicano', assetClass: 'forex', currency: 'MXN', basePrice: 0.121, volatility: 0.008, meta: { base: 'JPY', quote: 'MXN', defaultSpread: 0.0008 } },
   { symbol: 'GBP/MXN', name: 'Libra / Peso Mexicano', assetClass: 'forex', currency: 'MXN', basePrice: 23.4, volatility: 0.007, meta: { base: 'GBP', quote: 'MXN', defaultSpread: 0.06 } },
 ];

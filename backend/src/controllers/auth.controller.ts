@@ -4,6 +4,7 @@ import {
   createClient,
   findClientByEmail,
   findClientByPhone,
+  updateClientPassword,
 } from '../repositories/client.repository';
 import { hashPassword, verifyPassword } from '../services/security.service';
 import { issueOtp, verifyOtp, consumeVerifiedOtp } from '../services/otp.service';
@@ -146,4 +147,60 @@ export function verifyOtpCode(req: Request, res: Response): void {
   const { phone, otpCode } = verifyOtpOnlySchema.parse(req.body);
   verifyOtp(phone, otpCode);
   res.json({ data: { valid: true } });
+}
+
+/** OTP para recuperar contraseña (solo si el celular ya está registrado). */
+export async function sendRecoveryOtp(req: Request, res: Response): Promise<void> {
+  const { phone } = sendOtpSchema.parse(req.body);
+  const client = await findClientByPhone(phone);
+  if (!client) {
+    throw new HttpError(404, 'No hay cuenta registrada con este número de celular.');
+  }
+  if (client.accountStatus !== 'ACTIVA') {
+    throw new HttpError(403, 'Tu cuenta está suspendida. Contacta a tu asesor.');
+  }
+
+  const { code, expiresInSeconds } = issueOtp(phone);
+  const { mock } = await sendOtpSms(phone, code);
+
+  res.json({
+    data: {
+      message: 'Código enviado a tu celular.',
+      expiresInSeconds,
+      maskedPhone: `***${phone.slice(-4)}`,
+      ...(mock && shouldExposeDebugCode() ? { debugCode: code } : {}),
+    },
+  });
+}
+
+const resetPasswordSchema = z.object({
+  phone: phoneSchema,
+  otpCode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
+  password: z
+    .string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres.')
+    .regex(/[A-Za-z]/, 'La contraseña debe incluir letras.')
+    .regex(/\d/, 'La contraseña debe incluir números.'),
+});
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const { phone, otpCode, password } = resetPasswordSchema.parse(req.body);
+  const client = await findClientByPhone(phone);
+  if (!client) {
+    throw new HttpError(404, 'No hay cuenta registrada con este número de celular.');
+  }
+
+  verifyOtp(phone, otpCode);
+  consumeVerifiedOtp(phone, otpCode);
+
+  await updateClientPassword(client.id, hashPassword(password), password);
+
+  res.json({
+    data: {
+      message: 'Contraseña actualizada. Ya puedes iniciar sesión.',
+    },
+  });
 }

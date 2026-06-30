@@ -64,6 +64,12 @@ export function LoginClient() {
           autoComplete="current-password"
         />
 
+        <p className="text-right text-sm">
+          <Link to="/recuperar" className="text-brand-400 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
+
         {error && <p className="rounded-lg bg-bear/15 px-3 py-2 text-sm text-bear">{error}</p>}
 
         <button type="submit" className="btn-primary w-full py-3" disabled={busy}>
