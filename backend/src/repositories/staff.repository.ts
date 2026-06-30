@@ -58,3 +58,45 @@ export function normalizeStaffDisplay(staff: Staff): Staff {
   if (staff.email === 'admin@brokermx.com') staff.displayName = 'Administración';
   return staff;
 }
+
+export async function listStaffByRole(role: Staff['role']): Promise<Staff[]> {
+  if (!isDatabaseEnabled()) return legacy.staff.filter((s) => s.role === role && s.active);
+
+  const rows = await prisma.staff.findMany({
+    where: { role, active: true },
+    orderBy: { displayName: 'asc' },
+  });
+  return rows.map(mapStaff);
+}
+
+export async function createStaff(data: {
+  email: string;
+  displayName: string;
+  role: Staff['role'];
+  passwordHash: string;
+}): Promise<Staff> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Crear asesores requiere PostgreSQL.');
+  }
+
+  const row = await prisma.staff.create({
+    data: {
+      email: data.email.toLowerCase().trim(),
+      displayName: data.displayName.trim(),
+      role: data.role,
+      passwordHash: data.passwordHash,
+    },
+  });
+  return mapStaff(row);
+}
+
+export async function deactivateStaff(id: string): Promise<void> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Eliminar asesores requiere PostgreSQL.');
+  }
+
+  await prisma.staff.update({
+    where: { id },
+    data: { active: false },
+  });
+}

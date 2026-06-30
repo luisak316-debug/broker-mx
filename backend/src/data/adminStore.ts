@@ -20,6 +20,7 @@ const DEMO_PASSWORD = 'Admin1234';
 
 export const staff: Staff[] = [
   mkStaff('admin@brokermx.com', 'Administración', 'ADMIN'),
+  mkStaff('supervisor@brokermx.com', 'María Supervisora', 'SUPERVISOR'),
   mkStaff('juan.perez@brokermx.com', 'Juan Pérez', 'ADVISOR'),
   mkStaff('laura.cumplimiento@brokermx.com', 'Laura Cumplimiento', 'COMPLIANCE'),
   mkStaff('soporte@brokermx.com', 'Carlos Soporte', 'SUPPORT'),

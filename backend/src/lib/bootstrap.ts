@@ -147,20 +147,35 @@ async function seedInstruments(): Promise<void> {
 }
 
 async function seedStaff(): Promise<void> {
-  const count = await prisma.staff.count();
-  if (count > 0) return;
-
   const demoHash = hashPassword('Admin1234');
   const staffRows = [
     { email: 'admin@brokermx.com', displayName: 'Administración', role: 'ADMIN' as const },
+    { email: 'supervisor@brokermx.com', displayName: 'María Supervisora', role: 'SUPERVISOR' as const },
     { email: 'juan.perez@brokermx.com', displayName: 'Juan Pérez', role: 'ADVISOR' as const },
     { email: 'laura.cumplimiento@brokermx.com', displayName: 'Laura Cumplimiento', role: 'COMPLIANCE' as const },
     { email: 'soporte@brokermx.com', displayName: 'Carlos Soporte', role: 'SUPPORT' as const },
   ];
 
+  const count = await prisma.staff.count();
+  if (count === 0) {
+    for (const row of staffRows) {
+      await prisma.staff.create({
+        data: {
+          email: row.email,
+          displayName: row.displayName,
+          role: row.role,
+          passwordHash: demoHash,
+        },
+      });
+    }
+    return;
+  }
+
   for (const row of staffRows) {
-    await prisma.staff.create({
-      data: {
+    await prisma.staff.upsert({
+      where: { email: row.email },
+      update: { displayName: row.displayName, role: row.role, active: true },
+      create: {
         email: row.email,
         displayName: row.displayName,
         role: row.role,

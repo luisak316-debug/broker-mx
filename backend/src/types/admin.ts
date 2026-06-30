@@ -1,6 +1,6 @@
 import type { AssetClass } from './market';
 
-export type StaffRole = 'ADMIN' | 'ADVISOR' | 'COMPLIANCE' | 'SUPPORT';
+export type StaffRole = 'ADMIN' | 'SUPERVISOR' | 'ADVISOR' | 'COMPLIANCE' | 'SUPPORT';
 export type AccountStatus = 'ACTIVA' | 'SUSPENDIDA' | 'BLOQUEADA' | 'CERRADA';
 export type KycStatus = 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
 export type DocumentType = 'INE' | 'PASAPORTE' | 'COMPROBANTE_DOMICILIO' | 'CONSTANCIA_FISCAL';
@@ -113,5 +113,19 @@ export interface AuditLog {
   before?: unknown;
   after?: unknown;
   ipAddress?: string;
+  createdAt: string;
+}
+
+export interface AdvisorContactRow {
+  id: string;
+  advisorId: string;
+  advisorName: string;
+  assignedById: string;
+  assignedByName: string;
+  clientName: string;
+  phone: string;
+  email: string;
+  description: string;
+  assignedDate: string;
   createdAt: string;
 }

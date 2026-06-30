@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import { router } from './routes';
 import { adminRouter } from './routes/admin';
+import { supervisorRouter } from './routes/supervisor';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { ADMIN_WEB_PATH } from './config/paths';
 
@@ -50,6 +51,7 @@ export function createApp(): express.Express {
 
   app.use('/api', router);
   app.use('/api/admin', adminRouter);
+  app.use('/api/supervisor', supervisorRouter);
 
   if (env.isProd && distExists('frontend')) {
     const clientDist = path.join(repoRoot(), 'frontend', 'dist');

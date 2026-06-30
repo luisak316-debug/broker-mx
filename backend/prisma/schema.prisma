@@ -71,6 +71,29 @@ model Staff {
   clients       User[]     @relation("AdvisorClients")
   auditLogs     AuditLog[]
   reviewedRequests CashRequest[] @relation("RequestReviewer")
+  /// Contactos asignados a este asesor para llamadas diarias.
+  advisorContacts AdvisorContact[] @relation("AdvisorContacts")
+  /// Contactos que este supervisor asignó.
+  assignedContacts AdvisorContact[] @relation("AssignedContacts")
+}
+
+/// Contacto/prospecto asignado por un supervisor a un asesor (llamadas diarias).
+model AdvisorContact {
+  id            String   @id @default(cuid())
+  advisorId     String
+  advisor       Staff    @relation("AdvisorContacts", fields: [advisorId], references: [id], onDelete: Cascade)
+  assignedById  String
+  assignedBy    Staff    @relation("AssignedContacts", fields: [assignedById], references: [id])
+  clientName    String
+  phone         String
+  email         String   @default("")
+  description   String   @default("")
+  /// Día de la asignación (para historial y calendario).
+  assignedDate  DateTime @db.Date
+  createdAt     DateTime @default(now())
+
+  @@index([advisorId, assignedDate])
+  @@index([assignedById, assignedDate])
 }
 
 /// Documentos de identidad cargados por el cliente (KYC).
@@ -231,6 +254,7 @@ enum AccountStatus {
 /// Roles del personal interno (RBAC).
 enum StaffRole {
   ADMIN       // acceso total, gestión de personal
+  SUPERVISOR  // supervisión: asigna contactos a asesores, ve cartera
   ADVISOR     // asesor/trader: gestiona sus clientes
   COMPLIANCE  // cumplimiento: auditoría y aprobación de movimientos
   SUPPORT     // soporte: solo lectura

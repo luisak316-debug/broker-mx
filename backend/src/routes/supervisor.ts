@@ -1,0 +1,24 @@
+import { Router } from 'express';
+import { asyncHandler } from '../middleware/errorHandler';
+import { requireAuth, requireRole } from '../middleware/auth';
+import * as auth from '../controllers/supervisor/auth.controller';
+import * as clients from '../controllers/supervisor/clients.controller';
+import * as advisors from '../controllers/supervisor/advisors.controller';
+import * as contacts from '../controllers/supervisor/contacts.controller';
+
+export const supervisorRouter = Router();
+
+supervisorRouter.post('/auth/login', asyncHandler(auth.login));
+
+supervisorRouter.use(requireAuth, requireRole('SUPERVISOR'));
+
+supervisorRouter.get('/auth/me', asyncHandler(auth.me));
+supervisorRouter.get('/clients', asyncHandler(clients.listClientsSummary));
+
+supervisorRouter.get('/advisors', asyncHandler(advisors.listAdvisors));
+supervisorRouter.post('/advisors', asyncHandler(advisors.createAdvisor));
+supervisorRouter.delete('/advisors/:id', asyncHandler(advisors.removeAdvisor));
+
+supervisorRouter.get('/contacts', asyncHandler(contacts.listContacts));
+supervisorRouter.post('/contacts', asyncHandler(contacts.saveContact));
+supervisorRouter.delete('/contacts/:id', asyncHandler(contacts.removeContact));
