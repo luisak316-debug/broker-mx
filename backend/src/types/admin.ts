@@ -32,14 +32,18 @@ export interface ClientDocument {
   uploadedByName?: string;
 }
 
+/** Forma en que el cliente debe fondear su cuenta. */
+export type DepositMethod = 'TRANSFERENCIA' | 'VENTANILLA';
+
 /** Cuenta bancaria de depósito personalizada y reemplazable por cliente. */
 export interface DepositAccount {
-  beneficiary: string; // Razón social / beneficiario
-  bank: string; // Banco receptor
-  accountNumber: string; // Número de cuenta
-  clabe: string; // CLABE interbancaria (18 dígitos)
-  reference: string; // Referencia única de pago
-  initialInvestmentMxn?: number; // Monto inicial de inversión sugerido (opcional)
+  depositMethod: DepositMethod;
+  beneficiary: string;
+  bank: string;
+  accountNumber: string;
+  clabe: string;
+  reference: string;
+  initialInvestmentMxn?: number;
   updatedAt?: string;
   updatedByName?: string;
 }

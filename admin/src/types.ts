@@ -34,7 +34,10 @@ export interface ClientDocument {
   uploadedByName?: string;
 }
 
+export type DepositMethod = 'TRANSFERENCIA' | 'VENTANILLA';
+
 export interface DepositAccount {
+  depositMethod: DepositMethod;
   beneficiary: string;
   bank: string;
   accountNumber: string;

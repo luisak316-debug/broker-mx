@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { isDatabaseEnabled } from '../lib/database';
 import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
-import type { AccountStatus, Client, KycStatus } from '../types/admin';
+import type { AccountStatus, Client, DepositMethod, KycStatus } from '../types/admin';
 
 const userInclude = {
   balance: true,
@@ -20,6 +20,34 @@ type DbUser = Prisma.UserGetPayload<{ include: typeof userInclude }>;
 function dec(v: Prisma.Decimal | number | null | undefined): number {
   if (v == null) return 0;
   return typeof v === 'number' ? v : Number(v);
+}
+
+function buildDepositAccount(user: DbUser): Client['depositAccount'] {
+  if (!user.depositBank || !user.depositBeneficiary || !user.depositReference) return undefined;
+
+  const method: DepositMethod =
+    user.depositMethod === 'VENTANILLA'
+      ? 'VENTANILLA'
+      : user.depositMethod === 'TRANSFERENCIA'
+        ? 'TRANSFERENCIA'
+        : user.depositClabe
+          ? 'TRANSFERENCIA'
+          : user.depositAccountNumber
+            ? 'VENTANILLA'
+            : 'TRANSFERENCIA';
+
+  if (method === 'TRANSFERENCIA' && !user.depositClabe) return undefined;
+  if (method === 'VENTANILLA' && !user.depositAccountNumber) return undefined;
+
+  return {
+    depositMethod: method,
+    beneficiary: user.depositBeneficiary,
+    bank: user.depositBank,
+    accountNumber: user.depositAccountNumber ?? '',
+    clabe: user.depositClabe ?? '',
+    reference: user.depositReference,
+    updatedAt: user.depositUpdatedAt?.toISOString(),
+  };
 }
 
 export function mapUserToClient(user: DbUser): Client {
@@ -49,17 +77,7 @@ export function mapUserToClient(user: DbUser): Client {
       status: d.status,
       uploadedAt: d.uploadedAt.toISOString(),
     })),
-    depositAccount:
-      user.depositClabe && user.depositBank
-        ? {
-            beneficiary: user.depositBeneficiary ?? '',
-            bank: user.depositBank ?? '',
-            accountNumber: user.depositAccountNumber ?? '',
-            clabe: user.depositClabe ?? '',
-            reference: user.depositReference ?? '',
-            updatedAt: user.depositUpdatedAt?.toISOString(),
-          }
-        : undefined,
+    depositAccount: buildDepositAccount(user),
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -226,6 +244,7 @@ export async function updateAccountStatus(
 export async function updateDepositAccountFields(
   idOrCode: string,
   data: {
+    depositMethod: DepositMethod;
     beneficiary: string;
     bank: string;
     accountNumber: string;
@@ -242,10 +261,11 @@ export async function updateDepositAccountFields(
   await prisma.user.update({
     where: { id: user.id },
     data: {
+      depositMethod: data.depositMethod,
       depositBeneficiary: data.beneficiary,
       depositBank: data.bank,
-      depositAccountNumber: data.accountNumber,
-      depositClabe: data.clabe,
+      depositAccountNumber: data.depositMethod === 'VENTANILLA' ? data.accountNumber : data.accountNumber || null,
+      depositClabe: data.depositMethod === 'TRANSFERENCIA' ? data.clabe : null,
       depositReference: data.reference,
       depositUpdatedAt: new Date(),
       depositUpdatedById: data.staffId,

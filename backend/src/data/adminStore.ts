@@ -7,6 +7,7 @@ import type {
   CashRequest,
   Client,
   ClientTransaction,
+  DepositMethod,
   Staff,
 } from '../types/admin';
 
@@ -163,6 +164,7 @@ export function updateAccountStatus(
 export function updateDepositAccountFields(
   idOrCode: string,
   data: {
+    depositMethod: DepositMethod;
     beneficiary: string;
     bank: string;
     accountNumber: string;
@@ -175,10 +177,11 @@ export function updateDepositAccountFields(
   if (!client) return undefined;
   const staffMember = findStaffById(data.staffId);
   client.depositAccount = {
+    depositMethod: data.depositMethod,
     beneficiary: data.beneficiary,
     bank: data.bank,
-    accountNumber: data.accountNumber,
-    clabe: data.clabe,
+    accountNumber: data.depositMethod === 'VENTANILLA' ? data.accountNumber : data.accountNumber || '',
+    clabe: data.depositMethod === 'TRANSFERENCIA' ? data.clabe : '',
     reference: data.reference,
     updatedAt: new Date().toISOString(),
     updatedByName: staffMember?.displayName ?? 'Asesor',

@@ -5,7 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
-import type { ClientProfile as Profile, Transaction } from '../types';
+import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
 import { CATEGORY_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, parseMoneyInput } from '../lib/format';
 import { resolveUploadUrl } from '../lib/apiConfig';
 
@@ -28,6 +28,7 @@ export function ClientProfile() {
   const [fundsReason, setFundsReason] = useState('');
 
   // Cuenta de depósito bancaria asignada
+  const [depositMethod, setDepositMethod] = useState<DepositMethod>('TRANSFERENCIA');
   const [deposit, setDeposit] = useState({
     beneficiary: '',
     bank: '',
@@ -60,6 +61,10 @@ export function ClientProfile() {
         clabe: c.depositAccount?.clabe ?? '',
         reference: c.depositAccount?.reference ?? '',
       });
+      setDepositMethod(
+        c.depositAccount?.depositMethod ??
+          (c.depositAccount?.clabe ? 'TRANSFERENCIA' : 'VENTANILLA'),
+      );
       setInitialInvestment(
         c.depositAccount?.initialInvestmentMxn !== undefined
           ? formatMoneyDisplay(c.depositAccount.initialInvestmentMxn)
@@ -74,9 +79,8 @@ export function ClientProfile() {
   const depositReady =
     deposit.beneficiary.trim().length >= 3 &&
     deposit.bank.trim().length >= 2 &&
-    accountValid &&
-    clabeValid &&
-    deposit.reference.trim().length >= 1;
+    deposit.reference.trim().length >= 1 &&
+    (depositMethod === 'TRANSFERENCIA' ? clabeValid : accountValid);
 
   const investmentParsed = parseMoneyInput(initialInvestment);
   const investmentValid =
@@ -88,6 +92,7 @@ export function ClientProfile() {
     try {
       const amount = parseMoneyInput(initialInvestment);
       await api.updateDepositAccount(id, {
+        depositMethod,
         ...deposit,
         ...(amount !== undefined ? { initialInvestmentMxn: amount } : {}),
       });
@@ -489,8 +494,29 @@ export function ClientProfile() {
         {canEdit ? (
           <div className="space-y-3">
             <p className="text-xs text-slate-400">
-              Estos datos los verá el cliente en su sección "Fondear Cuenta / Invertir" en tiempo real.
+              Indica cómo debe fondear el cliente. Estos datos se muestran en tiempo real en
+              &quot;Fondear Cuenta / Invertir&quot;.
             </p>
+            <div>
+              <label className="label">Forma de depósito del cliente</label>
+              <select
+                className="input"
+                value={depositMethod}
+                onChange={(e) => setDepositMethod(e.target.value as DepositMethod)}
+              >
+                <option value="TRANSFERENCIA">
+                  Transferencia bancaria / SPEI (requiere CLABE interbancaria)
+                </option>
+                <option value="VENTANILLA">
+                  Depósito en ventanilla (requiere número de cuenta)
+                </option>
+              </select>
+              <p className="mt-1 text-xs text-slate-500">
+                {depositMethod === 'TRANSFERENCIA'
+                  ? 'El cliente verá la CLABE para transferencia interbancaria o SPEI desde su banca en línea o app.'
+                  : 'El cliente verá el número de cuenta para depositar en sucursal bancaria en México.'}
+              </p>
+            </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="label">Razón social / Beneficiario</label>
@@ -510,35 +536,54 @@ export function ClientProfile() {
                   onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="label">Número de cuenta</label>
-                <input
-                  className="input"
-                  inputMode="numeric"
-                  placeholder="Solo dígitos"
-                  value={deposit.accountNumber}
-                  onChange={(e) =>
-                    setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
-                  }
-                />
-                {deposit.accountNumber && !accountValid && (
-                  <p className="mt-1 text-xs text-danger">El número de cuenta debe tener entre 5 y 20 dígitos.</p>
-                )}
-              </div>
-              <div>
-                <label className="label">CLABE interbancaria (18 dígitos)</label>
-                <input
-                  className="input"
-                  inputMode="numeric"
-                  maxLength={18}
-                  placeholder="18 dígitos"
-                  value={deposit.clabe}
-                  onChange={(e) => setDeposit({ ...deposit, clabe: e.target.value.replace(/\D/g, '') })}
-                />
-                <p className={`mt-1 text-xs ${deposit.clabe && !clabeValid ? 'text-danger' : 'text-slate-500'}`}>
-                  {deposit.clabe.length}/18 dígitos
-                </p>
-              </div>
+              {depositMethod === 'VENTANILLA' ? (
+                <div>
+                  <label className="label">Número de cuenta (ventanilla)</label>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    placeholder="Solo dígitos — para depósito en sucursal"
+                    value={deposit.accountNumber}
+                    onChange={(e) =>
+                      setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
+                    }
+                  />
+                  {deposit.accountNumber && !accountValid && (
+                    <p className="mt-1 text-xs text-danger">
+                      El número de cuenta debe tener entre 5 y 20 dígitos.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="label">CLABE interbancaria (18 dígitos)</label>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    maxLength={18}
+                    placeholder="Para transferencia bancaria o SPEI"
+                    value={deposit.clabe}
+                    onChange={(e) => setDeposit({ ...deposit, clabe: e.target.value.replace(/\D/g, '') })}
+                  />
+                  <p className={`mt-1 text-xs ${deposit.clabe && !clabeValid ? 'text-danger' : 'text-slate-500'}`}>
+                    {deposit.clabe.length}/18 dígitos
+                  </p>
+                </div>
+              )}
+              {depositMethod === 'TRANSFERENCIA' && (
+                <div>
+                  <label className="label">Número de cuenta (opcional)</label>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    placeholder="Opcional — referencia adicional"
+                    value={deposit.accountNumber}
+                    onChange={(e) =>
+                      setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
+                    }
+                  />
+                </div>
+              )}
               <div>
                 <label className="label">Referencia única de pago</label>
                 <input
@@ -578,10 +623,26 @@ export function ClientProfile() {
           </div>
         ) : client.depositAccount ? (
           <dl className="space-y-2 text-sm">
+            <Row
+              label="Forma de depósito"
+              value={
+                client.depositAccount.depositMethod === 'VENTANILLA'
+                  ? 'Depósito en ventanilla'
+                  : 'Transferencia bancaria / SPEI'
+              }
+            />
             <Row label="Beneficiario" value={client.depositAccount.beneficiary} />
             <Row label="Banco" value={client.depositAccount.bank} />
-            <Row label="Cuenta" value={client.depositAccount.accountNumber} />
-            <Row label="CLABE" value={client.depositAccount.clabe} />
+            {client.depositAccount.depositMethod === 'VENTANILLA' ? (
+              <Row label="Número de cuenta (ventanilla)" value={client.depositAccount.accountNumber} />
+            ) : (
+              <>
+                <Row label="CLABE interbancaria" value={client.depositAccount.clabe} />
+                {client.depositAccount.accountNumber ? (
+                  <Row label="Número de cuenta (opcional)" value={client.depositAccount.accountNumber} />
+                ) : null}
+              </>
+            )}
             <Row label="Referencia" value={client.depositAccount.reference} />
             <Row
               label="Monto inicial de inversión"

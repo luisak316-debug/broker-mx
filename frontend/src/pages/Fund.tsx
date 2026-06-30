@@ -4,7 +4,19 @@ import { Card } from '../components/common/Card';
 import { CopyButton } from '../components/common/CopyButton';
 import { useClientAuth } from '../auth/ClientAuthContext';
 import { fmtMxn } from '../lib/format';
-import type { DepositAccountInfo } from '../types';
+import type { DepositAccountInfo, DepositMethod } from '../types';
+
+const DEPOSIT_METHOD_LABEL: Record<DepositMethod, string> = {
+  TRANSFERENCIA: 'Transferencia bancaria / SPEI',
+  VENTANILLA: 'Depósito en ventanilla',
+};
+
+function depositInstructions(method: DepositMethod): string {
+  if (method === 'VENTANILLA') {
+    return 'Acude a cualquier sucursal del banco indicado en México y realiza tu depósito en ventanilla usando el número de cuenta asignado.';
+  }
+  return 'Desde tu banca en línea o app bancaria, realiza una transferencia interbancaria o SPEI usando la CLABE interbancaria asignada.';
+}
 
 export function Fund() {
   const { client } = useClientAuth();
@@ -89,6 +101,10 @@ export function Fund() {
     }
   }
 
+  const depositMethod: DepositMethod =
+    info?.account?.depositMethod ??
+    (info?.account?.clabe ? 'TRANSFERENCIA' : 'VENTANILLA');
+
   return (
     <div className="space-y-6">
       <header>
@@ -103,10 +119,26 @@ export function Fund() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           <Card>
-            <p className="mb-4 text-sm text-slate-300">
-              Para comenzar tu inversión, realiza una transferencia <strong>SPEI</strong> o depósito
-              en ventanilla bancaria a la siguiente cuenta asignada:
-            </p>
+            {info?.account && (
+              <div className="mb-4 rounded-lg border border-brand-500/30 bg-brand-600/10 px-3 py-2 text-sm text-brand-100">
+                <strong className="text-white">{DEPOSIT_METHOD_LABEL[depositMethod]}</strong>
+                <p className="mt-1 text-brand-100/90">{depositInstructions(depositMethod)}</p>
+              </div>
+            )}
+
+            {info && info.assigned && (
+              <p className="mb-4 text-sm text-slate-300">
+                {depositMethod === 'VENTANILLA'
+                  ? 'Usa los datos siguientes para depositar en ventanilla:'
+                  : 'Usa los datos siguientes para tu transferencia bancaria o SPEI:'}
+              </p>
+            )}
+
+            {!info?.assigned && (
+              <p className="mb-4 text-sm text-slate-300">
+                Tu asesor configurará la forma de depósito y los datos bancarios correspondientes.
+              </p>
+            )}
 
             {info && !info.assigned && (
               <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
@@ -137,9 +169,40 @@ export function Fund() {
               <div className="overflow-hidden rounded-xl border border-ink-600 bg-ink-900/60">
                 <Field label="Beneficiario" value={info.account.beneficiary} />
                 <Field label="Banco" value={info.account.bank} />
-                <Field label="Número de cuenta" value={info.account.accountNumber} copy onCopied={showToast} />
-                <Field label="CLABE interbancaria" value={info.account.clabe} copy mono onCopied={showToast} />
-                <Field label="Referencia de pago" value={info.account.reference} copy onCopied={showToast} last />
+                {depositMethod === 'VENTANILLA' ? (
+                  <Field
+                    label="Número de cuenta (depósito en ventanilla)"
+                    value={info.account.accountNumber}
+                    copy
+                    mono
+                    onCopied={showToast}
+                  />
+                ) : (
+                  <>
+                    <Field
+                      label="CLABE interbancaria (transferencia / SPEI)"
+                      value={info.account.clabe}
+                      copy
+                      mono
+                      onCopied={showToast}
+                    />
+                    {info.account.accountNumber ? (
+                      <Field
+                        label="Número de cuenta (referencia opcional)"
+                        value={info.account.accountNumber}
+                        copy
+                        onCopied={showToast}
+                      />
+                    ) : null}
+                  </>
+                )}
+                <Field
+                  label="Referencia de pago"
+                  value={info.account.reference}
+                  copy
+                  onCopied={showToast}
+                  last
+                />
               </div>
             )}
           </Card>

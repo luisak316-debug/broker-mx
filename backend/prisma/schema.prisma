@@ -36,6 +36,8 @@ model User {
   depositAccountNumber  String?
   depositClabe          String?
   depositReference      String?
+  /// TRANSFERENCIA (SPEI/interbancaria) o VENTANILLA
+  depositMethod         String?
   depositUpdatedAt      DateTime?
   depositUpdatedById    String?
 
