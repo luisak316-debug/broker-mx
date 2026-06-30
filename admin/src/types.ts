@@ -76,6 +76,9 @@ export interface CashRequest {
   method?: string;
   status: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
   note?: string;
+  payoutBank?: string;
+  payoutOwnerName?: string;
+  payoutConcept?: string;
   reviewedByName?: string;
   reviewedAt?: string;
   createdAt: string;

@@ -62,31 +62,6 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
-    where: { email: 'demo@brokermx.com' },
-    update: {},
-    create: {
-      clientCode: 'CLI-1001',
-      email: 'demo@brokermx.com',
-      passwordHash: hashPassword('Cliente1234'),
-      plainPassword: 'Cliente1234',
-      displayName: 'Cliente Demo',
-      phone: '5512345678',
-      kycStatus: 'APPROVED',
-      isLead: false,
-      totalInvestedMxn: 45000,
-      advisorId: advisor.id,
-      depositBeneficiary: 'Corporativo Consorcio Óptimo Andrade Estrella S.A.S. de C.V.',
-      depositBank: 'BBVA',
-      depositAccountNumber: '0123456789',
-      depositClabe: '012180001234567895',
-      depositReference: 'INV-1001',
-      depositUpdatedAt: new Date(),
-      depositUpdatedById: advisor.id,
-      balance: { create: { cashMxn: 100000 } },
-    },
-  });
-
   console.log(`Seed completado. Admin: ${adminStaff.email} · Asesor: ${advisor.email}`);
 }
 

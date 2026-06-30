@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { initLegacyStore } from '../data/adminStore';
 import { applyDatabaseEnv, isDatabaseEnabled } from './database';
+import { purgeAllDemoClients } from './purgeDemoClients';
 import { prisma } from './prisma';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
@@ -71,6 +72,7 @@ export async function bootstrapDatabase(): Promise<{ mode: StorageMode; dbOk: bo
 
   if (!isDatabaseEnabled()) {
     initLegacyStore();
+    await purgeAllDemoClients();
     console.warn(
       '[broker.mx] DATABASE_URL no configurada — modo legacy (archivo local en data/persist).',
     );
@@ -82,11 +84,13 @@ export async function bootstrapDatabase(): Promise<{ mode: StorageMode; dbOk: bo
     await prisma.$connect();
     await seedInstruments();
     await seedStaff();
+    await purgeAllDemoClients();
     console.log('[broker.mx] PostgreSQL conectada y lista.');
     return { mode: 'postgres', dbOk: true };
   } catch (err) {
     console.error('[broker.mx] PostgreSQL no disponible, usando modo legacy:', err);
     initLegacyStore();
+    await purgeAllDemoClients();
     return { mode: 'legacy', dbOk: false };
   }
 }

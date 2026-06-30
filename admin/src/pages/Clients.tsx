@@ -41,7 +41,7 @@ export function Clients() {
             <label className="label">Buscar (nombre, ID, correo o teléfono)</label>
             <input
               className="input"
-              placeholder="Ej. Ana, CLI-1001, 5512345678…"
+              placeholder="Ej. Bryan, CLI-1001, 5512345678…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />

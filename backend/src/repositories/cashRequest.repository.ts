@@ -16,6 +16,9 @@ function mapRow(row: {
   method: string | null;
   status: RequestStatus;
   note: string | null;
+  payoutBank: string | null;
+  payoutOwnerName: string | null;
+  payoutConcept: string | null;
   reviewedAt: Date | null;
   createdAt: Date;
   user: { displayName: string; clientCode: string };
@@ -29,8 +32,11 @@ function mapRow(row: {
     amountMxn: dec(row.amountMxn),
     method: row.method ?? undefined,
     status: row.status,
-    note: row.note ?? undefined,
-    reviewedByName: row.reviewedBy?.displayName,
+  note: row.note ?? undefined,
+  payoutBank: row.payoutBank ?? undefined,
+  payoutOwnerName: row.payoutOwnerName ?? undefined,
+  payoutConcept: row.payoutConcept ?? undefined,
+  reviewedByName: row.reviewedBy?.displayName,
     reviewedAt: row.reviewedAt?.toISOString(),
     createdAt: row.createdAt.toISOString(),
   };
@@ -67,6 +73,9 @@ export async function findCashRequest(id: string) {
       method: request.method ?? null,
       status: request.status,
       note: request.note ?? null,
+      payoutBank: request.payoutBank ?? null,
+      payoutOwnerName: request.payoutOwnerName ?? null,
+      payoutConcept: request.payoutConcept ?? null,
       reviewedAt: request.reviewedAt ? new Date(request.reviewedAt) : null,
       createdAt: new Date(request.createdAt),
       user: {
@@ -93,6 +102,9 @@ export async function createCashRequest(input: {
   amountMxn: number;
   method?: string;
   note?: string;
+  payoutBank?: string;
+  payoutOwnerName?: string;
+  payoutConcept?: string;
 }): Promise<CashRequest> {
   if (!isDatabaseEnabled()) {
     const client = legacy.findClient(input.userInternalId);
@@ -104,6 +116,9 @@ export async function createCashRequest(input: {
       amountMxn: input.amountMxn,
       method: input.method,
       note: input.note,
+      payoutBank: input.payoutBank,
+      payoutOwnerName: input.payoutOwnerName,
+      payoutConcept: input.payoutConcept,
       status: 'PENDIENTE',
       createdAt: new Date().toISOString(),
     };
@@ -117,6 +132,9 @@ export async function createCashRequest(input: {
       amountMxn: input.amountMxn,
       method: input.method,
       note: input.note,
+      payoutBank: input.payoutBank,
+      payoutOwnerName: input.payoutOwnerName,
+      payoutConcept: input.payoutConcept,
     },
     include: {
       user: { select: { displayName: true, clientCode: true } },

@@ -1,8 +1,6 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import {
-  createCashRequest,
-} from '../repositories/cashRequest.repository';
+import { createCashRequest } from '../repositories/cashRequest.repository';
 import { findClient, getInternalUserId } from '../repositories/client.repository';
 import { HttpError } from '../middleware/errorHandler';
 
@@ -10,11 +8,19 @@ const withdrawSchema = z.object({
   clientId: z.string().min(1),
   amountMxn: z.number().positive('El monto debe ser mayor a cero.'),
   note: z.string().max(500).optional(),
+  payoutBank: z.string().trim().min(2, 'Indica el banco destino.'),
+  payoutOwnerName: z
+    .string()
+    .trim()
+    .min(5, 'Indica el nombre completo del titular de la cuenta.'),
+  payoutConcept: z.string().trim().min(3, 'Indica el concepto del retiro.'),
 });
 
-/** Solicitud de retiro desde la app del cliente. */
+/** Solicitud de retiro desde la app del cliente (con cuenta destino simulada). */
 export async function requestWithdrawal(req: Request, res: Response): Promise<void> {
-  const { clientId, amountMxn, note } = withdrawSchema.parse(req.body);
+  const parsed = withdrawSchema.parse(req.body);
+  const { clientId, amountMxn, note, payoutBank, payoutOwnerName, payoutConcept } = parsed;
+
   const client = await findClient(clientId);
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
   if (client.accountStatus !== 'ACTIVA') {
@@ -33,12 +39,16 @@ export async function requestWithdrawal(req: Request, res: Response): Promise<vo
     amountMxn: round2(amountMxn),
     method: 'SPEI',
     note,
+    payoutBank,
+    payoutOwnerName,
+    payoutConcept,
   });
 
   res.status(201).json({
     data: {
       request,
-      message: 'Solicitud de retiro enviada. Tu asesor la revisará pronto.',
+      message:
+        'Solicitud de retiro enviada con los datos bancarios indicados. Tu asesor la revisará pronto.',
     },
   });
 }

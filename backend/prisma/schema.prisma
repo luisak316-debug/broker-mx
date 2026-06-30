@@ -92,6 +92,10 @@ model CashRequest {
   method      String?      // SPEI, tarjeta, etc.
   status      RequestStatus @default(PENDIENTE)
   note        String?
+  /// Cuenta destino del retiro (capturada por el cliente; simulado, no se transfiere).
+  payoutBank       String?
+  payoutOwnerName  String?
+  payoutConcept    String?
   reviewedById String?
   reviewedBy  Staff?       @relation("RequestReviewer", fields: [reviewedById], references: [id])
   reviewedAt  DateTime?

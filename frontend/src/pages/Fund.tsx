@@ -6,15 +6,23 @@ import { useClientAuth } from '../auth/ClientAuthContext';
 import { fmtMxn } from '../lib/format';
 import type { DepositAccountInfo } from '../types';
 
+type WithdrawStep = 'amount' | 'payout';
+
 export function Fund() {
   const { client } = useClientAuth();
   const clientId = client?.id;
   const [info, setInfo] = useState<DepositAccountInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
+  const [withdrawStep, setWithdrawStep] = useState<WithdrawStep>('amount');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawNote, setWithdrawNote] = useState('');
+  const [confirmAmount, setConfirmAmount] = useState('');
+  const [payoutBank, setPayoutBank] = useState('');
+  const [payoutOwnerName, setPayoutOwnerName] = useState('');
+  const [payoutConcept, setPayoutConcept] = useState('');
   const [withdrawMsg, setWithdrawMsg] = useState<string | null>(null);
+  const [withdrawBusy, setWithdrawBusy] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
@@ -30,26 +38,87 @@ export function Fund() {
     setTimeout(() => setToast(false), 2500);
   }
 
-  async function submitWithdrawal() {
-    if (!clientId) return;
-    const amountMxn = Number(withdrawAmount.replace(/,/g, ''));
-    if (!Number.isFinite(amountMxn) || amountMxn <= 0) {
+  function parseAmount(raw: string): number | null {
+    const amountMxn = Number(raw.replace(/,/g, '').trim());
+    if (!Number.isFinite(amountMxn) || amountMxn <= 0) return null;
+    return amountMxn;
+  }
+
+  function goToPayoutStep() {
+    const amountMxn = parseAmount(withdrawAmount);
+    if (amountMxn == null) {
       setWithdrawMsg('Ingresa un monto válido.');
       return;
     }
+    setWithdrawMsg(null);
+    setConfirmAmount('');
+    setPayoutBank('');
+    setPayoutOwnerName('');
+    setPayoutConcept('');
+    setWithdrawStep('payout');
+  }
+
+  function resetWithdrawFlow() {
+    setWithdrawStep('amount');
+    setWithdrawAmount('');
+    setWithdrawNote('');
+    setConfirmAmount('');
+    setPayoutBank('');
+    setPayoutOwnerName('');
+    setPayoutConcept('');
+    setWithdrawMsg(null);
+  }
+
+  async function submitWithdrawal() {
+    if (!clientId) return;
+    const amountMxn = parseAmount(withdrawAmount);
+    const confirmed = parseAmount(confirmAmount);
+    if (amountMxn == null) {
+      setWithdrawMsg('El monto original no es válido.');
+      return;
+    }
+    if (confirmed == null) {
+      setWithdrawMsg('Confirma el monto a retirar.');
+      return;
+    }
+    if (Math.abs(amountMxn - confirmed) > 0.009) {
+      setWithdrawMsg('El monto confirmado no coincide con el monto solicitado.');
+      return;
+    }
+    if (payoutBank.trim().length < 2) {
+      setWithdrawMsg('Indica el banco destino.');
+      return;
+    }
+    if (payoutOwnerName.trim().length < 5) {
+      setWithdrawMsg('Indica el nombre completo del titular de la cuenta.');
+      return;
+    }
+    if (payoutConcept.trim().length < 3) {
+      setWithdrawMsg('Indica el concepto del retiro.');
+      return;
+    }
+
+    setWithdrawBusy(true);
+    setWithdrawMsg(null);
     try {
       const res = await api.requestWithdrawal({
         clientId,
         amountMxn,
         note: withdrawNote || undefined,
+        payoutBank: payoutBank.trim(),
+        payoutOwnerName: payoutOwnerName.trim(),
+        payoutConcept: payoutConcept.trim(),
       });
       setWithdrawMsg(res.message);
-      setWithdrawAmount('');
-      setWithdrawNote('');
+      resetWithdrawFlow();
     } catch (e) {
       setWithdrawMsg(e instanceof Error ? e.message : 'No se pudo enviar la solicitud.');
+    } finally {
+      setWithdrawBusy(false);
     }
   }
+
+  const pendingAmount = parseAmount(withdrawAmount);
 
   return (
     <div className="space-y-6">
@@ -113,31 +182,109 @@ export function Fund() {
         </div>
 
         <Card title="Solicitar retiro">
-          <p className="mb-3 text-sm text-slate-400">
-            Envía una solicitud de retiro de inversión. Tu asesor la revisará y te contactará.
-          </p>
-          <label className="block">
-            <span className="label">Monto a retirar (MXN)</span>
-            <input
-              className="input"
-              inputMode="decimal"
-              placeholder="Ej. 5000"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-            />
-          </label>
-          <label className="mt-3 block">
-            <span className="label">Nota opcional</span>
-            <input
-              className="input"
-              placeholder="Ej. Retiro parcial para gastos familiares"
-              value={withdrawNote}
-              onChange={(e) => setWithdrawNote(e.target.value)}
-            />
-          </label>
-          <button type="button" className="btn-primary mt-4 w-full" onClick={submitWithdrawal}>
-            Enviar solicitud de retiro
-          </button>
+          {withdrawStep === 'amount' ? (
+            <>
+              <p className="mb-3 text-sm text-slate-400">
+                Envía una solicitud de retiro de inversión. Tu asesor la revisará y te contactará.
+              </p>
+              <label className="block">
+                <span className="label">Monto a retirar (MXN)</span>
+                <input
+                  className="input"
+                  inputMode="decimal"
+                  placeholder="Ej. 5000"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="label">Nota opcional</span>
+                <input
+                  className="input"
+                  placeholder="Ej. Retiro parcial para gastos familiares"
+                  value={withdrawNote}
+                  onChange={(e) => setWithdrawNote(e.target.value)}
+                />
+              </label>
+              <button type="button" className="btn-primary mt-4 w-full" onClick={goToPayoutStep}>
+                Enviar solicitud de retiro
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="mb-3 text-sm text-slate-400">
+                Indica la cuenta bancaria donde deseas recibir el retiro. Esta información es solo
+                para registro interno; no se realizará ninguna transferencia automática.
+              </p>
+
+              {pendingAmount != null && (
+                <div className="mb-4 rounded-lg border border-brand-500/30 bg-brand-600/10 px-3 py-2 text-sm text-brand-100">
+                  Monto solicitado: <strong className="text-white">{fmtMxn(pendingAmount)}</strong>
+                </div>
+              )}
+
+              <label className="block">
+                <span className="label">Banco destino</span>
+                <input
+                  className="input"
+                  placeholder="Ej. BBVA, Banorte, Santander…"
+                  value={payoutBank}
+                  onChange={(e) => setPayoutBank(e.target.value)}
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="label">Confirmar monto (MXN)</span>
+                <input
+                  className="input"
+                  inputMode="decimal"
+                  placeholder="Repite el monto a retirar"
+                  value={confirmAmount}
+                  onChange={(e) => setConfirmAmount(e.target.value)}
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="label">Concepto</span>
+                <input
+                  className="input"
+                  placeholder="Ej. Retiro de utilidades"
+                  value={payoutConcept}
+                  onChange={(e) => setPayoutConcept(e.target.value)}
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="label">Nombre completo del titular</span>
+                <input
+                  className="input"
+                  placeholder="Como aparece en la cuenta bancaria"
+                  value={payoutOwnerName}
+                  onChange={(e) => setPayoutOwnerName(e.target.value)}
+                />
+              </label>
+
+              <div className="mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="btn-primary w-full"
+                  disabled={withdrawBusy}
+                  onClick={submitWithdrawal}
+                >
+                  {withdrawBusy ? 'Enviando…' : 'Enviar transacción'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost w-full text-sm text-slate-400"
+                  disabled={withdrawBusy}
+                  onClick={() => {
+                    setWithdrawStep('amount');
+                    setWithdrawMsg(null);
+                  }}
+                >
+                  Volver al monto
+                </button>
+              </div>
+            </>
+          )}
+
           {withdrawMsg ? <p className="mt-3 text-sm text-brand-200">{withdrawMsg}</p> : null}
         </Card>
       </div>

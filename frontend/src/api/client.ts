@@ -77,7 +77,14 @@ export const api = {
     http<AuthResult>(`/auth/register`, { method: 'POST', body: JSON.stringify(payload) }),
   login: (payload: { phone: string; password: string }) =>
     http<AuthResult>(`/auth/login`, { method: 'POST', body: JSON.stringify(payload) }),
-  requestWithdrawal: (payload: { clientId: string; amountMxn: number; note?: string }) =>
+  requestWithdrawal: (payload: {
+    clientId: string;
+    amountMxn: number;
+    note?: string;
+    payoutBank: string;
+    payoutOwnerName: string;
+    payoutConcept: string;
+  }) =>
     http<{ message: string }>(`/cash-requests/withdraw`, {
       method: 'POST',
       body: JSON.stringify(payload),

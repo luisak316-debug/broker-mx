@@ -89,6 +89,9 @@ export interface CashRequest {
   method?: string;
   status: RequestStatus;
   note?: string;
+  payoutBank?: string;
+  payoutOwnerName?: string;
+  payoutConcept?: string;
   reviewedById?: string;
   reviewedByName?: string;
   reviewedAt?: string;

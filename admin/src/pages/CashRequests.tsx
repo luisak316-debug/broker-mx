@@ -78,6 +78,7 @@ export function CashRequests() {
                 <th>Cliente</th>
                 <th>Tipo</th>
                 <th>Método</th>
+                <th>Cuenta destino</th>
                 <th className="text-right">Monto (MXN)</th>
                 <th>Estado</th>
                 <th className="text-right">Acciones</th>
@@ -94,6 +95,22 @@ export function CashRequests() {
                   </td>
                   <td><Badge value={r.type} /></td>
                   <td className="text-slate-300">{r.method ?? '—'}</td>
+                  <td className="max-w-[220px] text-xs text-slate-300">
+                    {r.type === 'RETIRO' && r.payoutBank ? (
+                      <span>
+                        {r.payoutBank}
+                        {r.payoutOwnerName ? ` · ${r.payoutOwnerName}` : ''}
+                        {r.payoutConcept ? (
+                          <>
+                            <br />
+                            <span className="text-slate-500">{r.payoutConcept}</span>
+                          </>
+                        ) : null}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td className="text-right font-semibold text-white">{fmtMxn(r.amountMxn)}</td>
                   <td><Badge value={r.status} /></td>
                   <td className="text-right">
@@ -122,7 +139,7 @@ export function CashRequests() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-400">
+                  <td colSpan={8} className="py-6 text-center text-slate-400">
                     Sin solicitudes en este filtro.
                   </td>
                 </tr>
