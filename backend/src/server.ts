@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { createApp } from './app';
 import { env } from './config/env';
-import { bootstrapDatabase } from './lib/bootstrap';
+import { bootstrapDatabaseFast, bootstrapDatabaseSlow } from './lib/bootstrap';
 import { setStorageMode } from './routes/index';
 import { marketData } from './services/marketData.service';
 import { attachPriceFeed } from './sockets/priceFeed';
@@ -10,7 +10,7 @@ import { warmMarketNewsCache } from './services/marketNews.service';
 import { ADMIN_WEB_PATH } from './config/paths';
 
 async function main(): Promise<void> {
-  const boot = await bootstrapDatabase();
+  const boot = await bootstrapDatabaseFast();
   setStorageMode(boot.mode);
 
   const app = createApp();
@@ -36,6 +36,8 @@ async function main(): Promise<void> {
     }
     console.log('');
   });
+
+  bootstrapDatabaseSlow();
 
   function shutdown(): void {
     marketData.stop();

@@ -9,13 +9,15 @@ services:
     name: broker-mx-api
     runtime: node
     plan: free
-    buildCommand: NPM_CONFIG_PRODUCTION=false npm install && npm --workspace backend run prisma:generate && npm --workspace backend run build
+    buildCommand: NPM_CONFIG_PRODUCTION=false npm install && npm --workspace backend run prisma:generate && npm --workspace backend run prisma:push && npm --workspace backend run build
     startCommand: npm run start:prod
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SKIP_DB_PUSH
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: broker-mx-db

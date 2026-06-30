@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { wakeApi } from '../api/client';
 import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
 import { MarketNewsSection } from '../components/landing/MarketNewsSection';
 import { MARKET_CATEGORIES, type MarketCategoryId } from '../data/marketCategories';
@@ -30,6 +31,10 @@ export function Landing() {
   const selectedMarket = activeMarket
     ? MARKET_CATEGORIES.find((m) => m.id === activeMarket)
     : null;
+
+  useEffect(() => {
+    wakeApi();
+  }, []);
 
   return (
     <div className="min-h-screen bg-ink-900 text-slate-100">

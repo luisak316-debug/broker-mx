@@ -42,14 +42,14 @@ function resolvePrismaBin(): string {
 function ensureSchema(): void {
   const backendRoot = resolveBackendRoot();
   const prismaBin = resolvePrismaBin();
-  execFileSync(prismaBin, ['db', 'push', '--accept-data-loss'], {
+  execFileSync(prismaBin, ['db', 'push', '--accept-data-loss', '--skip-generate'], {
     cwd: backendRoot,
     env: process.env,
     stdio: 'inherit',
   });
 }
 
-async function ensureSchemaWithRetry(maxAttempts = 3): Promise<void> {
+async function ensureSchemaWithRetry(maxAttempts = 2): Promise<void> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -59,63 +59,91 @@ async function ensureSchemaWithRetry(maxAttempts = 3): Promise<void> {
       lastError = err;
       if (attempt < maxAttempts) {
         console.warn(`[broker.mx] db push intento ${attempt}/${maxAttempts} falló, reintentando…`);
-        await sleep(4000);
+        await sleep(2000);
       }
     }
   }
   throw lastError;
 }
 
-/** Conecta BD, aplica schema y siembra staff/instrumentos si faltan. */
-export async function bootstrapDatabase(): Promise<{ mode: StorageMode; dbOk: boolean }> {
+function shouldRunDbPush(): boolean {
+  return process.env.SKIP_DB_PUSH !== 'true';
+}
+
+/** Arranque rápido: conecta BD y deja la API escuchando en segundos. */
+export async function bootstrapDatabaseFast(): Promise<{ mode: StorageMode; dbOk: boolean }> {
   applyDatabaseEnv();
 
   if (!isDatabaseEnabled()) {
     initLegacyStore();
-    await purgeAllDemoClients();
-    console.warn(
-      '[broker.mx] DATABASE_URL no configurada — modo legacy (archivo local en data/persist).',
-    );
     return { mode: 'legacy', dbOk: true };
   }
 
   try {
-    await ensureSchemaWithRetry();
     await prisma.$connect();
-    await seedInstruments();
-    await seedStaff();
-    await purgeAllDemoClients();
-    console.log('[broker.mx] PostgreSQL conectada y lista.');
+    console.log('[broker.mx] PostgreSQL conectada.');
     return { mode: 'postgres', dbOk: true };
   } catch (err) {
     console.error('[broker.mx] PostgreSQL no disponible, usando modo legacy:', err);
     initLegacyStore();
-    await purgeAllDemoClients();
     return { mode: 'legacy', dbOk: false };
   }
 }
 
-async function seedInstruments(): Promise<void> {
-  for (const inst of ALL_INSTRUMENTS) {
-    await prisma.instrument.upsert({
-      where: { symbol: inst.symbol },
-      update: {
-        name: inst.name,
-        assetClass: inst.assetClass,
-        currency: inst.currency,
-        group: (inst.meta?.group as string) ?? null,
-        exchange: (inst.meta?.exchange as string) ?? null,
-      },
-      create: {
-        symbol: inst.symbol,
-        name: inst.name,
-        assetClass: inst.assetClass,
-        currency: inst.currency,
-        group: (inst.meta?.group as string) ?? null,
-        exchange: (inst.meta?.exchange as string) ?? null,
-      },
-    });
+/** Tareas pesadas en segundo plano (schema, seed, limpieza). */
+async function runSlowBootstrapTasks(): Promise<void> {
+  if (!isDatabaseEnabled()) {
+    await purgeAllDemoClients();
+    return;
   }
+
+  try {
+    if (shouldRunDbPush()) {
+      await ensureSchemaWithRetry();
+    }
+    await seedInstruments();
+    await seedStaff();
+    await purgeAllDemoClients();
+    console.log('[broker.mx] Sincronización en segundo plano completada.');
+  } catch (err) {
+    console.error('[broker.mx] Sincronización en segundo plano falló:', err);
+  }
+}
+
+export function bootstrapDatabaseSlow(): void {
+  void runSlowBootstrapTasks();
+}
+
+/** Compatibilidad: arranque completo (scripts locales). */
+export async function bootstrapDatabase(): Promise<{ mode: StorageMode; dbOk: boolean }> {
+  const boot = await bootstrapDatabaseFast();
+  await runSlowBootstrapTasks();
+  return boot;
+}
+
+async function seedInstruments(): Promise<void> {
+  await Promise.all(
+    ALL_INSTRUMENTS.map((inst) =>
+      prisma.instrument.upsert({
+        where: { symbol: inst.symbol },
+        update: {
+          name: inst.name,
+          assetClass: inst.assetClass,
+          currency: inst.currency,
+          group: (inst.meta?.group as string) ?? null,
+          exchange: (inst.meta?.exchange as string) ?? null,
+        },
+        create: {
+          symbol: inst.symbol,
+          name: inst.name,
+          assetClass: inst.assetClass,
+          currency: inst.currency,
+          group: (inst.meta?.group as string) ?? null,
+          exchange: (inst.meta?.exchange as string) ?? null,
+        },
+      }),
+    ),
+  );
 }
 
 async function seedStaff(): Promise<void> {

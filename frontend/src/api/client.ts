@@ -12,22 +12,46 @@ import type {
 
 import { getApiBase } from '../lib/apiConfig';
 
-async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${getApiBase()}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-  if (res.status === 405) {
-    throw new Error(
-      'La API no esta conectada. Ejecuta CONFIGURAR_API_VERCEL.bat con la URL del backend.',
-    );
+type HttpOptions = RequestInit & { timeoutMs?: number };
+
+async function http<T>(path: string, init?: HttpOptions): Promise<T> {
+  const timeoutMs = init?.timeoutMs ?? 45_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(`${getApiBase()}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...init,
+      signal: controller.signal,
+    });
+    if (res.status === 405) {
+      throw new Error(
+        'La API no esta conectada. Ejecuta CONFIGURAR_API_VERCEL.bat con la URL del backend.',
+      );
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? `Error ${res.status}`);
+    }
+    const json = (await res.json()) as { data: T };
+    return json.data;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error(
+        'El servidor tardó demasiado en responder. Espera unos segundos e intenta de nuevo.',
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Error ${res.status}`);
-  }
-  const json = (await res.json()) as { data: T };
-  return json.data;
+}
+
+/** Despierta la API en Render (plan free) antes de login u otras acciones. */
+export function wakeApi(): void {
+  const base = getApiBase();
+  fetch(`${base}/health`, { method: 'GET', cache: 'no-store' }).catch(() => undefined);
 }
 
 export const api = {
@@ -76,7 +100,11 @@ export const api = {
   register: (payload: { fullName: string; phone: string; otpCode: string; password: string }) =>
     http<AuthResult>(`/auth/register`, { method: 'POST', body: JSON.stringify(payload) }),
   login: (payload: { phone: string; password: string }) =>
-    http<AuthResult>(`/auth/login`, { method: 'POST', body: JSON.stringify(payload) }),
+    http<AuthResult>(`/auth/login`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      timeoutMs: 90_000,
+    }),
   sendRecoveryOtp: (payload: { phone: string }) =>
     http<import('../types').SendOtpResult>(`/auth/recovery/send-otp`, {
       method: 'POST',
