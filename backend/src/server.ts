@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { createApp } from './app';
 import { env } from './config/env';
 import { bootstrapDatabase } from './lib/bootstrap';
+import { setStorageMode } from './routes/index';
 import { marketData } from './services/marketData.service';
 import { attachPriceFeed } from './sockets/priceFeed';
 import { smsStatusLabel } from './services/sms.service';
@@ -9,7 +10,8 @@ import { warmMarketNewsCache } from './services/marketNews.service';
 import { ADMIN_WEB_PATH } from './config/paths';
 
 async function main(): Promise<void> {
-  await bootstrapDatabase();
+  const boot = await bootstrapDatabase();
+  setStorageMode(boot.mode);
 
   const app = createApp();
   const server = createServer(app);
@@ -25,7 +27,9 @@ async function main(): Promise<void> {
     console.log(`  ➜ WebSocket: ws://localhost:${env.port}/ws/prices`);
     console.log(`  ➜ Moneda base: ${env.baseCurrency}`);
     console.log(`  ➜ SMS registro: ${smsStatusLabel()}`);
-    console.log(`  ➜ Base de datos: conectada (PostgreSQL)`);
+    console.log(
+      `  ➜ Almacenamiento: ${boot.mode === 'postgres' ? 'PostgreSQL' : 'archivo local (legacy)'}`,
+    );
     if (env.isProd) {
       console.log(`  ➜ Web clientes: http://localhost:${env.port}/`);
       console.log(`  ➜ Web admin:    http://localhost:${env.port}${ADMIN_WEB_PATH}/`);

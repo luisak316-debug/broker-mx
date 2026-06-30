@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { isDatabaseEnabled } from '../lib/database';
+import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
 import { findClient } from '../repositories/client.repository';
 import type { AuditLog } from '../types/admin';
@@ -13,6 +16,23 @@ export async function record(params: {
   ip?: string;
 }): Promise<AuditLog> {
   const target = params.targetUserId ? await findClient(params.targetUserId) : undefined;
+
+  if (!isDatabaseEnabled()) {
+    const entry: AuditLog = {
+      id: randomUUID(),
+      staffId: params.actor.sub,
+      staffName: params.actor.name,
+      action: params.action,
+      targetUserId: target?.id,
+      targetUserName: target?.displayName,
+      description: params.description,
+      before: params.before,
+      after: params.after,
+      ipAddress: params.ip,
+      createdAt: new Date().toISOString(),
+    };
+    return legacy.appendAuditLog(entry);
+  }
 
   const row = await prisma.auditLog.create({
     data: {
@@ -46,6 +66,13 @@ export async function list(filter?: {
   staffId?: string;
   targetUserId?: string;
 }): Promise<AuditLog[]> {
+  if (!isDatabaseEnabled()) {
+    let rows = [...legacy.auditLogs];
+    if (filter?.staffId) rows = rows.filter((r) => r.staffId === filter.staffId);
+    if (filter?.targetUserId) rows = rows.filter((r) => r.targetUserId === filter.targetUserId);
+    return rows.slice(0, 500);
+  }
+
   const targetInternal =
     filter?.targetUserId != null
       ? (await findClient(filter.targetUserId))?.internalId

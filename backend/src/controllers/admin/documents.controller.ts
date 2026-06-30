@@ -1,5 +1,8 @@
 import type { Request, Response } from 'express';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import { addClientDocument } from '../../data/adminStore';
+import { isDatabaseEnabled } from '../../lib/database';
 import { prisma } from '../../lib/prisma';
 import { findClient, getInternalUserId } from '../../repositories/client.repository';
 import { record } from '../../services/audit.service';
@@ -50,32 +53,39 @@ export async function uploadDocument(req: Request, res: Response): Promise<void>
   const internalId = await getInternalUserId(client.id);
   if (!internalId) throw new HttpError(404, 'Cliente no encontrado.');
 
-  const row = await prisma.clientDocument.create({
-    data: {
-      userId: internalId,
-      type: parsed.type,
-      fileName: parsed.fileName,
-      status: 'EN_REVISION',
-    },
-  });
-
-  if (client.kycStatus === 'PENDING') {
-    await prisma.user.update({
-      where: { id: internalId },
-      data: { kycStatus: 'IN_REVIEW' },
-    });
-  }
-
   const doc: ClientDocument = {
-    id: row.id,
+    id: randomUUID(),
     type: parsed.type,
     fileName: parsed.fileName,
     mimeType: parsed.mimeType,
     fileUrl: saved.fileUrl,
     status: 'EN_REVISION',
-    uploadedAt: row.uploadedAt.toISOString(),
+    uploadedAt: new Date().toISOString(),
     uploadedByName: req.staff!.name,
   };
+
+  if (!isDatabaseEnabled()) {
+    addClientDocument(client.id, doc);
+  } else {
+    const row = await prisma.clientDocument.create({
+      data: {
+        userId: internalId,
+        type: parsed.type,
+        fileName: parsed.fileName,
+        status: 'EN_REVISION',
+      },
+    });
+
+    if (client.kycStatus === 'PENDING') {
+      await prisma.user.update({
+        where: { id: internalId },
+        data: { kycStatus: 'IN_REVIEW' },
+      });
+    }
+
+    doc.id = row.id;
+    doc.uploadedAt = row.uploadedAt.toISOString();
+  }
 
   const audit = await record({
     actor: req.staff!,

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
+import { pingDatabase, type StorageMode } from '../lib/bootstrap';
+import { isDatabaseEnabled } from '../lib/database';
 import * as market from '../controllers/market.controller';
 import * as stocks from '../controllers/stocks.controller';
 import * as forex from '../controllers/forex.controller';
@@ -12,8 +14,22 @@ import * as cashRequest from '../controllers/cashRequest.controller';
 
 export const router = Router();
 
+let storageMode: StorageMode = isDatabaseEnabled() ? 'postgres' : 'legacy';
+
+export function setStorageMode(mode: StorageMode): void {
+  storageMode = mode;
+}
+
 // Salud
-router.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+router.get('/health', async (_req, res) => {
+  const dbOk = await pingDatabase();
+  res.json({
+    status: dbOk ? 'ok' : 'degraded',
+    storage: storageMode,
+    database: isDatabaseEnabled() ? (dbOk ? 'connected' : 'unreachable') : 'legacy-file',
+    ts: new Date().toISOString(),
+  });
+});
 
 // Noticias diarias (landing — 4 mercados + destacado)
 router.get('/market-news', asyncHandler(marketNews.getMarketNews));

@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { isDatabaseEnabled } from '../lib/database';
+import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
 import type { CashRequest, RequestStatus } from '../types/admin';
 
@@ -34,6 +37,13 @@ function mapRow(row: {
 }
 
 export async function listCashRequests(status?: string): Promise<CashRequest[]> {
+  if (!isDatabaseEnabled()) {
+    const rows = status
+      ? legacy.cashRequests.filter((r) => r.status === status)
+      : legacy.cashRequests;
+    return [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
   const rows = await prisma.cashRequest.findMany({
     where: status ? { status: status as RequestStatus } : undefined,
     include: {
@@ -46,6 +56,28 @@ export async function listCashRequests(status?: string): Promise<CashRequest[]> 
 }
 
 export async function findCashRequest(id: string) {
+  if (!isDatabaseEnabled()) {
+    const request = legacy.cashRequests.find((r) => r.id === id);
+    if (!request) return null;
+    return {
+      id: request.id,
+      userId: request.userId,
+      type: request.type,
+      amountMxn: request.amountMxn,
+      method: request.method ?? null,
+      status: request.status,
+      note: request.note ?? null,
+      reviewedAt: request.reviewedAt ? new Date(request.reviewedAt) : null,
+      createdAt: new Date(request.createdAt),
+      user: {
+        id: request.userId,
+        displayName: request.clientName,
+        clientCode: request.userId,
+      },
+      reviewedBy: request.reviewedByName ? { displayName: request.reviewedByName } : null,
+    };
+  }
+
   return prisma.cashRequest.findUnique({
     where: { id },
     include: {
@@ -62,6 +94,22 @@ export async function createCashRequest(input: {
   method?: string;
   note?: string;
 }): Promise<CashRequest> {
+  if (!isDatabaseEnabled()) {
+    const client = legacy.findClient(input.userInternalId);
+    const request: CashRequest = {
+      id: randomUUID(),
+      userId: client?.id ?? input.userInternalId,
+      clientName: client?.displayName ?? 'Cliente',
+      type: input.type,
+      amountMxn: input.amountMxn,
+      method: input.method,
+      note: input.note,
+      status: 'PENDIENTE',
+      createdAt: new Date().toISOString(),
+    };
+    return legacy.appendCashRequest(request);
+  }
+
   const row = await prisma.cashRequest.create({
     data: {
       userId: input.userInternalId,
@@ -87,6 +135,14 @@ export async function reviewCashRequest(
     reviewedByName: string;
   },
 ): Promise<CashRequest | undefined> {
+  if (!isDatabaseEnabled()) {
+    return legacy.reviewLegacyCashRequest(id, {
+      status: data.status,
+      note: data.note,
+      reviewedByName: data.reviewedByName,
+    });
+  }
+
   const row = await prisma.cashRequest.update({
     where: { id },
     data: {
@@ -104,5 +160,9 @@ export async function reviewCashRequest(
 }
 
 export async function countPendingCashRequests(): Promise<number> {
+  if (!isDatabaseEnabled()) {
+    return legacy.cashRequests.filter((r) => r.status === 'PENDIENTE').length;
+  }
+
   return prisma.cashRequest.count({ where: { status: 'PENDIENTE' } });
 }

@@ -1,4 +1,6 @@
 import type { Prisma } from '@prisma/client';
+import { isDatabaseEnabled } from '../lib/database';
+import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
 import type { AccountStatus, Client, KycStatus } from '../types/admin';
 
@@ -87,6 +89,8 @@ function userWhere(idOrCode: string): Prisma.UserWhereInput {
 }
 
 export async function findClient(idOrCode: string): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.findClient(idOrCode);
+
   const user = await prisma.user.findFirst({
     where: userWhere(idOrCode),
     include: userInclude,
@@ -95,6 +99,8 @@ export async function findClient(idOrCode: string): Promise<Client | undefined> 
 }
 
 export async function findClientByPhone(phone: string): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.findClientByPhone(phone);
+
   const digits = phone.replace(/\D/g, '').slice(-10);
   const user = await prisma.user.findFirst({
     where: { phone: digits },
@@ -104,6 +110,8 @@ export async function findClientByPhone(phone: string): Promise<Client | undefin
 }
 
 export async function findClientByEmail(email: string): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.findClientByEmail(email);
+
   const user = await prisma.user.findFirst({
     where: { email: { equals: email, mode: 'insensitive' } },
     include: userInclude,
@@ -118,6 +126,10 @@ export async function createClient(input: {
   passwordHash: string;
   plainPassword: string;
 }): Promise<Client> {
+  if (!isDatabaseEnabled()) {
+    return legacy.createClient(input);
+  }
+
   const phoneDigits = input.phone.replace(/\D/g, '').slice(-10);
   const clientCode = await nextClientCode();
   const advisorId = await defaultAdvisorId();
@@ -144,6 +156,8 @@ export async function listClients(filters?: {
   status?: string;
   kyc?: string;
 }): Promise<Client[]> {
+  if (!isDatabaseEnabled()) return legacy.listClients(filters);
+
   const where: Prisma.UserWhereInput = {};
   if (filters?.status) where.accountStatus = filters.status as AccountStatus;
   if (filters?.kyc) where.kycStatus = filters.kyc as KycStatus;
@@ -170,6 +184,8 @@ export async function updateClientBalances(
   idOrCode: string,
   data: { cashMxn?: number; totalInvestedMxn?: number },
 ): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.updateClientBalances(idOrCode, data);
+
   const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
   if (!user) return undefined;
 
@@ -194,6 +210,8 @@ export async function updateAccountStatus(
   idOrCode: string,
   accountStatus: AccountStatus,
 ): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.updateAccountStatus(idOrCode, accountStatus);
+
   const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
   if (!user) return undefined;
 
@@ -216,6 +234,8 @@ export async function updateDepositAccountFields(
     staffId: string;
   },
 ): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.updateDepositAccountFields(idOrCode, data);
+
   const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
   if (!user) return undefined;
 
@@ -236,6 +256,11 @@ export async function updateDepositAccountFields(
 }
 
 export async function getInternalUserId(idOrCode: string): Promise<string | undefined> {
+  if (!isDatabaseEnabled()) {
+    const client = legacy.findClient(idOrCode);
+    return client?.internalId ?? client?.id;
+  }
+
   const user = await prisma.user.findFirst({
     where: userWhere(idOrCode),
     select: { id: true },

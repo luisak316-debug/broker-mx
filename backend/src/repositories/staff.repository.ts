@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { isDatabaseEnabled } from '../lib/database';
+import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
 import type { Staff } from '../types/admin';
 
@@ -24,6 +27,8 @@ function mapStaff(row: {
 }
 
 export async function findStaffByEmail(email: string): Promise<Staff | undefined> {
+  if (!isDatabaseEnabled()) return legacy.findStaffByEmail(email);
+
   const row = await prisma.staff.findFirst({
     where: { email: { equals: email, mode: 'insensitive' } },
   });
@@ -31,11 +36,18 @@ export async function findStaffByEmail(email: string): Promise<Staff | undefined
 }
 
 export async function findStaffById(id: string): Promise<Staff | undefined> {
+  if (!isDatabaseEnabled()) return legacy.findStaffById(id);
+
   const row = await prisma.staff.findUnique({ where: { id } });
   return row ? mapStaff(row) : undefined;
 }
 
 export async function touchStaffLogin(id: string): Promise<void> {
+  if (!isDatabaseEnabled()) {
+    legacy.touchStaffLogin(id);
+    return;
+  }
+
   await prisma.staff.update({
     where: { id },
     data: { lastLoginAt: new Date() },

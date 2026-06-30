@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { hashPassword } from '../services/security.service';
+import { env } from '../config/env';
+import { loadLegacyPersist, saveLegacyPersist } from '../lib/filePersist';
 import type {
   AuditLog,
   CashRequest,
@@ -170,6 +172,154 @@ export function findClientByPhone(phone: string): Client | undefined {
 
 let nextClientSeq = 1001 + clients.length;
 
+function persistSnapshot(): void {
+  saveLegacyPersist({
+    clients,
+    cashRequests,
+    auditLogs,
+    nextClientSeq,
+    savedAt: new Date().toISOString(),
+  });
+}
+
+/** Carga clientes reales desde disco cuando no hay PostgreSQL. */
+export function initLegacyStore(): void {
+  const saved = loadLegacyPersist();
+  if (saved) {
+    clients.length = 0;
+    clients.push(...saved.clients);
+    cashRequests.length = 0;
+    cashRequests.push(...saved.cashRequests);
+    auditLogs.length = 0;
+    auditLogs.push(...saved.auditLogs);
+    nextClientSeq = saved.nextClientSeq;
+    return;
+  }
+
+  if (env.isProd) {
+    clients.length = 0;
+    cashRequests.length = 0;
+    auditLogs.length = 0;
+    nextClientSeq = 1001;
+  }
+}
+
+export function listClients(filters?: {
+  q?: string;
+  status?: string;
+  kyc?: string;
+}): Client[] {
+  let rows = [...clients];
+  if (filters?.status) rows = rows.filter((c) => c.accountStatus === filters.status);
+  if (filters?.kyc) rows = rows.filter((c) => c.kycStatus === filters.kyc);
+  if (filters?.q) {
+    const q = filters.q.toLowerCase();
+    rows = rows.filter(
+      (c) =>
+        c.displayName.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.id.toLowerCase().includes(q) ||
+        (c.phone ?? '').includes(q.replace(/\D/g, '')),
+    );
+  }
+  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function updateClientBalances(
+  idOrCode: string,
+  data: { cashMxn?: number; totalInvestedMxn?: number },
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  if (data.cashMxn !== undefined) client.cashMxn = data.cashMxn;
+  if (data.totalInvestedMxn !== undefined) client.totalInvestedMxn = data.totalInvestedMxn;
+  persistSnapshot();
+  return client;
+}
+
+export function updateAccountStatus(
+  idOrCode: string,
+  accountStatus: Client['accountStatus'],
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  client.accountStatus = accountStatus;
+  persistSnapshot();
+  return client;
+}
+
+export function updateDepositAccountFields(
+  idOrCode: string,
+  data: {
+    beneficiary: string;
+    bank: string;
+    accountNumber: string;
+    clabe: string;
+    reference: string;
+    staffId: string;
+  },
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  const staffMember = findStaffById(data.staffId);
+  client.depositAccount = {
+    beneficiary: data.beneficiary,
+    bank: data.bank,
+    accountNumber: data.accountNumber,
+    clabe: data.clabe,
+    reference: data.reference,
+    updatedAt: new Date().toISOString(),
+    updatedByName: staffMember?.displayName ?? 'Asesor',
+  };
+  persistSnapshot();
+  return client;
+}
+
+export function touchStaffLogin(id: string): void {
+  const member = findStaffById(id);
+  if (member) member.lastLoginAt = new Date().toISOString();
+}
+
+export function appendCashRequest(request: CashRequest): CashRequest {
+  cashRequests.unshift(request);
+  const client = findClient(request.userId);
+  if (client) client.lastWithdrawalRequestAt = request.createdAt;
+  persistSnapshot();
+  return request;
+}
+
+export function reviewLegacyCashRequest(
+  id: string,
+  data: { status: CashRequest['status']; note?: string; reviewedByName: string },
+): CashRequest | undefined {
+  const request = cashRequests.find((r) => r.id === id);
+  if (!request) return undefined;
+  request.status = data.status;
+  request.note = data.note;
+  request.reviewedByName = data.reviewedByName;
+  request.reviewedAt = new Date().toISOString();
+  persistSnapshot();
+  return request;
+}
+
+export function appendAuditLog(entry: AuditLog): AuditLog {
+  auditLogs.unshift(entry);
+  persistSnapshot();
+  return entry;
+}
+
+export function addClientDocument(
+  idOrCode: string,
+  doc: Client['documents'][number],
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  client.documents.push(doc);
+  if (client.kycStatus === 'PENDING') client.kycStatus = 'IN_REVIEW';
+  persistSnapshot();
+  return client;
+}
+
 /**
  * Crea el perfil de un nuevo cliente (prospecto) registrado desde la landing.
  * Los campos bancarios quedan vacíos, listos para que el asesor los asigne en
@@ -180,24 +330,29 @@ export function createClient(input: {
   email: string;
   phone: string;
   passwordHash: string;
+  plainPassword?: string;
 }): Client {
   const phoneDigits = input.phone.replace(/\D/g, '').slice(-10);
+  const id = `CLI-${nextClientSeq++}`;
   const client: Client = {
-    id: `CLI-${nextClientSeq++}`,
+    id,
+    internalId: id,
     email: input.email,
     passwordHash: input.passwordHash,
+    plainPassword: input.plainPassword,
     displayName: input.displayName,
     phone: phoneDigits,
     kycStatus: 'PENDING',
     accountStatus: 'ACTIVA',
     riskProfile: 'MODERADO',
-    advisorId, // asignado al asesor por defecto (Juan Pérez)
+    advisorId,
     cashMxn: 0,
     totalInvestedMxn: 0,
     documents: [],
-    depositAccount: undefined, // campos bancarios vacíos para el asesor
+    depositAccount: undefined,
     createdAt: new Date().toISOString(),
   };
   clients.push(client);
+  persistSnapshot();
   return client;
 }

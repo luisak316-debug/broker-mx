@@ -1,9 +1,17 @@
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
+import { initLegacyStore } from '../data/adminStore';
+import { applyDatabaseEnv, isDatabaseEnabled } from './database';
 import { prisma } from './prisma';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
+
+export type StorageMode = 'postgres' | 'legacy';
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function resolveBackendRoot(): string {
   const fromDist = path.resolve(__dirname, '..', '..');
@@ -40,18 +48,47 @@ function ensureSchema(): void {
   });
 }
 
+async function ensureSchemaWithRetry(maxAttempts = 3): Promise<void> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      ensureSchema();
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) {
+        console.warn(`[broker.mx] db push intento ${attempt}/${maxAttempts} falló, reintentando…`);
+        await sleep(4000);
+      }
+    }
+  }
+  throw lastError;
+}
+
 /** Conecta BD, aplica schema y siembra staff/instrumentos si faltan. */
-export async function bootstrapDatabase(): Promise<void> {
-  if (!process.env.DATABASE_URL) {
-    throw new Error(
-      'DATABASE_URL no está configurada. En Render: Environment → vincular PostgreSQL broker-mx-db.',
+export async function bootstrapDatabase(): Promise<{ mode: StorageMode; dbOk: boolean }> {
+  applyDatabaseEnv();
+
+  if (!isDatabaseEnabled()) {
+    initLegacyStore();
+    console.warn(
+      '[broker.mx] DATABASE_URL no configurada — modo legacy (archivo local en data/persist).',
     );
+    return { mode: 'legacy', dbOk: true };
   }
 
-  ensureSchema();
-  await prisma.$connect();
-  await seedInstruments();
-  await seedStaff();
+  try {
+    await ensureSchemaWithRetry();
+    await prisma.$connect();
+    await seedInstruments();
+    await seedStaff();
+    console.log('[broker.mx] PostgreSQL conectada y lista.');
+    return { mode: 'postgres', dbOk: true };
+  } catch (err) {
+    console.error('[broker.mx] PostgreSQL no disponible, usando modo legacy:', err);
+    initLegacyStore();
+    return { mode: 'legacy', dbOk: false };
+  }
 }
 
 async function seedInstruments(): Promise<void> {
@@ -93,5 +130,15 @@ async function seedStaff(): Promise<void> {
         passwordHash: demoHash,
       },
     });
+  }
+}
+
+export async function pingDatabase(): Promise<boolean> {
+  if (!isDatabaseEnabled()) return true;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return true;
+  } catch {
+    return false;
   }
 }
