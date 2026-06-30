@@ -106,6 +106,41 @@ export async function createAdvisorContact(data: {
   return mapRow(row);
 }
 
+export async function createAdvisorContactsBulk(
+  items: Array<{
+    advisorId: string;
+    assignedById: string;
+    clientName: string;
+    phone: string;
+    email: string;
+    description: string;
+    assignedDate: Date;
+  }>,
+): Promise<AdvisorContactRow[]> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Asignación masiva requiere PostgreSQL.');
+  }
+
+  const rows = await prisma.$transaction(
+    items.map((item) =>
+      prisma.advisorContact.create({
+        data: {
+          advisorId: item.advisorId,
+          assignedById: item.assignedById,
+          clientName: item.clientName,
+          phone: item.phone.replace(/\D/g, '').slice(-10),
+          email: item.email.trim().toLowerCase(),
+          description: item.description,
+          assignedDate: startOfDay(item.assignedDate),
+        },
+        include: { advisor: true, assignedBy: true },
+      }),
+    ),
+  );
+
+  return rows.map(mapRow);
+}
+
 export async function deleteAdvisorContact(id: string): Promise<void> {
   if (!isDatabaseEnabled()) {
     throw new Error('Eliminar contactos requiere PostgreSQL.');

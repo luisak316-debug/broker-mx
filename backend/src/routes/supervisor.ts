@@ -21,4 +21,6 @@ supervisorRouter.delete('/advisors/:id', asyncHandler(advisors.removeAdvisor));
 
 supervisorRouter.get('/contacts', asyncHandler(contacts.listContacts));
 supervisorRouter.post('/contacts', asyncHandler(contacts.saveContact));
+supervisorRouter.post('/contacts/bulk', asyncHandler(contacts.bulkAssignContacts));
+supervisorRouter.post('/contacts/bulk/preview', asyncHandler(contacts.previewBulkContacts));
 supervisorRouter.delete('/contacts/:id', asyncHandler(contacts.removeContact));

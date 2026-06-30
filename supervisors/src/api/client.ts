@@ -75,6 +75,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  bulkAssignContacts: (payload: { rawText: string; assignedDate?: string }) =>
+    http<{
+      saved: number;
+      skipped: number;
+      assignedDate: string;
+      distribution: Array<{ advisorId: string; advisorName: string; count: number }>;
+    }>('/contacts/bulk', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   removeContact: (id: string) =>
     http<{ ok: boolean }>(`/contacts/${id}`, { method: 'DELETE' }),
 };

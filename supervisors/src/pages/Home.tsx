@@ -44,7 +44,7 @@ export function Home() {
       <Card title="Accesos rápidos">
         <div className="grid gap-3 sm:grid-cols-2">
           <Link to="/asignar" className="btn-primary py-3">
-            Asignar contactos a un asesor
+            Asignar contactos a asesores (masivo)
           </Link>
           <Link to="/historial" className="btn-ghost py-3">
             Ver historial por fecha
