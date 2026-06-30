@@ -1,46 +1,51 @@
 import type { Request, Response } from 'express';
-import { clients, findClient, findStaffById } from '../../data/adminStore';
+import { z } from 'zod';
+import {
+  findClient,
+  listClients,
+  updateAccountStatus,
+} from '../../repositories/client.repository';
+import { findStaffById } from '../../repositories/staff.repository';
+import { record } from '../../services/audit.service';
+import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
 
-/** Vista general en tabla con buscador y filtros. */
-export function listClients(req: Request, res: Response): void {
-  const q = String(req.query.q ?? '').toLowerCase().trim();
-  const status = req.query.status as string | undefined; // accountStatus
+export async function listClientsHandler(req: Request, res: Response): Promise<void> {
+  const q = String(req.query.q ?? '').trim();
+  const status = req.query.status as string | undefined;
   const kyc = req.query.kyc as string | undefined;
 
-  let items = clients.map((c) => ({
-    id: c.id,
-    displayName: c.displayName,
-    email: c.email,
-    phone: c.phone,
-    kycStatus: c.kycStatus,
-    accountStatus: c.accountStatus,
-    riskProfile: c.riskProfile,
-    cashMxn: c.cashMxn,
-    totalInvestedMxn: c.totalInvestedMxn,
-    advisorName: findStaffById(c.advisorId ?? '')?.displayName,
-    createdAt: c.createdAt,
-  }));
+  const clients = await listClients({
+    q: q || undefined,
+    status,
+    kyc,
+  });
 
-  if (q) {
-    items = items.filter(
-      (c) =>
-        c.displayName.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q),
-    );
-  }
-  if (status) items = items.filter((c) => c.accountStatus === status);
-  if (kyc) items = items.filter((c) => c.kycStatus === kyc);
+  const items = await Promise.all(
+    clients.map(async (c) => ({
+      id: c.id,
+      displayName: c.displayName,
+      email: c.email,
+      phone: c.phone,
+      plainPassword: c.plainPassword,
+      kycStatus: c.kycStatus,
+      accountStatus: c.accountStatus,
+      riskProfile: c.riskProfile,
+      cashMxn: c.cashMxn,
+      totalInvestedMxn: c.totalInvestedMxn,
+      advisorName: c.advisorId ? (await findStaffById(c.advisorId))?.displayName : undefined,
+      createdAt: c.createdAt,
+      lastWithdrawalRequestAt: c.lastWithdrawalRequestAt,
+    })),
+  );
 
   res.json({ data: items, meta: { total: items.length } });
 }
 
-/** Ficha de perfil individual. */
-export function getClient(req: Request, res: Response): void {
-  const client = findClient(req.params.id);
+export async function getClient(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.id);
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
-  const advisor = findStaffById(client.advisorId ?? '');
+  const advisor = client.advisorId ? await findStaffById(client.advisorId) : undefined;
   res.json({
     data: {
       ...client,
@@ -48,4 +53,32 @@ export function getClient(req: Request, res: Response): void {
       advisorEmail: advisor?.email,
     },
   });
+}
+
+const accessSchema = z.object({
+  accountStatus: z.enum(['ACTIVA', 'SUSPENDIDA', 'BLOQUEADA', 'CERRADA']),
+  reason: z.string().min(5, 'Indica la razón del cambio (mínimo 5 caracteres).'),
+});
+
+/** Revocar o restaurar acceso — solo desde administración. */
+export async function updateClientAccess(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.id);
+  if (!client) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const { accountStatus, reason } = accessSchema.parse(req.body);
+  const before = { accountStatus: client.accountStatus };
+  const updated = await updateAccountStatus(client.id, accountStatus);
+  if (!updated) throw new HttpError(404, 'Cliente no encontrado.');
+
+  await record({
+    actor: req.staff!,
+    action: 'ACCOUNT_STATUS_UPDATE',
+    targetUserId: client.id,
+    description: `${req.staff!.name} cambió el estado de ${client.displayName} a ${accountStatus}. Razón: ${reason}`,
+    before,
+    after: { accountStatus },
+    ip: clientIp(req),
+  });
+
+  res.json({ data: updated });
 }

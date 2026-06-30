@@ -208,9 +208,50 @@ export function ClientProfile() {
             {client.id} · {client.email}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Badge value={client.accountStatus} />
           <Badge value={client.kycStatus} />
+          {can('ADMIN', 'COMPLIANCE') && client.accountStatus === 'ACTIVA' ? (
+            <button
+              type="button"
+              className="btn-ghost border border-danger/40 text-xs text-danger"
+              onClick={async () => {
+                if (!window.confirm('¿Revocar acceso de este cliente?')) return;
+                try {
+                  await api.updateClientAccess(id, {
+                    accountStatus: 'BLOQUEADA',
+                    reason: 'Acceso revocado manualmente desde administración.',
+                  });
+                  setFeedback('Acceso revocado. El cliente ya no podrá iniciar sesión.');
+                  load();
+                } catch (e) {
+                  setFeedback(e instanceof Error ? e.message : 'Error al revocar acceso.');
+                }
+              }}
+            >
+              Revocar acceso
+            </button>
+          ) : null}
+          {can('ADMIN', 'COMPLIANCE') && client.accountStatus !== 'ACTIVA' ? (
+            <button
+              type="button"
+              className="btn-ghost border border-bull/40 text-xs text-bull"
+              onClick={async () => {
+                try {
+                  await api.updateClientAccess(id, {
+                    accountStatus: 'ACTIVA',
+                    reason: 'Acceso restaurado desde administración.',
+                  });
+                  setFeedback('Acceso restaurado.');
+                  load();
+                } catch (e) {
+                  setFeedback(e instanceof Error ? e.message : 'Error al restaurar acceso.');
+                }
+              }}
+            >
+              Restaurar acceso
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -225,10 +266,19 @@ export function ClientProfile() {
         <Card title="Información personal">
           <dl className="space-y-2 text-sm">
             <Row label="Teléfono" value={client.phone} />
+            <Row label="Contraseña (registro)" value={client.plainPassword} />
             <Row label="CURP" value={client.curp} />
             <Row label="RFC" value={client.rfc} />
             <Row label="Perfil de riesgo" value={client.riskProfile} />
             <Row label="Fecha de registro" value={fmtDate(client.createdAt)} />
+            <Row
+              label="Última solicitud de retiro"
+              value={
+                client.lastWithdrawalRequestAt
+                  ? fmtDateTime(client.lastWithdrawalRequestAt)
+                  : 'Sin solicitudes'
+              }
+            />
             <Row label="Asesor asignado" value={client.advisorName} />
             <Row label="Correo del asesor" value={client.advisorEmail} />
           </dl>

@@ -1,7 +1,7 @@
-import { randomUUID } from 'node:crypto';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { findClient } from '../../data/adminStore';
+import { prisma } from '../../lib/prisma';
+import { findClient, getInternalUserId } from '../../repositories/client.repository';
 import { record } from '../../services/audit.service';
 import { saveClientDocument } from '../../services/documentUpload.service';
 import { clientIp } from '../../middleware/auth';
@@ -22,9 +22,8 @@ const DOC_LABEL: Record<DocumentType, string> = {
   CONSTANCIA_FISCAL: 'Constancia fiscal',
 };
 
-/** Sube un documento de identidad (PDF o imagen) al expediente del cliente. */
-export function uploadDocument(req: Request, res: Response): void {
-  const client = findClient(req.params.id);
+export async function uploadDocument(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.id);
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
 
   const parsed = uploadSchema.parse(req.body);
@@ -48,21 +47,37 @@ export function uploadDocument(req: Request, res: Response): void {
     throw new HttpError(400, e instanceof Error ? e.message : 'No se pudo guardar el archivo.');
   }
 
+  const internalId = await getInternalUserId(client.id);
+  if (!internalId) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const row = await prisma.clientDocument.create({
+    data: {
+      userId: internalId,
+      type: parsed.type,
+      fileName: parsed.fileName,
+      status: 'EN_REVISION',
+    },
+  });
+
+  if (client.kycStatus === 'PENDING') {
+    await prisma.user.update({
+      where: { id: internalId },
+      data: { kycStatus: 'IN_REVIEW' },
+    });
+  }
+
   const doc: ClientDocument = {
-    id: randomUUID(),
+    id: row.id,
     type: parsed.type,
     fileName: parsed.fileName,
     mimeType: parsed.mimeType,
     fileUrl: saved.fileUrl,
     status: 'EN_REVISION',
-    uploadedAt: new Date().toISOString(),
+    uploadedAt: row.uploadedAt.toISOString(),
     uploadedByName: req.staff!.name,
   };
-  client.documents.unshift(doc);
 
-  if (client.kycStatus === 'PENDING') client.kycStatus = 'IN_REVIEW';
-
-  const audit = record({
+  const audit = await record({
     actor: req.staff!,
     action: 'DOCUMENT_UPLOAD',
     targetUserId: client.id,

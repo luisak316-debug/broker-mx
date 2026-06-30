@@ -1,36 +1,47 @@
 import { createServer } from 'node:http';
 import { createApp } from './app';
 import { env } from './config/env';
+import { bootstrapDatabase } from './lib/bootstrap';
 import { marketData } from './services/marketData.service';
 import { attachPriceFeed } from './sockets/priceFeed';
 import { smsStatusLabel } from './services/sms.service';
 import { warmMarketNewsCache } from './services/marketNews.service';
 import { ADMIN_WEB_PATH } from './config/paths';
 
-const app = createApp();
-const server = createServer(app);
+async function main(): Promise<void> {
+  await bootstrapDatabase();
 
-attachPriceFeed(server);
-marketData.start();
-warmMarketNewsCache();
+  const app = createApp();
+  const server = createServer(app);
 
-server.listen(env.port, () => {
-  /* eslint-disable no-console */
-  console.log(`\n  broker.mx API`);
-  console.log(`  ➜ REST:      http://localhost:${env.port}/api`);
-  console.log(`  ➜ WebSocket: ws://localhost:${env.port}/ws/prices`);
-  console.log(`  ➜ Moneda base: ${env.baseCurrency}`);
-  console.log(`  ➜ SMS registro: ${smsStatusLabel()}`);
-  if (env.isProd) {
-    console.log(`  ➜ Web clientes: http://localhost:${env.port}/`);
-    console.log(`  ➜ Web admin:    http://localhost:${env.port}${ADMIN_WEB_PATH}/`);
+  attachPriceFeed(server);
+  marketData.start();
+  warmMarketNewsCache();
+
+  server.listen(env.port, () => {
+    /* eslint-disable no-console */
+    console.log(`\n  broker.mx API`);
+    console.log(`  ➜ REST:      http://localhost:${env.port}/api`);
+    console.log(`  ➜ WebSocket: ws://localhost:${env.port}/ws/prices`);
+    console.log(`  ➜ Moneda base: ${env.baseCurrency}`);
+    console.log(`  ➜ SMS registro: ${smsStatusLabel()}`);
+    console.log(`  ➜ Base de datos: conectada (PostgreSQL)`);
+    if (env.isProd) {
+      console.log(`  ➜ Web clientes: http://localhost:${env.port}/`);
+      console.log(`  ➜ Web admin:    http://localhost:${env.port}${ADMIN_WEB_PATH}/`);
+    }
+    console.log('');
+  });
+
+  function shutdown(): void {
+    marketData.stop();
+    server.close(() => process.exit(0));
   }
-  console.log('');
-});
-
-function shutdown(): void {
-  marketData.stop();
-  server.close(() => process.exit(0));
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+
+main().catch((err) => {
+  console.error('Error al iniciar la API:', err);
+  process.exit(1);
+});

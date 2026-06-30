@@ -1,6 +1,10 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { createClient, findClientByEmail, findClientByPhone } from '../data/adminStore';
+import {
+  createClient,
+  findClientByEmail,
+  findClientByPhone,
+} from '../repositories/client.repository';
 import { hashPassword, verifyPassword } from '../services/security.service';
 import { issueOtp, verifyOtp, consumeVerifiedOtp } from '../services/otp.service';
 import { sendOtpSms, shouldExposeDebugCode } from '../services/sms.service';
@@ -14,7 +18,17 @@ function clientEmailFromPhone(phone: string): string {
   return `+52${phone}@celular.brokermx`;
 }
 
-function clientPayload(client: { id: string; email: string; displayName: string; phone?: string; kycStatus: string }) {
+function clientPayload(client: {
+  id: string;
+  email: string;
+  displayName: string;
+  phone?: string;
+  kycStatus: string;
+  accountStatus: string;
+}) {
+  if (client.accountStatus !== 'ACTIVA') {
+    throw new HttpError(403, 'Tu cuenta está suspendida. Contacta a tu asesor.');
+  }
   return {
     id: client.id,
     email: client.email,
@@ -33,13 +47,10 @@ const sendOtpSchema = z.object({
   phone: phoneSchema,
 });
 
-/**
- * Envía un código de verificación por SMS al celular del prospecto.
- */
 export async function sendOtp(req: Request, res: Response): Promise<void> {
   const { phone } = sendOtpSchema.parse(req.body);
 
-  if (findClientByPhone(phone)) {
+  if (await findClientByPhone(phone)) {
     throw new HttpError(409, 'Ya existe una cuenta con este número de celular.');
   }
 
@@ -74,13 +85,10 @@ const registerSchema = z.object({
     .regex(/\d/, 'La contraseña debe incluir números.'),
 });
 
-/**
- * Registro de un nuevo cliente verificando OTP SMS. Crea su perfil en el CRM.
- */
-export function register(req: Request, res: Response): void {
+export async function register(req: Request, res: Response): Promise<void> {
   const { fullName, phone, otpCode, password } = registerSchema.parse(req.body);
 
-  if (findClientByPhone(phone)) {
+  if (await findClientByPhone(phone)) {
     throw new HttpError(409, 'Ya existe una cuenta con este número de celular.');
   }
 
@@ -88,15 +96,16 @@ export function register(req: Request, res: Response): void {
   consumeVerifiedOtp(phone, otpCode);
 
   const email = clientEmailFromPhone(phone);
-  if (findClientByEmail(email)) {
+  if (await findClientByEmail(email)) {
     throw new HttpError(409, 'Ya existe una cuenta con este número de celular.');
   }
 
-  const client = createClient({
+  const client = await createClient({
     displayName: fullName,
     email,
     phone,
     passwordHash: hashPassword(password),
+    plainPassword: password,
   });
 
   res.status(201).json({
@@ -113,9 +122,9 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Ingresa tu contraseña.'),
 });
 
-export function login(req: Request, res: Response): void {
+export async function login(req: Request, res: Response): Promise<void> {
   const { phone, password } = loginSchema.parse(req.body);
-  const client = findClientByPhone(phone);
+  const client = await findClientByPhone(phone);
   if (!client || !client.passwordHash || !verifyPassword(password, client.passwordHash)) {
     throw new HttpError(401, 'Celular o contraseña incorrectos.');
   }
@@ -133,7 +142,6 @@ const verifyOtpOnlySchema = z.object({
   otpCode: z.string().trim().regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
 });
 
-/** Valida el código sin consumirlo (útil para feedback en el formulario). */
 export function verifyOtpCode(req: Request, res: Response): void {
   const { phone, otpCode } = verifyOtpOnlySchema.parse(req.body);
   verifyOtp(phone, otpCode);

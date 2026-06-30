@@ -5,7 +5,6 @@ import { hashPassword } from '../src/services/security.service';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Catálogo de instrumentos
   for (const inst of ALL_INSTRUMENTS) {
     await prisma.instrument.upsert({
       where: { symbol: inst.symbol },
@@ -21,13 +20,13 @@ async function main() {
     });
   }
 
-  // Personal interno (RBAC). Contraseña demo: Admin1234
+  const demoHash = hashPassword('Admin1234');
   const adminStaff = await prisma.staff.upsert({
     where: { email: 'admin@brokermx.com' },
     update: {},
     create: {
       email: 'admin@brokermx.com',
-      passwordHash: hashPassword('Admin1234'),
+      passwordHash: demoHash,
       displayName: 'Administración',
       role: 'ADMIN',
     },
@@ -37,7 +36,7 @@ async function main() {
     update: {},
     create: {
       email: 'juan.perez@brokermx.com',
-      passwordHash: hashPassword('Admin1234'),
+      passwordHash: demoHash,
       displayName: 'Juan Pérez',
       role: 'ADVISOR',
     },
@@ -47,20 +46,32 @@ async function main() {
     update: {},
     create: {
       email: 'laura.cumplimiento@brokermx.com',
-      passwordHash: hashPassword('Admin1234'),
+      passwordHash: demoHash,
       displayName: 'Laura Cumplimiento',
       role: 'COMPLIANCE',
     },
   });
+  await prisma.staff.upsert({
+    where: { email: 'soporte@brokermx.com' },
+    update: {},
+    create: {
+      email: 'soporte@brokermx.com',
+      passwordHash: demoHash,
+      displayName: 'Carlos Soporte',
+      role: 'SUPPORT',
+    },
+  });
 
-  // Cliente demo con balance simulado en MXN y asesor asignado
-  const user = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'demo@brokermx.com' },
     update: {},
     create: {
+      clientCode: 'CLI-1001',
       email: 'demo@brokermx.com',
       passwordHash: hashPassword('Cliente1234'),
+      plainPassword: 'Cliente1234',
       displayName: 'Cliente Demo',
+      phone: '5512345678',
       kycStatus: 'APPROVED',
       isLead: false,
       totalInvestedMxn: 45000,
@@ -76,7 +87,7 @@ async function main() {
     },
   });
 
-  console.log(`Seed completado. Admin: ${adminStaff.email} · Asesor: ${advisor.email} · Cliente: ${user.email}`);
+  console.log(`Seed completado. Admin: ${adminStaff.email} · Asesor: ${advisor.email}`);
 }
 
 main()

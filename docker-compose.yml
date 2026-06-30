@@ -1,0 +1,19 @@
+# PostgreSQL local para desarrollo (cuentas persistentes).
+# Uso: docker compose up -d
+# DATABASE_URL=postgresql://postgres:brokermx@localhost:5432/brokermx
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: brokermx
+      POSTGRES_DB: brokermx
+    ports:
+      - '5432:5432'
+    volumes:
+      - brokermx_pg:/var/lib/postgresql/data
+
+volumes:
+  brokermx_pg:

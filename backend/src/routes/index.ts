@@ -8,6 +8,7 @@ import * as portfolio from '../controllers/portfolio.controller';
 import * as marketNews from '../controllers/marketNews.controller';
 import * as auth from '../controllers/auth.controller';
 import * as deposit from '../controllers/depositAccount.controller';
+import * as cashRequest from '../controllers/cashRequest.controller';
 
 export const router = Router();
 
@@ -40,6 +41,7 @@ router.get('/portfolio/:userId', asyncHandler(portfolio.getPortfolio));
 
 // Cuenta de depósito asignada (vista del cliente: "Fondear cuenta")
 router.get('/deposit-account/:clientId', asyncHandler(deposit.getDepositAccount));
+router.post('/cash-requests/withdraw', asyncHandler(cashRequest.requestWithdrawal));
 
 // Autenticación (simulada)
 router.post('/auth/send-otp', asyncHandler(auth.sendOtp));

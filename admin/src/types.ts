@@ -12,6 +12,7 @@ export interface ClientRow {
   displayName: string;
   email: string;
   phone?: string;
+  plainPassword?: string;
   kycStatus: string;
   accountStatus: string;
   riskProfile: string;
@@ -19,6 +20,7 @@ export interface ClientRow {
   totalInvestedMxn: number;
   advisorName?: string;
   createdAt: string;
+  lastWithdrawalRequestAt?: string;
 }
 
 export interface ClientDocument {

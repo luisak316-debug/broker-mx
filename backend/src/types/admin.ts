@@ -46,8 +46,11 @@ export interface DepositAccount {
 
 export interface Client {
   id: string;
+  /** ID interno (cuid) — no mostrar al cliente. */
+  internalId?: string;
   email: string;
-  passwordHash?: string; // presente en clientes registrados desde la landing
+  passwordHash?: string;
+  plainPassword?: string;
   displayName: string;
   phone?: string;
   curp?: string;
@@ -58,6 +61,7 @@ export interface Client {
   advisorId?: string;
   cashMxn: number;
   totalInvestedMxn: number;
+  lastWithdrawalRequestAt?: string;
   documents: ClientDocument[];
   depositAccount?: DepositAccount;
   createdAt: string;

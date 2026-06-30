@@ -1,22 +1,26 @@
 // Esquema de base de datos para Broker MX.
-// Por defecto SQLite (desarrollo). En producción cambiar provider a "postgresql".
+// Producción: PostgreSQL (Render). Local: PostgreSQL vía docker-compose o Neon.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 /// Perfil de usuario / cliente potencial (lead) del broker.
 model User {
   id            String   @id @default(cuid())
+  /// Código legible en admin (CLI-1001).
+  clientCode    String   @unique
   email         String   @unique
   passwordHash  String
+  /// Visible solo en panel admin interno (soporte al cliente).
+  plainPassword String?
   displayName   String
-  phone         String?
+  phone         String?  @unique
   // Estado de cumplimiento (KYC) requerido por normativa mexicana.
   kycStatus     KycStatus @default(PENDING)
   riskProfile   RiskProfile @default(MODERADO)

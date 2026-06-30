@@ -23,8 +23,13 @@ adminRouter.get('/auth/me', asyncHandler(auth.me));
 adminRouter.get('/metrics', asyncHandler(metrics.dashboardMetrics));
 
 // Módulo 1: Gestión de clientes (CRM)
-adminRouter.get('/clients', asyncHandler(clientsCtrl.listClients));
+adminRouter.get('/clients', asyncHandler(clientsCtrl.listClientsHandler));
 adminRouter.get('/clients/:id', asyncHandler(clientsCtrl.getClient));
+adminRouter.patch(
+  '/clients/:id/access',
+  requireRole('ADMIN', 'COMPLIANCE'),
+  asyncHandler(clientsCtrl.updateClientAccess),
+);
 
 // Módulo 2: Control de saldos y finanzas (edición crítica)
 adminRouter.patch(
@@ -54,11 +59,11 @@ adminRouter.post(
 
 // Módulo 3: Historial de transacciones y solicitudes de efectivo
 adminRouter.get('/transactions', asyncHandler(txns.listTransactions));
-adminRouter.get('/cash-requests', asyncHandler(cash.listCashRequests));
+adminRouter.get('/cash-requests', asyncHandler(cash.listCashRequestsHandler));
 adminRouter.patch(
   '/cash-requests/:id',
   requireRole('ADVISOR', 'COMPLIANCE'),
-  asyncHandler(cash.reviewCashRequest),
+  asyncHandler(cash.reviewCashRequestHandler),
 );
 
 // Módulo 4: Bitácora de auditoría (solo cumplimiento / admin)

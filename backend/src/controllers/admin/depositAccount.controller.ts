@@ -1,11 +1,10 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { findClient } from '../../data/adminStore';
+import { findClient, updateDepositAccountFields } from '../../repositories/client.repository';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
 import { fmtMxn } from '../../utils/format';
-import type { DepositAccount } from '../../types/admin';
 
 const depositSchema = z.object({
   beneficiary: z.string().min(3, 'El beneficiario / razón social es obligatorio.'),
@@ -17,31 +16,39 @@ const depositSchema = z.object({
     .string()
     .regex(/^\d{18}$/, 'La CLABE interbancaria debe tener exactamente 18 dígitos.'),
   reference: z.string().min(1, 'La referencia única de pago es obligatoria.'),
-  // Monto inicial de inversión: opcional. Si se captura, se refleja al cliente.
   initialInvestmentMxn: z.number().nonnegative('El monto no puede ser negativo.').optional(),
 });
 
-/** Asigna, modifica o reemplaza dinámicamente la cuenta de depósito del cliente. */
-export function updateDepositAccount(req: Request, res: Response): void {
-  const client = findClient(req.params.id);
+export async function updateDepositAccount(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.id);
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
 
   const parsed = depositSchema.parse(req.body);
   const before = client.depositAccount ?? null;
 
-  const next: DepositAccount = {
-    ...parsed,
-    updatedAt: new Date().toISOString(),
+  const updated = await updateDepositAccountFields(client.id, {
+    beneficiary: parsed.beneficiary,
+    bank: parsed.bank,
+    accountNumber: parsed.accountNumber,
+    clabe: parsed.clabe,
+    reference: parsed.reference,
+    staffId: req.staff!.sub,
+  });
+  if (!updated) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const next = {
+    ...updated.depositAccount!,
+    initialInvestmentMxn: parsed.initialInvestmentMxn,
     updatedByName: req.staff!.name,
   };
-  client.depositAccount = next;
 
   const verbo = before ? 'modificó' : 'asignó';
   const montoTxt =
-    next.initialInvestmentMxn !== undefined
-      ? ` · Monto inicial sugerido: ${fmtMxn(next.initialInvestmentMxn)}`
+    parsed.initialInvestmentMxn !== undefined
+      ? ` · Monto inicial sugerido: ${fmtMxn(parsed.initialInvestmentMxn)}`
       : '';
-  const audit = record({
+
+  const audit = await record({
     actor: req.staff!,
     action: before ? 'DEPOSIT_ACCOUNT_UPDATE' : 'DEPOSIT_ACCOUNT_ASSIGN',
     targetUserId: client.id,

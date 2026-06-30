@@ -65,6 +65,11 @@ export const api = {
   },
   client: (id: string) => http<ClientProfile>(`/clients/${id}`),
 
+  updateClientAccess: (
+    id: string,
+    payload: { accountStatus: 'ACTIVA' | 'SUSPENDIDA' | 'BLOQUEADA' | 'CERRADA'; reason: string },
+  ) => http(`/clients/${id}/access`, { method: 'PATCH', body: JSON.stringify(payload) }),
+
   updateBalance: (
     id: string,
     payload: { cashMxn?: number; totalInvestedMxn?: number; reason: string },

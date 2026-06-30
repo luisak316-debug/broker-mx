@@ -2,23 +2,25 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/common/Card';
 import { CopyButton } from '../components/common/CopyButton';
-import { DEMO_CLIENT_ID } from '../config';
 import { useClientAuth } from '../auth/ClientAuthContext';
 import { fmtMxn } from '../lib/format';
 import type { DepositAccountInfo } from '../types';
 
 export function Fund() {
   const { client } = useClientAuth();
-  const clientId = client?.id ?? DEMO_CLIENT_ID;
+  const clientId = client?.id;
   const [info, setInfo] = useState<DepositAccountInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawNote, setWithdrawNote] = useState('');
+  const [withdrawMsg, setWithdrawMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!clientId) return;
     const load = () =>
       api.depositAccount(clientId).then(setInfo).catch((e) => setError(e.message));
     load();
-    // Lee en "tiempo real" los cambios que el asesor haga desde el backoffice.
     const id = setInterval(load, 8000);
     return () => clearInterval(id);
   }, [clientId]);
@@ -26,6 +28,27 @@ export function Fund() {
   function showToast() {
     setToast(true);
     setTimeout(() => setToast(false), 2500);
+  }
+
+  async function submitWithdrawal() {
+    if (!clientId) return;
+    const amountMxn = Number(withdrawAmount.replace(/,/g, ''));
+    if (!Number.isFinite(amountMxn) || amountMxn <= 0) {
+      setWithdrawMsg('Ingresa un monto válido.');
+      return;
+    }
+    try {
+      const res = await api.requestWithdrawal({
+        clientId,
+        amountMxn,
+        note: withdrawNote || undefined,
+      });
+      setWithdrawMsg(res.message);
+      setWithdrawAmount('');
+      setWithdrawNote('');
+    } catch (e) {
+      setWithdrawMsg(e instanceof Error ? e.message : 'No se pudo enviar la solicitud.');
+    }
   }
 
   return (
@@ -89,13 +112,33 @@ export function Fund() {
           </p>
         </div>
 
-        <Card title="¿Cómo funciona?">
-          <ol className="space-y-3 text-sm text-slate-300">
-            <li><span className="font-semibold text-white">1.</span> Copia los datos con el botón <em>Copiar</em>.</li>
-            <li><span className="font-semibold text-white">2.</span> Abre tu banca en línea y registra la cuenta CLABE.</li>
-            <li><span className="font-semibold text-white">3.</span> Realiza la transferencia SPEI incluyendo tu referencia.</li>
-            <li><span className="font-semibold text-white">4.</span> Tu saldo se actualizará al confirmarse el depósito.</li>
-          </ol>
+        <Card title="Solicitar retiro">
+          <p className="mb-3 text-sm text-slate-400">
+            Envía una solicitud de retiro de inversión. Tu asesor la revisará y te contactará.
+          </p>
+          <label className="block">
+            <span className="label">Monto a retirar (MXN)</span>
+            <input
+              className="input"
+              inputMode="decimal"
+              placeholder="Ej. 5000"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+            />
+          </label>
+          <label className="mt-3 block">
+            <span className="label">Nota opcional</span>
+            <input
+              className="input"
+              placeholder="Ej. Retiro parcial para gastos familiares"
+              value={withdrawNote}
+              onChange={(e) => setWithdrawNote(e.target.value)}
+            />
+          </label>
+          <button type="button" className="btn-primary mt-4 w-full" onClick={submitWithdrawal}>
+            Enviar solicitud de retiro
+          </button>
+          {withdrawMsg ? <p className="mt-3 text-sm text-brand-200">{withdrawMsg}</p> : null}
         </Card>
       </div>
 

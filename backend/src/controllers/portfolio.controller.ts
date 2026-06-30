@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { findClient } from '../data/adminStore';
+import { findClient } from '../repositories/client.repository';
 import { portfolioService } from '../services/portfolio.service';
 import { marketData } from '../services/marketData.service';
 import { findInstrument } from '../data/instruments';
@@ -19,10 +19,10 @@ export function placeOrder(req: Request, res: Response): void {
   res.status(201).json({ data: result });
 }
 
-export function getPortfolio(req: Request, res: Response): void {
+export async function getPortfolio(req: Request, res: Response): Promise<void> {
   const userId = req.params.userId || 'demo-user';
   const portfolio = portfolioService.getOrCreate(userId);
-  const client = findClient(userId);
+  const client = await findClient(userId);
   if (client) portfolio.cashMxn = client.cashMxn;
 
   // Valuación a mercado (P&L no realizado) de las posiciones abiertas.
