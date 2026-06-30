@@ -108,13 +108,13 @@ export function ForgotPassword() {
           aria-live="assertive"
         >
           <p className="text-sm font-semibold text-white sm:text-base">
-            ✓ Contraseña actualizada correctamente — ya puedes iniciar sesión
+            ✓ Acceso recuperado con éxito — ya puedes iniciar sesión
           </p>
         </div>
       )}
 
       <AuthShell
-        title={step === 'success' ? 'Contraseña actualizada' : 'Recuperar contraseña'}
+        title={step === 'success' ? 'Acceso restablecido' : 'Recuperar contraseña'}
         subtitle={
           step === 'phone'
             ? 'Te enviaremos un código SMS al celular registrado en tu cuenta.'
@@ -154,9 +154,9 @@ export function ForgotPassword() {
             </div>
 
             <div className="space-y-3">
-              <p className="text-xl font-bold text-white">¡Contraseña recuperada con éxito!</p>
+              <p className="text-xl font-bold text-white">¡Acceso recuperado con éxito!</p>
               <p className="text-sm leading-relaxed text-slate-300">
-                Tu contraseña ha sido actualizada correctamente
+                Tu acceso ha sido restablecido correctamente
                 {maskedPhone ? (
                   <>
                     {' '}
@@ -164,7 +164,7 @@ export function ForgotPassword() {
                     <span className="font-semibold text-white">{maskedPhone}</span>
                   </>
                 ) : null}
-                . Utiliza tu nueva contraseña para entrar a Broker.mx.
+                . Inicia sesión con tu nueva contraseña en Broker.mx.
               </p>
             </div>
 
@@ -179,7 +179,9 @@ export function ForgotPassword() {
             <button
               type="button"
               className="btn-primary w-full py-3 text-base"
-              onClick={() => navigate('/login', { replace: true })}
+              onClick={() =>
+                navigate('/login', { replace: true, state: { phone: phone.trim() } })
+              }
             >
               Ir a iniciar sesión
             </button>
@@ -204,12 +206,14 @@ export function ForgotPassword() {
             </button>
           </form>
         ) : (
-          <form onSubmit={onReset} className="space-y-4" noValidate>
+          <form onSubmit={onReset} className="space-y-4" noValidate autoComplete="off">
             <label className="block">
               <span className="mb-1 block text-sm text-slate-300">Código SMS (6 dígitos)</span>
               <input
                 type="text"
+                name="one-time-code"
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="123456"
