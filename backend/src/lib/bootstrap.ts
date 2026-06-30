@@ -1,26 +1,55 @@
-import { execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { prisma } from './prisma';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
 
-/** Migraciones + datos mínimos (staff, instrumentos). Los clientes registrados persisten en BD. */
+function resolveBackendRoot(): string {
+  const fromDist = path.resolve(__dirname, '..', '..');
+  if (existsSync(path.join(fromDist, 'prisma', 'schema.prisma'))) return fromDist;
+
+  const fromCwd = path.join(process.cwd(), 'backend');
+  if (existsSync(path.join(fromCwd, 'prisma', 'schema.prisma'))) return fromCwd;
+
+  if (existsSync(path.join(process.cwd(), 'prisma', 'schema.prisma'))) return process.cwd();
+
+  return fromDist;
+}
+
+function resolvePrismaBin(): string {
+  const candidates = [
+    resolveBackendRoot(),
+    path.join(resolveBackendRoot(), '..'),
+    process.cwd(),
+  ];
+  for (const root of candidates) {
+    const bin = path.join(root, 'node_modules', '.bin', 'prisma');
+    if (existsSync(bin)) return bin;
+  }
+  return 'prisma';
+}
+
+function ensureSchema(): void {
+  const backendRoot = resolveBackendRoot();
+  const prismaBin = resolvePrismaBin();
+  execFileSync(prismaBin, ['db', 'push', '--accept-data-loss'], {
+    cwd: backendRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+}
+
+/** Conecta BD, aplica schema y siembra staff/instrumentos si faltan. */
 export async function bootstrapDatabase(): Promise<void> {
-  const backendRoot = path.resolve(__dirname, '..', '..');
-  try {
-    execSync('npx prisma migrate deploy', {
-      cwd: backendRoot,
-      stdio: 'inherit',
-      env: process.env,
-    });
-  } catch {
-    execSync('npx prisma db push --accept-data-loss', {
-      cwd: backendRoot,
-      stdio: 'inherit',
-      env: process.env,
-    });
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL no está configurada. En Render: Environment → vincular PostgreSQL broker-mx-db.',
+    );
   }
 
+  ensureSchema();
+  await prisma.$connect();
   await seedInstruments();
   await seedStaff();
 }
