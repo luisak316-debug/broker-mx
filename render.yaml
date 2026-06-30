@@ -1,15 +1,15 @@
 # API permanente en Render.com — SMS 24/7 sin tu PC encendida
-# Planes de pago: API siempre encendida (sin cold start ~1 min del plan free)
+# Plan producción (~$44 USD/mes · ~$768 MXN/mes): Standard API + PostgreSQL 1 GB
 # 1) Sube el repo a GitHub
-# 2) dashboard.render.com → New → Blueprint → conecta broker-mx
-# 3) Tarjeta en Render (Billing) + variables Twilio (desde backend/.env)
+# 2) dashboard.render.com → Billing (tarjeta) + confirma planes Standard / Basic 1 GB
+# 3) Variables Twilio (desde backend/.env)
 # 4) Ejecuta CONFIGURAR_API_VERCEL.bat con la URL de Render
 
 services:
   - type: web
     name: broker-mx-api
     runtime: node
-    plan: starter
+    plan: standard
     buildCommand: NPM_CONFIG_PRODUCTION=false npm install && npm --workspace backend run prisma:generate && npm --workspace backend run prisma:push && npm --workspace backend run build
     startCommand: npm run start:prod
     healthCheckPath: /api/health
@@ -36,6 +36,6 @@ services:
 
 databases:
   - name: broker-mx-db
-    plan: basic-256mb
+    plan: basic-1gb
     databaseName: brokermx
     user: brokermx
