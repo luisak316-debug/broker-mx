@@ -18,7 +18,12 @@ export function Topbar({ connected }: { connected: boolean }) {
 
   useEffect(() => {
     if (!client?.id) return;
-    api.portfolio(client.id).then((p) => setCash(p.cashMxn)).catch(() => setCash(null));
+    function refresh() {
+      api.portfolio(client!.id).then((p) => setCash(p.cashMxn)).catch(() => setCash(null));
+    }
+    refresh();
+    window.addEventListener('brokermx:balance-updated', refresh);
+    return () => window.removeEventListener('brokermx:balance-updated', refresh);
   }, [client?.id]);
 
   function onLogout() {

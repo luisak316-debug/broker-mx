@@ -83,9 +83,8 @@ export const api = {
     note?: string;
     payoutBank: string;
     payoutOwnerName: string;
-    payoutConcept: string;
   }) =>
-    http<{ message: string }>(`/cash-requests/withdraw`, {
+    http<{ message: string; cashMxn: number }>(`/cash-requests/withdraw`, {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

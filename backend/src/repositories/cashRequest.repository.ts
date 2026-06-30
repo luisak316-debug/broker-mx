@@ -105,7 +105,11 @@ export async function createCashRequest(input: {
   payoutBank?: string;
   payoutOwnerName?: string;
   payoutConcept?: string;
+  status?: RequestStatus;
 }): Promise<CashRequest> {
+  const status = input.status ?? 'PENDIENTE';
+  const reviewedAt = status === 'APROBADA' ? new Date().toISOString() : undefined;
+
   if (!isDatabaseEnabled()) {
     const client = legacy.findClient(input.userInternalId);
     const request: CashRequest = {
@@ -119,7 +123,8 @@ export async function createCashRequest(input: {
       payoutBank: input.payoutBank,
       payoutOwnerName: input.payoutOwnerName,
       payoutConcept: input.payoutConcept,
-      status: 'PENDIENTE',
+      status,
+      reviewedAt,
       createdAt: new Date().toISOString(),
     };
     return legacy.appendCashRequest(request);
@@ -135,6 +140,8 @@ export async function createCashRequest(input: {
       payoutBank: input.payoutBank,
       payoutOwnerName: input.payoutOwnerName,
       payoutConcept: input.payoutConcept,
+      status,
+      reviewedAt: status === 'APROBADA' ? new Date() : undefined,
     },
     include: {
       user: { select: { displayName: true, clientCode: true } },
@@ -179,8 +186,12 @@ export async function reviewCashRequest(
 
 export async function countPendingCashRequests(): Promise<number> {
   if (!isDatabaseEnabled()) {
-    return legacy.cashRequests.filter((r) => r.status === 'PENDIENTE').length;
+    return legacy.cashRequests.filter(
+      (r) => r.status === 'PENDIENTE' && r.type === 'DEPOSITO',
+    ).length;
   }
 
-  return prisma.cashRequest.count({ where: { status: 'PENDIENTE' } });
+  return prisma.cashRequest.count({
+    where: { status: 'PENDIENTE', type: 'DEPOSITO' },
+  });
 }

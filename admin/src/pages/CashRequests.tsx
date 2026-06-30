@@ -42,7 +42,7 @@ export function CashRequests() {
       <header>
         <h1 className="text-2xl font-bold text-white">Solicitudes de Efectivo</h1>
         <p className="text-sm text-slate-400">
-          Aprueba, rechaza o deja pendientes los depósitos y retiros solicitados desde la app.
+          Aprueba o rechaza depósitos. Los retiros se registran al instante desde la app del cliente.
         </p>
       </header>
 
@@ -114,7 +114,7 @@ export function CashRequests() {
                   <td className="text-right font-semibold text-white">{fmtMxn(r.amountMxn)}</td>
                   <td><Badge value={r.status} /></td>
                   <td className="text-right">
-                    {canReview && r.status === 'PENDIENTE' ? (
+                    {canReview && r.status === 'PENDIENTE' && r.type === 'DEPOSITO' ? (
                       <div className="flex justify-end gap-1">
                         <button
                           className="btn-ok px-2 py-1 text-xs"
@@ -129,6 +129,8 @@ export function CashRequests() {
                           Rechazar
                         </button>
                       </div>
+                    ) : r.type === 'RETIRO' ? (
+                      <span className="text-xs text-slate-500">Registrado</span>
                     ) : (
                       <span className="text-xs text-slate-500">
                         {r.reviewedByName ? `Por ${r.reviewedByName}` : '—'}

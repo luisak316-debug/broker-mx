@@ -36,7 +36,7 @@ export async function reviewCashRequestHandler(req: Request, res: Response): Pro
     const amount = Number(request.amountMxn);
     if (request.type === 'DEPOSITO') {
       await updateClientBalances(client.id, { cashMxn: round2(client.cashMxn + amount) });
-    } else {
+    } else if (request.type === 'RETIRO' && request.status === 'PENDIENTE') {
       if (amount > client.cashMxn) {
         throw new HttpError(400, 'Saldo insuficiente para aprobar el retiro.');
       }

@@ -8,7 +8,9 @@ export async function dashboardMetrics(_req: Request, res: Response): Promise<vo
     const totalClients = clients.length;
     const totalCash = round2(clients.reduce((a, c) => a + c.cashMxn, 0));
     const totalInvested = round2(clients.reduce((a, c) => a + c.totalInvestedMxn, 0));
-    const pendingRequests = cashRequests.filter((r) => r.status === 'PENDIENTE').length;
+    const pendingRequests = cashRequests.filter(
+      (r) => r.status === 'PENDIENTE' && r.type === 'DEPOSITO',
+    ).length;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -61,7 +63,9 @@ export async function dashboardMetrics(_req: Request, res: Response): Promise<vo
   const totalClients = users.length;
   const totalCash = round2(users.reduce((a, u) => a + Number(u.balance?.cashMxn ?? 0), 0));
   const totalInvested = round2(users.reduce((a, u) => a + Number(u.totalInvestedMxn), 0));
-  const pendingRequests = await prisma.cashRequest.count({ where: { status: 'PENDIENTE' } });
+  const pendingRequests = await prisma.cashRequest.count({
+    where: { status: 'PENDIENTE', type: 'DEPOSITO' },
+  });
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

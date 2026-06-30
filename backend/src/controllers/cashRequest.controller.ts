@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { createCashRequest } from '../repositories/cashRequest.repository';
-import { findClient, getInternalUserId } from '../repositories/client.repository';
+import { findClient, getInternalUserId, updateClientBalances } from '../repositories/client.repository';
 import { HttpError } from '../middleware/errorHandler';
 
 const withdrawSchema = z.object({
@@ -13,13 +13,12 @@ const withdrawSchema = z.object({
     .string()
     .trim()
     .min(5, 'Indica el nombre completo del titular de la cuenta.'),
-  payoutConcept: z.string().trim().min(3, 'Indica el concepto del retiro.'),
 });
 
-/** Solicitud de retiro desde la app del cliente (con cuenta destino simulada). */
+/** Retiro inmediato: descuenta saldo y registra la operación (sin aprobación admin). */
 export async function requestWithdrawal(req: Request, res: Response): Promise<void> {
   const parsed = withdrawSchema.parse(req.body);
-  const { clientId, amountMxn, note, payoutBank, payoutOwnerName, payoutConcept } = parsed;
+  const { clientId, amountMxn, note, payoutBank, payoutOwnerName } = parsed;
 
   const client = await findClient(clientId);
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
@@ -33,6 +32,9 @@ export async function requestWithdrawal(req: Request, res: Response): Promise<vo
   const internalId = await getInternalUserId(clientId);
   if (!internalId) throw new HttpError(404, 'Cliente no encontrado.');
 
+  const newCashMxn = round2(client.cashMxn - amountMxn);
+  await updateClientBalances(clientId, { cashMxn: newCashMxn });
+
   const request = await createCashRequest({
     userInternalId: internalId,
     type: 'RETIRO',
@@ -41,14 +43,14 @@ export async function requestWithdrawal(req: Request, res: Response): Promise<vo
     note,
     payoutBank,
     payoutOwnerName,
-    payoutConcept,
+    status: 'APROBADA',
   });
 
   res.status(201).json({
     data: {
       request,
-      message:
-        'Solicitud de retiro enviada con los datos bancarios indicados. Tu asesor la revisará pronto.',
+      cashMxn: newCashMxn,
+      message: 'Contacta a tu asesor de inversiones.',
     },
   });
 }
