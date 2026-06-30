@@ -1,14 +1,15 @@
 # API permanente en Render.com — SMS 24/7 sin tu PC encendida
+# Planes de pago: API siempre encendida (sin cold start ~1 min del plan free)
 # 1) Sube el repo a GitHub
 # 2) dashboard.render.com → New → Blueprint → conecta broker-mx
-# 3) Pega las variables Twilio (desde backend/.env)
+# 3) Tarjeta en Render (Billing) + variables Twilio (desde backend/.env)
 # 4) Ejecuta CONFIGURAR_API_VERCEL.bat con la URL de Render
 
 services:
   - type: web
     name: broker-mx-api
     runtime: node
-    plan: free
+    plan: starter
     buildCommand: NPM_CONFIG_PRODUCTION=false npm install && npm --workspace backend run prisma:generate && npm --workspace backend run prisma:push && npm --workspace backend run build
     startCommand: npm run start:prod
     healthCheckPath: /api/health
@@ -35,6 +36,6 @@ services:
 
 databases:
   - name: broker-mx-db
-    plan: free
+    plan: basic-256mb
     databaseName: brokermx
     user: brokermx

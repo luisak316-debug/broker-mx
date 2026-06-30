@@ -110,8 +110,8 @@ echo   API:  %RENDER_URL%
 echo   Web:  https://brokermx-alpha.vercel.app/
 echo   Admin: https://brokermxadmin-khaki.vercel.app/
 echo.
-echo   Prueba registro con SMS. La primera vez
-echo   Render puede tardar ~1 min (plan gratis).
+echo   Prueba registro con SMS. Con plan Starter
+echo   la API responde al instante (sin cold start).
 echo ============================================
 
 :fin
