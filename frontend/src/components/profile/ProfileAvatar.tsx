@@ -6,7 +6,13 @@ type Props = {
   photoUrl?: string;
   initials: string;
   onPhotoSaved: (url: string) => void;
+  size?: 'md' | 'lg';
 };
+
+const SIZE = {
+  md: { box: 'h-12 w-12', text: 'text-sm', cam: 'h-4 w-4 text-[10px]' },
+  lg: { box: 'h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]', text: 'text-lg', cam: 'h-5 w-5 text-xs' },
+} as const;
 
 function resolvePhotoUrl(url?: string): string | undefined {
   if (!url) return undefined;
@@ -14,7 +20,7 @@ function resolvePhotoUrl(url?: string): string | undefined {
   return `${getUploadsBase()}${url}`;
 }
 
-export function ProfileAvatar({ photoUrl, initials, onPhotoSaved }: Props) {
+export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }: Props) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -98,12 +104,13 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved }: Props) {
   }
 
   const resolved = resolvePhotoUrl(photoUrl);
+  const s = SIZE[size];
 
   return (
     <>
       <button
         type="button"
-        className="group relative h-9 w-9 shrink-0"
+        className={`group relative shrink-0 ${s.box}`}
         aria-label="Tomar foto de perfil"
         onClick={() => setOpen(true)}
       >
@@ -111,14 +118,18 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved }: Props) {
           <img
             src={resolved}
             alt="Foto de perfil"
-            className="h-9 w-9 rounded-full object-cover ring-2 ring-amber-400/40"
+            className={`${s.box} rounded-full object-cover ring-2 ring-amber-400/50`}
           />
         ) : (
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-ink-600 text-sm font-semibold text-white ring-2 ring-amber-400/30">
+          <span
+            className={`${s.box} grid place-items-center rounded-full bg-gradient-to-br from-amber-400/90 to-brand-600 font-semibold text-white ring-2 ring-amber-400/40 ${s.text}`}
+          >
             {initials}
           </span>
         )}
-        <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-amber-400 text-[10px] text-ink-900 shadow-md ring-2 ring-ink-900">
+        <span
+          className={`absolute -bottom-0.5 -right-0.5 grid place-items-center rounded-full bg-amber-400 text-ink-900 shadow-md ring-2 ring-ink-900 ${s.cam}`}
+        >
           📷
         </span>
       </button>

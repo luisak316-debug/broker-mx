@@ -36,6 +36,7 @@ export async function listClientsHandler(req: Request, res: Response): Promise<v
       advisorName: c.advisorId ? (await findStaffById(c.advisorId))?.displayName : undefined,
       createdAt: c.createdAt,
       lastWithdrawalRequestAt: c.lastWithdrawalRequestAt,
+      profilePhotoUrl: c.profilePhotoUrl,
     })),
   );
 

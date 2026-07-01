@@ -18,6 +18,7 @@ export async function listClientsSummary(req: Request, res: Response): Promise<v
       advisorName: c.advisorId ? (await findStaffById(c.advisorId))?.displayName : undefined,
       accountStatus: c.accountStatus,
       createdAt: c.createdAt,
+      profilePhotoUrl: c.profilePhotoUrl,
     })),
   );
 

@@ -17,6 +17,7 @@ export interface ClientSummary {
   advisorName?: string;
   accountStatus: string;
   createdAt: string;
+  profilePhotoUrl?: string;
 }
 
 export interface AdvisorRow {

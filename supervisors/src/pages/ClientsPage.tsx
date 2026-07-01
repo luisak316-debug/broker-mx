@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
+import { ClientAvatar } from '../components/ui/ClientAvatar';
 import { fmtDate, fmtMxn } from '../lib/format';
 
 export function ClientsPage() {
@@ -65,8 +66,17 @@ export function ClientsPage() {
                 rows.map((c) => (
                   <tr key={c.id}>
                     <td>
-                      <p className="font-medium text-white">{c.displayName}</p>
-                      <p className="text-xs text-slate-500">{c.id}</p>
+                      <div className="flex items-center gap-3">
+                        <ClientAvatar
+                          displayName={c.displayName}
+                          photoUrl={c.profilePhotoUrl}
+                          size="md"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-medium text-white">{c.displayName}</p>
+                          <p className="text-xs text-slate-500">{c.id}</p>
+                        </div>
+                      </div>
                     </td>
                     <td>{c.phone ?? '—'}</td>
                     <td>{c.email}</td>

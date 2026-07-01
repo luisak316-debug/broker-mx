@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { ClientAvatar } from '../components/ui/ClientAvatar';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
@@ -211,15 +212,24 @@ export function ClientProfile() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link to="/clientes" className="text-sm text-brand-400 hover:underline">
-            ← Volver a clientes
-          </Link>
-          <h1 className="mt-1 text-2xl font-bold text-white">{client.displayName}</h1>
-          <p className="text-sm text-slate-400">
-            {client.id} · {client.email}
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          {client && (
+            <ClientAvatar
+              displayName={client.displayName}
+              photoUrl={client.profilePhotoUrl}
+              size="md"
+            />
+          )}
+          <div className="min-w-0">
+            <Link to="/clientes" className="text-sm text-brand-400 hover:underline">
+              ← Volver a clientes
+            </Link>
+            <h1 className="mt-1 truncate text-2xl font-bold text-white">{client.displayName}</h1>
+            <p className="text-sm text-slate-400">
+              {client.id} · {client.email}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge value={client.accountStatus} />

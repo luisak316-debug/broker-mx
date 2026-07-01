@@ -48,15 +48,22 @@ export function Topbar({ connected }: { connected: boolean }) {
             {cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—'}
           </p>
         </div>
-        <div className="hidden text-right sm:block">
-          <p className="text-sm font-semibold text-white">{client?.displayName ?? 'Cliente'}</p>
-          <p className="text-xs text-slate-400">{client?.phone ? fmtPhone(client.phone) : ''}</p>
+        <div className="flex items-center gap-3 rounded-xl border border-ink-600/50 bg-ink-800/40 px-3 py-2">
+          <ProfileAvatar
+            photoUrl={client?.profilePhotoUrl}
+            initials={initials}
+            onPhotoSaved={updateProfilePhoto}
+            size="lg"
+          />
+          <div className="min-w-0 text-left">
+            <p className="truncate text-base font-semibold text-white sm:text-lg">
+              {client?.displayName ?? 'Cliente'}
+            </p>
+            <p className="truncate text-sm text-slate-300">
+              {client?.phone ? fmtPhone(client.phone) : ''}
+            </p>
+          </div>
         </div>
-        <ProfileAvatar
-          photoUrl={client?.profilePhotoUrl}
-          initials={initials}
-          onPhotoSaved={updateProfilePhoto}
-        />
         <button onClick={onLogout} className="btn-ghost">
           Salir
         </button>

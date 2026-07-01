@@ -21,6 +21,7 @@ export interface ClientRow {
   advisorName?: string;
   createdAt: string;
   lastWithdrawalRequestAt?: string;
+  profilePhotoUrl?: string;
 }
 
 export interface ClientDocument {
