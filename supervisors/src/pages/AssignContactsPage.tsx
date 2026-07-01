@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
-import { fmtDate, assignmentDate } from '../lib/format';
+import { fmtDate, isoDate } from '../lib/format';
 import { parseBulkContacts, previewDistribution } from '../lib/parseBulkContacts';
 import { ManagerTeamsBulkForm } from '../components/assign/ManagerTeamsBulkForm';
-import type { AdvisorRow, ContactRow, ManagerTeamRow } from '../types';
+import type { AdvisorRow, ContactRow } from '../types';
 
 type Mode = 'bulk' | 'managers' | 'single';
 
 export function AssignContactsPage() {
   const [mode, setMode] = useState<Mode>('bulk');
   const [advisors, setAdvisors] = useState<AdvisorRow[]>([]);
-  const [managerTeams, setManagerTeams] = useState<ManagerTeamRow[]>([]);
   const [todayRows, setTodayRows] = useState<ContactRow[]>([]);
   const [form, setForm] = useState({
     advisorId: '',
@@ -25,7 +24,7 @@ export function AssignContactsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
 
-  const assignmentDay = assignmentDate();
+  const callDay = isoDate(new Date());
 
   const bulkPreview = useMemo(() => {
     if (!bulkText.trim()) {
@@ -43,8 +42,8 @@ export function AssignContactsPage() {
     }));
   }, [advisors, bulkPreview.contacts.length]);
 
-  function reloadAssigned(advisorId?: string) {
-    const [year, month, day] = assignmentDay.split('-').map(Number);
+  function reloadToday(advisorId?: string) {
+    const [year, month, day] = callDay.split('-').map(Number);
     api
       .contacts({
         advisorId: advisorId || undefined,
@@ -56,12 +55,11 @@ export function AssignContactsPage() {
   }
 
   useEffect(() => {
-    Promise.all([api.advisors(), api.managers()]).then(([list, teams]) => {
+    api.advisors().then((list) => {
       setAdvisors(list);
-      setManagerTeams(teams);
       if (list[0]) setForm((f) => ({ ...f, advisorId: f.advisorId || list[0].id }));
     });
-    reloadAssigned();
+    reloadToday();
   }, []);
 
   async function onSaveSingle(e: FormEvent) {
@@ -84,11 +82,11 @@ export function AssignContactsPage() {
         phone: form.phone.replace(/\D/g, '').slice(-10),
         email: form.email,
         description: form.description,
-        assignedDate: assignmentDay,
+        assignedDate: callDay,
       });
       setSaved('Contacto guardado y asignado al asesor.');
       setForm((f) => ({ ...f, clientName: '', phone: '', email: '', description: '' }));
-      reloadAssigned(form.advisorId);
+      reloadToday(form.advisorId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar.');
     } finally {
@@ -112,7 +110,7 @@ export function AssignContactsPage() {
 
     setBusy(true);
     try {
-      const result = await api.bulkAssignContacts({ rawText: bulkText, assignedDate: assignmentDay });
+      const result = await api.bulkAssignContacts({ rawText: bulkText, assignedDate: callDay });
       const detail = result.distribution
         .filter((d) => d.count > 0)
         .map((d) => `${d.advisorName}: ${d.count}`)
@@ -123,7 +121,7 @@ export function AssignContactsPage() {
         `${result.saved} contactos repartidos entre ${advisors.length} asesores${skipped}. ${detail}`,
       );
       setBulkText('');
-      reloadAssigned();
+      reloadToday();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar la asignación masiva.');
     } finally {
@@ -138,7 +136,7 @@ export function AssignContactsPage() {
       <header>
         <h1 className="text-2xl font-bold text-white">Asignar contactos</h1>
         <p className="text-sm text-slate-400">
-          Reparte prospectos a tus asesores para sus llamadas de mañana ({fmtDate(assignmentDay)}).
+          Reparte prospectos a tus asesores para sus llamadas de hoy ({fmtDate(callDay)}).
         </p>
       </header>
 
@@ -181,9 +179,8 @@ export function AssignContactsPage() {
       {mode === 'managers' ? (
         <ManagerTeamsBulkForm
           advisors={advisors}
-          teams={managerTeams}
-          today={assignmentDay}
-          onSaved={() => reloadAssigned()}
+          today={callDay}
+          onSaved={() => reloadToday()}
         />
       ) : mode === 'bulk' ? (
         <Card title="Asignación masiva — pegar desde libreta">
@@ -302,7 +299,7 @@ export function AssignContactsPage() {
                 value={form.advisorId}
                 onChange={(e) => {
                   setForm({ ...form, advisorId: e.target.value });
-                  reloadAssigned(e.target.value);
+                  reloadToday(e.target.value);
                 }}
                 required
               >
@@ -378,7 +375,7 @@ export function AssignContactsPage() {
       )}
 
       {mode === 'single' && form.advisorId && (
-        <Card title={`Contactos asignados para mañana — ${advisorName ?? 'Asesor'}`}>
+        <Card title={`Contactos de hoy — ${advisorName ?? 'Asesor'}`}>
           <div className="overflow-x-auto">
             <table className="table-base">
               <thead>
@@ -393,7 +390,7 @@ export function AssignContactsPage() {
                 {todayRows.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-6 text-center text-slate-400">
-                      Sin contactos asignados para mañana.
+                      Sin contactos asignados hoy.
                     </td>
                   </tr>
                 ) : (

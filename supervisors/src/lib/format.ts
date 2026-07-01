@@ -16,11 +16,6 @@ export function isoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Fecha de llamadas: siempre el día siguiente en hora local del navegador. */
-export function assignmentDate(base: Date = new Date()): string {
-  return isoDate(shiftDays(base, 1));
-}
-
 export function shiftDays(base: Date, delta: number): Date {
   const d = new Date(base);
   d.setDate(d.getDate() + delta);

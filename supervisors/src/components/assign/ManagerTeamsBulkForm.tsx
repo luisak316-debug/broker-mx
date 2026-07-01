@@ -2,18 +2,21 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { api } from '../../api/client';
 import { Card } from '../ui/Card';
 import { parseBulkContacts, previewDistribution } from '../../lib/parseBulkContacts';
-import type { AdvisorRow, ManagerTeamRow } from '../../types';
+import type { AdvisorRow } from '../../types';
 
 const TEAM_IDS = [1, 2, 3, 4] as const;
 
+function teamLabel(team: number): string {
+  return `Gerencia ${team}`;
+}
+
 type Props = {
   advisors: AdvisorRow[];
-  teams: ManagerTeamRow[];
   today: string;
   onSaved: () => void;
 };
 
-export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props) {
+export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
   const [teamTexts, setTeamTexts] = useState<Record<number, string>>({ 1: '', 2: '', 3: '', 4: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,10 +28,9 @@ export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props)
       const parsed = raw.trim() ? parseBulkContacts(raw) : { contacts: [], skippedLines: [] as string[] };
       const teamAdvisors = advisors.filter((a) => a.managerTeam === team);
       const counts = previewDistribution(parsed.contacts.length, teamAdvisors.length);
-      const meta = teams.find((t) => t.team === team);
       return {
         team,
-        label: meta?.displayName ?? `Gerencia ${team}`,
+        label: teamLabel(team),
         advisorCount: teamAdvisors.length,
         parsed,
         distribution: teamAdvisors.map((a, i) => ({
@@ -38,7 +40,7 @@ export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props)
         })),
       };
     });
-  }, [teamTexts, advisors, teams]);
+  }, [teamTexts, advisors]);
 
   const totalContacts = teamPreviews.reduce((s, t) => s + t.parsed.contacts.length, 0);
 

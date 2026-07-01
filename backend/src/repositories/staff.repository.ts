@@ -112,7 +112,7 @@ export async function listManagerTeams(): Promise<
     const mgr = managers.find((m) => m.managerTeam === team);
     return {
       team,
-      displayName: mgr?.displayName ?? `Gerencia ${team}`,
+      displayName: `Gerencia ${team}`,
       managerId: mgr?.id,
       advisorCount: advisorCounts[i],
     };
