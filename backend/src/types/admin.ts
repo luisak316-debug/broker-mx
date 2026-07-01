@@ -15,6 +15,9 @@ export interface Staff {
   displayName: string;
   role: StaffRole;
   managerTeam?: number | null;
+  phone?: string | null;
+  hireDate?: string | null;
+  inactiveDate?: string | null;
   active: boolean;
   lastLoginAt?: string;
   createdAt: string;

@@ -66,6 +66,12 @@ model Staff {
   role          StaffRole  @default(ADVISOR)
   /// Equipo de gerencia 1–4 (asesores y gerentes).
   managerTeam   Int?
+  /// Teléfono actual del asesor (10 dígitos).
+  phone         String?
+  /// Fecha de ingreso a la empresa.
+  hireDate      DateTime?  @db.Date
+  /// Fecha en que dejó de estar activo.
+  inactiveDate  DateTime?  @db.Date
   active        Boolean    @default(true)
   lastLoginAt   DateTime?
   createdAt     DateTime   @default(now())
@@ -77,6 +83,21 @@ model Staff {
   advisorContacts AdvisorContact[] @relation("AdvisorContacts")
   /// Contactos que este supervisor asignó.
   assignedContacts AdvisorContact[] @relation("AssignedContacts")
+  phoneHistory  AdvisorPhoneHistory[] @relation("AdvisorPhoneHistory")
+  phoneChangesMade AdvisorPhoneHistory[] @relation("PhoneHistoryChangedBy")
+}
+
+/// Historial de teléfonos que tuvo un asesor (números anteriores al actual).
+model AdvisorPhoneHistory {
+  id           String   @id @default(cuid())
+  advisorId    String
+  advisor      Staff    @relation("AdvisorPhoneHistory", fields: [advisorId], references: [id], onDelete: Cascade)
+  phone        String
+  replacedAt   DateTime @default(now())
+  replacedById String?
+  replacedBy   Staff?   @relation("PhoneHistoryChangedBy", fields: [replacedById], references: [id])
+
+  @@index([advisorId, replacedAt])
 }
 
 /// Contacto/prospecto asignado por un supervisor a un asesor (llamadas diarias).

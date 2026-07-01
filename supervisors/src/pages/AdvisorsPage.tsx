@@ -1,14 +1,25 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
+import { AdvisorManagePanel } from '../components/advisors/AdvisorManagePanel';
 import { Card } from '../components/ui/Card';
+import { fmtDate } from '../lib/format';
+import type { AdvisorRow } from '../types';
 
 export function AdvisorsPage() {
-  const [rows, setRows] = useState<Awaited<ReturnType<typeof api.advisors>>>([]);
+  const [rows, setRows] = useState<AdvisorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
-  const [form, setForm] = useState({ displayName: '', email: '', password: '', managerTeam: '' });
+  const [form, setForm] = useState({
+    displayName: '',
+    email: '',
+    password: '',
+    managerTeam: '',
+    phone: '',
+    hireDate: '',
+  });
   const [busy, setBusy] = useState(false);
+  const [manageId, setManageId] = useState<string | null>(null);
 
   function reload() {
     setLoading(true);
@@ -29,10 +40,21 @@ export function AdvisorsPage() {
     setBusy(true);
     try {
       await api.createAdvisor({
-        ...form,
+        email: form.email,
+        displayName: form.displayName,
+        password: form.password,
         managerTeam: form.managerTeam ? Number(form.managerTeam) : null,
+        phone: form.phone ? form.phone.replace(/\D/g, '').slice(-10) : null,
+        hireDate: form.hireDate || null,
       });
-      setForm({ displayName: '', email: '', password: '', managerTeam: '' });
+      setForm({
+        displayName: '',
+        email: '',
+        password: '',
+        managerTeam: '',
+        phone: '',
+        hireDate: '',
+      });
       setOk('Asesor agregado correctamente.');
       reload();
     } catch (err) {
@@ -47,7 +69,8 @@ export function AdvisorsPage() {
     setError(null);
     try {
       await api.removeAdvisor(id);
-      setOk('Asesor eliminado.');
+      setOk('Asesor desactivado.');
+      if (manageId === id) setManageId(null);
       reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo eliminar.');
@@ -58,7 +81,9 @@ export function AdvisorsPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-white">Asesores</h1>
-        <p className="text-sm text-slate-400">Agrega o elimina asesores que recibirán contactos para llamadas.</p>
+        <p className="text-sm text-slate-400">
+          Control de asesores: teléfono actual, historial de números, ingreso e inactividad.
+        </p>
       </header>
 
       <Card title="Agregar asesor">
@@ -80,6 +105,27 @@ export function AdvisorsPage() {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
+            />
+          </div>
+          <div>
+            <label className="label">Teléfono (10 dígitos)</label>
+            <input
+              className="input"
+              inputMode="numeric"
+              value={form.phone}
+              onChange={(e) =>
+                setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
+              }
+              placeholder="5512345678"
+            />
+          </div>
+          <div>
+            <label className="label">Fecha de ingreso</label>
+            <input
+              type="date"
+              className="input"
+              value={form.hireDate}
+              onChange={(e) => setForm({ ...form, hireDate: e.target.value })}
             />
           </div>
           <div>
@@ -124,6 +170,9 @@ export function AdvisorsPage() {
               <tr>
                 <th>Nombre</th>
                 <th>Equipo</th>
+                <th>Teléfono</th>
+                <th>Ingreso</th>
+                <th>Inactividad</th>
                 <th>Correo</th>
                 <th className="text-right">Acción</th>
               </tr>
@@ -131,28 +180,57 @@ export function AdvisorsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-slate-400">
+                  <td colSpan={7} className="py-6 text-center text-slate-400">
                     Cargando…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-slate-400">
+                  <td colSpan={7} className="py-6 text-center text-slate-400">
                     No hay asesores. Agrega uno arriba.
                   </td>
                 </tr>
               ) : (
                 rows.map((a) => (
-                  <tr key={a.id}>
-                    <td className="font-medium text-white">{a.displayName}</td>
-                    <td>{a.managerTeam ? `Gerencia ${a.managerTeam}` : '—'}</td>
-                    <td>{a.email}</td>
-                    <td className="text-right">
-                      <button type="button" className="btn-danger text-xs" onClick={() => onRemove(a.id, a.displayName)}>
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
+                  <Fragment key={a.id}>
+                    <tr>
+                      <td className="font-medium text-white">{a.displayName}</td>
+                      <td>{a.managerTeam ? `Gerencia ${a.managerTeam}` : '—'}</td>
+                      <td className="font-mono">{a.phone ?? '—'}</td>
+                      <td>{a.hireDate ? fmtDate(a.hireDate) : '—'}</td>
+                      <td>{a.inactiveDate ? fmtDate(a.inactiveDate) : '—'}</td>
+                      <td>{a.email}</td>
+                      <td className="text-right">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn-secondary text-xs"
+                            onClick={() => setManageId(manageId === a.id ? null : a.id)}
+                          >
+                            {manageId === a.id ? 'Ocultar' : 'Gestionar'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-danger text-xs"
+                            onClick={() => onRemove(a.id, a.displayName)}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {manageId === a.id && (
+                      <tr key={`${a.id}-panel`}>
+                        <td colSpan={7} className="pb-4 pt-0">
+                          <AdvisorManagePanel
+                            advisor={a}
+                            onUpdated={reload}
+                            onClose={() => setManageId(null)}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))
               )}
             </tbody>

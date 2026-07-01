@@ -24,8 +24,18 @@ export interface AdvisorRow {
   email: string;
   displayName: string;
   managerTeam?: number | null;
+  phone?: string | null;
+  hireDate?: string | null;
+  inactiveDate?: string | null;
   lastLoginAt?: string;
   createdAt: string;
+}
+
+export interface AdvisorPhoneHistoryRow {
+  id: string;
+  phone: string;
+  replacedAt: string;
+  replacedByName?: string;
 }
 
 export interface ManagerTeamRow {

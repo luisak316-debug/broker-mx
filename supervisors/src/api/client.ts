@@ -49,11 +49,28 @@ export const api = {
     displayName: string;
     password: string;
     managerTeam?: number | null;
+    phone?: string | null;
+    hireDate?: string | null;
   }) =>
-    http<{ id: string; email: string; displayName: string }>('/advisors', {
+    http<import('../types').AdvisorRow>('/advisors', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  updateAdvisorPhone: (id: string, phone: string) =>
+    http<import('../types').AdvisorRow>(`/advisors/${id}/phone`, {
+      method: 'PATCH',
+      body: JSON.stringify({ phone }),
+    }),
+  updateAdvisorDates: (
+    id: string,
+    payload: { hireDate?: string | null; inactiveDate?: string | null },
+  ) =>
+    http<import('../types').AdvisorRow>(`/advisors/${id}/dates`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  advisorPhoneHistory: (id: string) =>
+    http<import('../types').AdvisorPhoneHistoryRow[]>(`/advisors/${id}/phones`),
   removeAdvisor: (id: string) =>
     http<{ ok: boolean }>(`/advisors/${id}`, { method: 'DELETE' }),
   contacts: (params: {

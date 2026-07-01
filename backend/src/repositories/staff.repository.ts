@@ -11,6 +11,9 @@ function mapStaff(row: {
   displayName: string;
   role: Staff['role'];
   managerTeam: number | null;
+  phone?: string | null;
+  hireDate?: Date | null;
+  inactiveDate?: Date | null;
   active: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
@@ -22,10 +25,27 @@ function mapStaff(row: {
     displayName: row.email === 'admin@brokermx.com' ? 'Administración' : row.displayName,
     role: row.role,
     managerTeam: row.managerTeam,
+    phone: row.phone ?? null,
+    hireDate: row.hireDate ? row.hireDate.toISOString().slice(0, 10) : null,
+    inactiveDate: row.inactiveDate ? row.inactiveDate.toISOString().slice(0, 10) : null,
     active: row.active,
     lastLoginAt: row.lastLoginAt?.toISOString(),
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+function parseDateOnly(value: string | null | undefined): Date | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  return new Date(`${value}T12:00:00.000Z`);
+}
+
+function normalizeAdvisorPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '').slice(-10);
+  if (!/^\d{10}$/.test(digits)) {
+    throw new Error('Teléfono de 10 dígitos requerido.');
+  }
+  return digits;
 }
 
 export async function findStaffByEmail(email: string): Promise<Staff | undefined> {
@@ -144,6 +164,8 @@ export async function createStaff(data: {
   role: Staff['role'];
   passwordHash: string;
   managerTeam?: number | null;
+  phone?: string | null;
+  hireDate?: string | null;
 }): Promise<Staff> {
   if (!isDatabaseEnabled()) {
     throw new Error('Crear asesores requiere PostgreSQL.');
@@ -156,18 +178,101 @@ export async function createStaff(data: {
       role: data.role,
       passwordHash: data.passwordHash,
       managerTeam: data.managerTeam ?? null,
+      phone: data.phone ? normalizeAdvisorPhone(data.phone) : null,
+      hireDate: parseDateOnly(data.hireDate ?? undefined) ?? null,
     },
   });
   return mapStaff(row);
 }
 
-export async function deactivateStaff(id: string): Promise<void> {
+export async function updateAdvisorPhone(
+  advisorId: string,
+  phone: string,
+  changedById: string,
+): Promise<Staff> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Actualizar teléfono requiere PostgreSQL.');
+  }
+
+  const normalized = normalizeAdvisorPhone(phone);
+  const current = await prisma.staff.findFirst({
+    where: { id: advisorId, role: 'ADVISOR', active: true },
+  });
+  if (!current) throw new Error('Asesor no encontrado.');
+
+  if (current.phone && current.phone !== normalized) {
+    await prisma.advisorPhoneHistory.create({
+      data: {
+        advisorId,
+        phone: current.phone,
+        replacedById: changedById,
+      },
+    });
+  }
+
+  const row = await prisma.staff.update({
+    where: { id: advisorId },
+    data: { phone: normalized },
+  });
+  return mapStaff(row);
+}
+
+export async function updateAdvisorDates(
+  advisorId: string,
+  data: { hireDate?: string | null; inactiveDate?: string | null },
+): Promise<Staff> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Actualizar fechas requiere PostgreSQL.');
+  }
+
+  const current = await prisma.staff.findFirst({
+    where: { id: advisorId, role: 'ADVISOR', active: true },
+  });
+  if (!current) throw new Error('Asesor no encontrado.');
+
+  const row = await prisma.staff.update({
+    where: { id: advisorId },
+    data: {
+      ...(data.hireDate !== undefined ? { hireDate: parseDateOnly(data.hireDate) } : {}),
+      ...(data.inactiveDate !== undefined ? { inactiveDate: parseDateOnly(data.inactiveDate) } : {}),
+    },
+  });
+  return mapStaff(row);
+}
+
+export async function listAdvisorPhoneHistory(
+  advisorId: string,
+): Promise<Array<{ id: string; phone: string; replacedAt: string; replacedByName?: string }>> {
+  if (!isDatabaseEnabled()) return [];
+
+  const rows = await prisma.advisorPhoneHistory.findMany({
+    where: { advisorId },
+    orderBy: { replacedAt: 'desc' },
+    include: { replacedBy: { select: { displayName: true } } },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    phone: row.phone,
+    replacedAt: row.replacedAt.toISOString(),
+    replacedByName: row.replacedBy?.displayName,
+  }));
+}
+
+export async function deactivateStaff(id: string, inactiveDate?: string | null): Promise<void> {
   if (!isDatabaseEnabled()) {
     throw new Error('Eliminar asesores requiere PostgreSQL.');
   }
 
+  const date = inactiveDate
+    ? parseDateOnly(inactiveDate)
+    : parseDateOnly(new Date().toISOString().slice(0, 10));
+
   await prisma.staff.update({
     where: { id },
-    data: { active: false },
+    data: {
+      active: false,
+      inactiveDate: date ?? undefined,
+    },
   });
 }
