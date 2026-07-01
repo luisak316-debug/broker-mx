@@ -1,22 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { fmtMxn } from '../lib/format';
+
+const REFRESH_MS = 30_000;
 
 export function Home() {
   const [clients, setClients] = useState<Awaited<ReturnType<typeof api.clients>>>([]);
   const [advisors, setAdvisors] = useState<Awaited<ReturnType<typeof api.advisors>>>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    Promise.all([api.clients(), api.advisors()])
-      .then(([c, a]) => {
-        setClients(c);
-        setAdvisors(a);
-      })
-      .finally(() => setLoading(false));
+  const reload = useCallback(() => {
+    return Promise.all([api.clients(), api.advisors()]).then(([c, a]) => {
+      setClients(c);
+      setAdvisors(a);
+    });
   }, []);
+
+  useEffect(() => {
+    reload().finally(() => setLoading(false));
+    const timer = window.setInterval(() => void reload(), REFRESH_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void reload();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [reload]);
 
   const totalInvested = clients.reduce((s, c) => s + c.totalInvestedMxn, 0);
 

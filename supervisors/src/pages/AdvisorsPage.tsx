@@ -31,6 +31,15 @@ export function AdvisorsPage() {
 
   useEffect(() => {
     reload();
+    const timer = window.setInterval(reload, 30_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') reload();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   async function onCreate(e: FormEvent) {

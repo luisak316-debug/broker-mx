@@ -26,7 +26,7 @@ export async function dashboardMetrics(_req: Request, res: Response): Promise<vo
         .reduce((a, r) => a + r.amountMxn, 0),
     );
 
-    const staffRows = staff.filter((s) => s.role === 'ADVISOR' || s.role === 'ADMIN');
+    const staffRows = staff.filter((s) => s.role === 'ADVISOR' && s.active);
     const advisors = staffRows.map((s) => {
       const cartera = clients.filter((c) => c.advisorId === s.id);
       return {
@@ -81,7 +81,8 @@ export async function dashboardMetrics(_req: Request, res: Response): Promise<vo
   );
 
   const staffRows = await prisma.staff.findMany({
-    where: { OR: [{ role: 'ADVISOR' }, { role: 'ADMIN' }] },
+    where: { role: 'ADVISOR', active: true },
+    orderBy: { displayName: 'asc' },
   });
 
   const advisors = staffRows.map((s) => {
