@@ -24,6 +24,7 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [failed, setFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -106,6 +107,10 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
   const resolved = resolvePhotoUrl(photoUrl);
   const s = SIZE[size];
 
+  useEffect(() => {
+    setFailed(false);
+  }, [photoUrl]);
+
   return (
     <>
       <button
@@ -114,11 +119,12 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
         aria-label="Tomar foto de perfil"
         onClick={() => setOpen(true)}
       >
-        {resolved ? (
+        {resolved && !failed ? (
           <img
             src={resolved}
             alt="Foto de perfil"
             className={`${s.box} rounded-full object-cover ring-2 ring-amber-400/50`}
+            onError={() => setFailed(true)}
           />
         ) : (
           <span

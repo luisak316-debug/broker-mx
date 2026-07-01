@@ -1,7 +1,10 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { findClient, updateClientProfilePhoto } from '../repositories/client.repository';
-import { saveClientProfilePhoto } from '../services/documentUpload.service';
+import {
+  findClient,
+  getProfilePhotoBuffer,
+  updateClientProfilePhoto,
+} from '../repositories/client.repository';
 import { HttpError } from '../middleware/errorHandler';
 
 const uploadPhotoSchema = z.object({
@@ -26,19 +29,24 @@ export async function uploadProfilePhoto(req: Request, res: Response): Promise<v
     throw new HttpError(400, 'Solo se permiten fotos capturadas en tiempo real (JPEG).');
   }
 
-  let saved: { fileUrl: string };
-  try {
-    saved = saveClientProfilePhoto({ clientId: client.id, buffer });
-  } catch (e) {
-    throw new HttpError(400, e instanceof Error ? e.message : 'No se pudo guardar la foto.');
-  }
-
-  const updated = await updateClientProfilePhoto(client.id, saved.fileUrl);
+  const updated = await updateClientProfilePhoto(client.id, parsed.data);
   if (!updated) throw new HttpError(500, 'No se pudo actualizar el perfil.');
 
   res.json({
     data: {
-      profilePhotoUrl: updated.profilePhotoUrl ?? saved.fileUrl,
+      profilePhotoUrl: updated.profilePhotoUrl ?? `/api/profile/${client.id}/photo`,
     },
   });
+}
+
+export async function getProfilePhoto(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.clientId);
+  if (!client) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const buffer = await getProfilePhotoBuffer(client.id);
+  if (!buffer?.length) throw new HttpError(404, 'Foto no encontrada.');
+
+  res.setHeader('Content-Type', 'image/jpeg');
+  res.setHeader('Cache-Control', 'public, max-age=600');
+  res.send(buffer);
 }

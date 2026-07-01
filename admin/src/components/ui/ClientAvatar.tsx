@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { resolveUploadUrl } from '../../lib/apiConfig';
 
 function initialsFromName(name: string): string {
@@ -22,16 +23,22 @@ const SIZE_CLASS = {
 } as const;
 
 export function ClientAvatar({ displayName, photoUrl, size = 'sm' }: Props) {
+  const [failed, setFailed] = useState(false);
   const initials = initialsFromName(displayName);
   const resolved = photoUrl ? resolveUploadUrl(photoUrl) : undefined;
   const box = SIZE_CLASS[size];
 
-  if (resolved) {
+  useEffect(() => {
+    setFailed(false);
+  }, [photoUrl]);
+
+  if (resolved && !failed) {
     return (
       <img
         src={resolved}
         alt={`Foto de ${displayName}`}
         className={`${box} shrink-0 rounded-full object-cover ring-2 ring-amber-400/50`}
+        onError={() => setFailed(true)}
       />
     );
   }

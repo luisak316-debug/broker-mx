@@ -61,6 +61,7 @@ router.get('/deposit-account/:clientId', asyncHandler(deposit.getDepositAccount)
 router.post('/cash-requests/withdraw', asyncHandler(cashRequest.requestWithdrawal));
 
 // Foto de perfil (captura en tiempo real desde la app del cliente)
+router.get('/profile/:clientId/photo', asyncHandler(profile.getProfilePhoto));
 router.post('/profile/:clientId/photo', asyncHandler(profile.uploadProfilePhoto));
 
 // Autenticación (simulada)

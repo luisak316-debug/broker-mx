@@ -1,4 +1,6 @@
 import type { Prisma } from '@prisma/client';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { isDatabaseEnabled } from '../lib/database';
 import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
@@ -20,6 +22,21 @@ type DbUser = Prisma.UserGetPayload<{ include: typeof userInclude }>;
 function dec(v: Prisma.Decimal | number | null | undefined): number {
   if (v == null) return 0;
   return typeof v === 'number' ? v : Number(v);
+}
+
+function profilePhotoApiPath(clientCode: string): string {
+  return `/api/profile/${clientCode}/photo`;
+}
+
+function resolveProfilePhotoUrl(user: {
+  clientCode: string;
+  profilePhotoUrl?: string | null;
+  profilePhotoData?: string | null;
+}): string | undefined {
+  if (user.profilePhotoData || user.profilePhotoUrl) {
+    return profilePhotoApiPath(user.clientCode);
+  }
+  return undefined;
 }
 
 function buildDepositAccount(user: DbUser): Client['depositAccount'] {
@@ -59,7 +76,8 @@ export function mapUserToClient(user: DbUser): Client {
     plainPassword: user.plainPassword ?? undefined,
     displayName: user.displayName,
     phone: user.phone ?? undefined,
-    profilePhotoUrl: user.profilePhotoUrl ?? undefined,
+    profilePhotoUrl: resolveProfilePhotoUrl(user),
+    profilePhotoData: user.profilePhotoData ?? undefined,
     curp: user.curp ?? undefined,
     rfc: user.rfc ?? undefined,
     kycStatus: user.kycStatus as KycStatus,
@@ -311,10 +329,10 @@ export async function updateClientPassword(
 
 export async function updateClientProfilePhoto(
   idOrCode: string,
-  profilePhotoUrl: string,
+  profilePhotoData: string,
 ): Promise<Client | undefined> {
   if (!isDatabaseEnabled()) {
-    return legacy.updateClientProfilePhoto(idOrCode, profilePhotoUrl);
+    return legacy.updateClientProfilePhoto(idOrCode, profilePhotoData);
   }
 
   const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
@@ -322,8 +340,43 @@ export async function updateClientProfilePhoto(
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { profilePhotoUrl },
+    data: {
+      profilePhotoData,
+      profilePhotoUrl: profilePhotoApiPath(user.clientCode),
+    },
   });
 
   return findClient(user.clientCode);
+}
+
+export async function getProfilePhotoBuffer(idOrCode: string): Promise<Buffer | undefined> {
+  if (!isDatabaseEnabled()) {
+    const client = legacy.findClient(idOrCode);
+    if (!client) return undefined;
+    if (client.profilePhotoData) {
+      return Buffer.from(client.profilePhotoData, 'base64');
+    }
+    if (client.profilePhotoUrl?.startsWith('/uploads/')) {
+      const filePath = path.join(process.cwd(), client.profilePhotoUrl.replace(/^\//, ''));
+      if (existsSync(filePath)) return readFileSync(filePath);
+    }
+    return undefined;
+  }
+
+  const user = await prisma.user.findFirst({
+    where: userWhere(idOrCode),
+    select: { profilePhotoData: true, profilePhotoUrl: true },
+  });
+  if (!user) return undefined;
+
+  if (user.profilePhotoData) {
+    return Buffer.from(user.profilePhotoData, 'base64');
+  }
+
+  if (user.profilePhotoUrl?.startsWith('/uploads/')) {
+    const filePath = path.join(process.cwd(), user.profilePhotoUrl.replace(/^\//, ''));
+    if (existsSync(filePath)) return readFileSync(filePath);
+  }
+
+  return undefined;
 }

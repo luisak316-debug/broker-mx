@@ -62,6 +62,7 @@ export interface Client {
   displayName: string;
   phone?: string;
   profilePhotoUrl?: string;
+  profilePhotoData?: string;
   curp?: string;
   rfc?: string;
   kycStatus: KycStatus;

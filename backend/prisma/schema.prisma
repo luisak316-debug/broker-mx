@@ -31,6 +31,8 @@ model User {
   rfc           String?
   /// Foto de perfil tomada en tiempo real por el cliente (ruta pública en /uploads).
   profilePhotoUrl String?
+  /// JPEG en base64 — persistido en BD para admin, supervisores y cliente.
+  profilePhotoData String? @db.Text
 
   // Cuenta bancaria de depósito personalizada y reemplazable por cliente.
   depositBeneficiary    String?

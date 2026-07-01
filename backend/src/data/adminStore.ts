@@ -288,11 +288,12 @@ export function updateClientPassword(
 
 export function updateClientProfilePhoto(
   idOrCode: string,
-  profilePhotoUrl: string,
+  profilePhotoData: string,
 ): Client | undefined {
   const client = findClient(idOrCode);
   if (!client) return undefined;
-  client.profilePhotoUrl = profilePhotoUrl;
+  client.profilePhotoData = profilePhotoData;
+  client.profilePhotoUrl = `/api/profile/${client.id}/photo`;
   persistSnapshot();
   return client;
 }
