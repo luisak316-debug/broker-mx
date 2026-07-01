@@ -285,3 +285,14 @@ export function updateClientPassword(
   persistSnapshot();
   return client;
 }
+
+export function updateClientProfilePhoto(
+  idOrCode: string,
+  profilePhotoUrl: string,
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  client.profilePhotoUrl = profilePhotoUrl;
+  persistSnapshot();
+  return client;
+}

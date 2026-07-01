@@ -41,3 +41,24 @@ export function saveClientDocument(params: {
     fileUrl: `/uploads/clients/${params.clientId}/${storageName}`,
   };
 }
+
+const PROFILE_MAX_BYTES = 2 * 1024 * 1024;
+
+export function saveClientProfilePhoto(params: {
+  clientId: string;
+  buffer: Buffer;
+}): { storageName: string; fileUrl: string } {
+  if (params.buffer.length > PROFILE_MAX_BYTES) {
+    throw new Error('La foto supera el límite de 2 MB.');
+  }
+
+  const storageName = `profile-${Date.now()}.jpg`;
+  const dir = path.join(UPLOAD_ROOT, params.clientId);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path.join(dir, storageName), params.buffer);
+
+  return {
+    storageName,
+    fileUrl: `/uploads/clients/${params.clientId}/${storageName}`,
+  };
+}

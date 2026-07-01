@@ -71,6 +71,7 @@ export interface ClientSession {
   phone: string;
   displayName: string;
   kycStatus?: string;
+  profilePhotoUrl?: string;
 }
 
 export interface SendOtpResult {

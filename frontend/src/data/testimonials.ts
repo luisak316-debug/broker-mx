@@ -131,6 +131,141 @@ const ROWS: Array<Omit<Testimonial, 'initials'>> = [
     role: 'Inversionista · Cuernavaca',
     text: 'Broker.mx me ayudó a proteger el futuro de mis hijos. Servicio de primera y confianza absoluta en mi asesor.',
   },
+  {
+    name: 'Javier Mejía',
+    role: 'Inversionista · Zapopan',
+    text: 'Desde el primer mes vi resultados reales. Mi asesor siempre está disponible y explica todo con claridad.',
+  },
+  {
+    name: 'Norma Guerrero',
+    role: 'Empresaria · CDMX',
+    text: 'La plataforma es intuitiva y el respaldo legal me dio la seguridad que buscaba para invertir en serio.',
+  },
+  {
+    name: 'Raúl Esparza',
+    role: 'Inversionista · Culiacán',
+    text: 'Diversifiqué en acciones y cripto con una estrategia clara. Estoy muy satisfecho con el acompañamiento.',
+  },
+  {
+    name: 'Leticia Contreras',
+    role: 'Inversionista · Tampico',
+    text: 'Nunca me sentí sola en el proceso. Broker.mx cumple lo que promete y el trato es siempre respetuoso.',
+  },
+  {
+    name: 'Emilio Zavala',
+    role: 'Contador · Villahermosa',
+    text: 'Como profesional valoro la transparencia en cada operación. Es la mejor experiencia de inversión que he tenido.',
+  },
+  {
+    name: 'Adriana Cervantes',
+    role: 'Inversionista · Pachuca',
+    text: 'Empecé con poco y hoy tengo un portafolio sólido. Mi asesora me guió paso a paso con mucha paciencia.',
+  },
+  {
+    name: 'Iván Rocha',
+    role: 'Ingeniero · Mexicali',
+    text: 'Depósitos rápidos, reportes claros y un equipo que responde. Recomiendo Broker.mx sin dudarlo.',
+  },
+  {
+    name: 'Rosa María Juárez',
+    role: 'Inversionista · Reynosa',
+    text: 'Recuperé la confianza en invertir. Los rendimientos han sido excelentes y el servicio es impecable.',
+  },
+  {
+    name: 'Sergio Beltrán',
+    role: 'Comerciante · Torreón',
+    text: 'Llevo más de un año con ustedes y la consistencia del servicio es total. Profesionales de verdad.',
+  },
+  {
+    name: 'Carmen Salgado',
+    role: 'Docente · La Paz',
+    text: 'Mis ahorros por fin trabajan para mí. Estoy encantada con la atención personalizada de mi asesor.',
+  },
+  {
+    name: 'Guillermo Paredes',
+    role: 'Inversionista · CDMX',
+    text: 'Probé otras plataformas y ninguna se compara. Aquí hay seguimiento real y resultados concretos.',
+  },
+  {
+    name: 'Laura Estévez',
+    role: 'Inversionista · Guadalajara',
+    text: 'Me sentí valorada desde la primera llamada. Hoy veo crecer mi patrimonio con total tranquilidad.',
+  },
+  {
+    name: 'Mauricio Galván',
+    role: 'Empresario · Monterrey',
+    text: 'La diversificación en forex y commodities fue clave. Excelente asesoría y plataforma muy estable.',
+  },
+  {
+    name: 'Beatriz Nava',
+    role: 'Inversionista · San Miguel de Allende',
+    text: 'Broker.mx me demostró que sí se puede crecer con ética. Estoy muy agradecida con todo el equipo.',
+  },
+  {
+    name: 'Ulises Corona',
+    role: 'Inversionista · Xalapa',
+    text: 'Operaciones claras y un asesor que entiende mis metas familiares. Experiencia excepcional.',
+  },
+  {
+    name: 'Paola Miranda',
+    role: 'Emprendedora · Playa del Carmen',
+    text: 'Nunca pensé que invertir pudiera ser tan accesible. Hoy estoy muy satisfecha con mis resultados.',
+  },
+  {
+    name: 'Enrique Valdez',
+    role: 'Inversionista · Durango',
+    text: 'El respaldo legal y la claridad en cada movimiento me convencieron. La mejor decisión financiera que tomé.',
+  },
+  {
+    name: 'Dolores Félix',
+    role: 'Inversionista · Irapuato',
+    text: 'Mi asesor me acompañó con paciencia desde cero. Hoy tengo un plan patrimonial que tiene sentido.',
+  },
+  {
+    name: 'Armando Cisneros',
+    role: 'Inversionista · Mazatlán',
+    text: 'Servicio cercano, humano y siempre disponible. Mis rendimientos han superado mis expectativas.',
+  },
+  {
+    name: 'Teresa Villarreal',
+    role: 'Inversionista · Nuevo Laredo',
+    text: 'Confío plenamente en mi asesor y en la firma. Duermo tranquila sabiendo que mi dinero está bien administrado.',
+  },
+  {
+    name: 'Francisco Javier Luna',
+    role: 'Inversionista · CDMX',
+    text: 'En seis meses diversifiqué en varios mercados. Me siento parte de un equipo que realmente quiere que gane.',
+  },
+  {
+    name: 'Ximena Bustos',
+    role: 'Arquitecta · Querétaro',
+    text: 'La atención personalizada marcó la diferencia. Me guiaron sin tecnicismos innecesarios.',
+  },
+  {
+    name: 'Rodolfo Aguilar',
+    role: 'Inversionista · Ensenada',
+    text: 'Depósitos por SPEI sin complicaciones. Es la plataforma más profesional con la que he trabajado.',
+  },
+  {
+    name: 'Mónica Serrano',
+    role: 'Médica · Puebla',
+    text: 'Llevaba años postergando invertir. Con Broker.mx me sentí acompañada y los resultados hablan solos.',
+  },
+  {
+    name: 'Gael Montoya',
+    role: 'Inversionista · CDMX',
+    text: 'Transparencia total y acompañamiento constante. Recomiendo Broker.mx a toda mi familia.',
+  },
+  {
+    name: 'Yolanda Ríos',
+    role: 'Inversionista · Orizaba',
+    text: 'Por fin un broker en México que habla claro y respalda legalmente. Estoy muy contenta.',
+  },
+  {
+    name: 'Leonardo Padilla',
+    role: 'Inversionista · Guanajuato',
+    text: 'Mis ganancias han sido muy buenas y el trato humano hace toda la diferencia. Totalmente recomendado.',
+  },
 ];
 
 export const TESTIMONIALS: Testimonial[] = ROWS.map((row) => ({

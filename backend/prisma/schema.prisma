@@ -29,6 +29,8 @@ model User {
   totalInvestedMxn Decimal @default(0)
   curp          String?
   rfc           String?
+  /// Foto de perfil tomada en tiempo real por el cliente (ruta pública en /uploads).
+  profilePhotoUrl String?
 
   // Cuenta bancaria de depósito personalizada y reemplazable por cliente.
   depositBeneficiary    String?

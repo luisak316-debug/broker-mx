@@ -59,6 +59,7 @@ export function mapUserToClient(user: DbUser): Client {
     plainPassword: user.plainPassword ?? undefined,
     displayName: user.displayName,
     phone: user.phone ?? undefined,
+    profilePhotoUrl: user.profilePhotoUrl ?? undefined,
     curp: user.curp ?? undefined,
     rfc: user.rfc ?? undefined,
     kycStatus: user.kycStatus as KycStatus,
@@ -303,6 +304,25 @@ export async function updateClientPassword(
   await prisma.user.update({
     where: { id: user.id },
     data: { passwordHash, plainPassword },
+  });
+
+  return findClient(user.clientCode);
+}
+
+export async function updateClientProfilePhoto(
+  idOrCode: string,
+  profilePhotoUrl: string,
+): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) {
+    return legacy.updateClientProfilePhoto(idOrCode, profilePhotoUrl);
+  }
+
+  const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
+  if (!user) return undefined;
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { profilePhotoUrl },
   });
 
   return findClient(user.clientCode);

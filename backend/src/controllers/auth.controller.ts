@@ -26,6 +26,7 @@ function clientPayload(client: {
   phone?: string;
   kycStatus: string;
   accountStatus: string;
+  profilePhotoUrl?: string;
 }) {
   if (client.accountStatus !== 'ACTIVA') {
     throw new HttpError(403, 'Tu cuenta está suspendida. Contacta a tu asesor.');
@@ -36,6 +37,7 @@ function clientPayload(client: {
     phone: client.phone ?? '',
     displayName: client.displayName,
     kycStatus: client.kycStatus,
+    profilePhotoUrl: client.profilePhotoUrl ?? '',
   };
 }
 

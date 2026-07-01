@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fmtMxn, fmtPhone } from '../../lib/format';
 import { useClientAuth } from '../../auth/ClientAuthContext';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 
 export function Topbar({ connected }: { connected: boolean }) {
   const [cash, setCash] = useState<number | null>(null);
-  const { client, logout } = useClientAuth();
+  const { client, logout, updateProfilePhoto } = useClientAuth();
   const navigate = useNavigate();
 
   const initials = (client?.displayName ?? 'Cliente')
@@ -51,9 +52,11 @@ export function Topbar({ connected }: { connected: boolean }) {
           <p className="text-sm font-semibold text-white">{client?.displayName ?? 'Cliente'}</p>
           <p className="text-xs text-slate-400">{client?.phone ? fmtPhone(client.phone) : ''}</p>
         </div>
-        <div className="grid h-9 w-9 place-items-center rounded-full bg-ink-600 text-sm font-semibold text-white">
-          {initials}
-        </div>
+        <ProfileAvatar
+          photoUrl={client?.profilePhotoUrl}
+          initials={initials}
+          onPhotoSaved={updateProfilePhoto}
+        />
         <button onClick={onLogout} className="btn-ghost">
           Salir
         </button>

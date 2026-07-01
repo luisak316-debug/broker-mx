@@ -11,6 +11,7 @@ interface ClientAuthState {
   register: (p: { fullName: string; phone: string; otpCode: string; password: string }) => Promise<void>;
   login: (p: { phone: string; password: string }) => Promise<void>;
   logout: () => void;
+  updateProfilePhoto: (url: string) => void;
 }
 
 const Ctx = createContext<ClientAuthState | null>(null);
@@ -49,6 +50,14 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(CLIENT_KEY);
         setClient(null);
+      },
+      updateProfilePhoto: (url: string) => {
+        setClient((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, profilePhotoUrl: url };
+          localStorage.setItem(CLIENT_KEY, JSON.stringify(next));
+          return next;
+        });
       },
     }),
     [client],

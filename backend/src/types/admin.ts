@@ -61,6 +61,7 @@ export interface Client {
   plainPassword?: string;
   displayName: string;
   phone?: string;
+  profilePhotoUrl?: string;
   curp?: string;
   rfc?: string;
   kycStatus: KycStatus;
