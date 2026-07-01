@@ -14,6 +14,7 @@ import { HttpError } from '../../middleware/errorHandler';
 const createSchema = z.object({
   email: z.string().email('Correo inválido.'),
   displayName: z.string().trim().min(2, 'Nombre requerido.'),
+  managerTeam: z.number().int().min(1).max(4).optional().nullable(),
   password: z
     .string()
     .min(8, 'Mínimo 8 caracteres.')
@@ -28,6 +29,7 @@ export async function listAdvisors(_req: Request, res: Response): Promise<void> 
       id: a.id,
       email: a.email,
       displayName: a.displayName,
+      managerTeam: a.managerTeam ?? null,
       lastLoginAt: a.lastLoginAt,
       createdAt: a.createdAt,
     })),
@@ -44,6 +46,7 @@ export async function createAdvisor(req: Request, res: Response): Promise<void> 
     displayName: body.displayName,
     role: 'ADVISOR',
     passwordHash: hashPassword(body.password),
+    managerTeam: body.managerTeam ?? null,
   });
 
   await record({

@@ -23,8 +23,16 @@ export interface AdvisorRow {
   id: string;
   email: string;
   displayName: string;
+  managerTeam?: number | null;
   lastLoginAt?: string;
   createdAt: string;
+}
+
+export interface ManagerTeamRow {
+  team: number;
+  displayName: string;
+  managerId?: string;
+  advisorCount: number;
 }
 
 export interface ContactRow {

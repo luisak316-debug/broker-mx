@@ -64,6 +64,8 @@ model Staff {
   passwordHash  String
   displayName   String
   role          StaffRole  @default(ADVISOR)
+  /// Equipo de gerencia 1–4 (asesores y gerentes).
+  managerTeam   Int?
   active        Boolean    @default(true)
   lastLoginAt   DateTime?
   createdAt     DateTime   @default(now())
@@ -255,6 +257,7 @@ enum AccountStatus {
 enum StaffRole {
   ADMIN       // acceso total, gestión de personal
   SUPERVISOR  // supervisión: asigna contactos a asesores, ve cartera
+  MANAGER     // gerente de equipo (equipos 1–4)
   ADVISOR     // asesor/trader: gestiona sus clientes
   COMPLIANCE  // cumplimiento: auditoría y aprobación de movimientos
   SUPPORT     // soporte: solo lectura

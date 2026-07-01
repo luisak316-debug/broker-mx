@@ -5,6 +5,7 @@ import * as auth from '../controllers/supervisor/auth.controller';
 import * as clients from '../controllers/supervisor/clients.controller';
 import * as advisors from '../controllers/supervisor/advisors.controller';
 import * as contacts from '../controllers/supervisor/contacts.controller';
+import * as managers from '../controllers/supervisor/managers.controller';
 
 export const supervisorRouter = Router();
 
@@ -19,8 +20,11 @@ supervisorRouter.get('/advisors', asyncHandler(advisors.listAdvisors));
 supervisorRouter.post('/advisors', asyncHandler(advisors.createAdvisor));
 supervisorRouter.delete('/advisors/:id', asyncHandler(advisors.removeAdvisor));
 
+supervisorRouter.get('/managers', asyncHandler(managers.listManagers));
+
 supervisorRouter.get('/contacts', asyncHandler(contacts.listContacts));
 supervisorRouter.post('/contacts', asyncHandler(contacts.saveContact));
 supervisorRouter.post('/contacts/bulk', asyncHandler(contacts.bulkAssignContacts));
+supervisorRouter.post('/contacts/bulk/managers', asyncHandler(contacts.bulkAssignContactsToManagers));
 supervisorRouter.post('/contacts/bulk/preview', asyncHandler(contacts.previewBulkContacts));
 supervisorRouter.delete('/contacts/:id', asyncHandler(contacts.removeContact));

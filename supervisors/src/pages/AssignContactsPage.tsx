@@ -3,13 +3,15 @@ import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { fmtDate, isoDate } from '../lib/format';
 import { parseBulkContacts, previewDistribution } from '../lib/parseBulkContacts';
-import type { AdvisorRow, ContactRow } from '../types';
+import { ManagerTeamsBulkForm } from '../components/assign/ManagerTeamsBulkForm';
+import type { AdvisorRow, ContactRow, ManagerTeamRow } from '../types';
 
-type Mode = 'single' | 'bulk';
+type Mode = 'bulk' | 'managers' | 'single';
 
 export function AssignContactsPage() {
   const [mode, setMode] = useState<Mode>('bulk');
   const [advisors, setAdvisors] = useState<AdvisorRow[]>([]);
+  const [managerTeams, setManagerTeams] = useState<ManagerTeamRow[]>([]);
   const [todayRows, setTodayRows] = useState<ContactRow[]>([]);
   const [form, setForm] = useState({
     advisorId: '',
@@ -54,8 +56,9 @@ export function AssignContactsPage() {
   }
 
   useEffect(() => {
-    api.advisors().then((list) => {
+    Promise.all([api.advisors(), api.managers()]).then(([list, teams]) => {
       setAdvisors(list);
+      setManagerTeams(teams);
       if (list[0]) setForm((f) => ({ ...f, advisorId: f.advisorId || list[0].id }));
     });
     reloadToday();
@@ -153,6 +156,17 @@ export function AssignContactsPage() {
         </button>
         <button
           type="button"
+          className={mode === 'managers' ? 'btn-primary' : 'btn-secondary'}
+          onClick={() => {
+            setMode('managers');
+            setError(null);
+            setSaved(null);
+          }}
+        >
+          Asignar contactos a gerentes
+        </button>
+        <button
+          type="button"
           className={mode === 'single' ? 'btn-primary' : 'btn-secondary'}
           onClick={() => {
             setMode('single');
@@ -164,7 +178,14 @@ export function AssignContactsPage() {
         </button>
       </div>
 
-      {mode === 'bulk' ? (
+      {mode === 'managers' ? (
+        <ManagerTeamsBulkForm
+          advisors={advisors}
+          teams={managerTeams}
+          today={today}
+          onSaved={() => reloadToday()}
+        />
+      ) : mode === 'bulk' ? (
         <Card title="Asignación masiva — pegar desde libreta">
           <form onSubmit={onSaveBulk} className="space-y-4">
             <p className="text-sm text-slate-400">

@@ -43,7 +43,13 @@ export const api = {
     return http<import('../types').ClientSummary[]>(`/clients${qs}`);
   },
   advisors: () => http<import('../types').AdvisorRow[]>('/advisors'),
-  createAdvisor: (payload: { email: string; displayName: string; password: string }) =>
+  managers: () => http<import('../types').ManagerTeamRow[]>('/managers'),
+  createAdvisor: (payload: {
+    email: string;
+    displayName: string;
+    password: string;
+    managerTeam?: number | null;
+  }) =>
     http<{ id: string; email: string; displayName: string }>('/advisors', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -82,6 +88,26 @@ export const api = {
       assignedDate: string;
       distribution: Array<{ advisorId: string; advisorName: string; count: number }>;
     }>('/contacts/bulk', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  bulkAssignContactsToManagers: (payload: {
+    assignedDate?: string;
+    teams: Array<{ team: number; rawText: string }>;
+  }) =>
+    http<{
+      saved: number;
+      skipped: number;
+      assignedDate: string;
+      teams: Array<{
+        team: number;
+        saved: number;
+        skipped: number;
+        advisorCount: number;
+        warning?: string;
+        distribution: Array<{ advisorId: string; advisorName: string; count: number }>;
+      }>;
+    }>('/contacts/bulk/managers', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

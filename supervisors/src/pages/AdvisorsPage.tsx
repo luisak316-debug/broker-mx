@@ -7,7 +7,7 @@ export function AdvisorsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
-  const [form, setForm] = useState({ displayName: '', email: '', password: '' });
+  const [form, setForm] = useState({ displayName: '', email: '', password: '', managerTeam: '' });
   const [busy, setBusy] = useState(false);
 
   function reload() {
@@ -28,8 +28,11 @@ export function AdvisorsPage() {
     setOk(null);
     setBusy(true);
     try {
-      await api.createAdvisor(form);
-      setForm({ displayName: '', email: '', password: '' });
+      await api.createAdvisor({
+        ...form,
+        managerTeam: form.managerTeam ? Number(form.managerTeam) : null,
+      });
+      setForm({ displayName: '', email: '', password: '', managerTeam: '' });
       setOk('Asesor agregado correctamente.');
       reload();
     } catch (err) {
@@ -79,7 +82,7 @@ export function AdvisorsPage() {
               required
             />
           </div>
-          <div className="sm:col-span-2">
+          <div>
             <label className="label">Contraseña inicial</label>
             <input
               type="password"
@@ -89,6 +92,20 @@ export function AdvisorsPage() {
               placeholder="Mín. 8 caracteres, letras y números"
               required
             />
+          </div>
+          <div>
+            <label className="label">Equipo gerente (1–4)</label>
+            <select
+              className="input max-w-md"
+              value={form.managerTeam}
+              onChange={(e) => setForm({ ...form, managerTeam: e.target.value })}
+            >
+              <option value="">Sin equipo</option>
+              <option value="1">Gerente 1</option>
+              <option value="2">Gerente 2</option>
+              <option value="3">Gerente 3</option>
+              <option value="4">Gerente 4</option>
+            </select>
           </div>
           {error && <p className="sm:col-span-2 text-sm text-danger">{error}</p>}
           {ok && <p className="sm:col-span-2 text-sm text-ok">{ok}</p>}
@@ -106,6 +123,7 @@ export function AdvisorsPage() {
             <thead>
               <tr>
                 <th>Nombre</th>
+                <th>Equipo</th>
                 <th>Correo</th>
                 <th className="text-right">Acción</th>
               </tr>
@@ -113,13 +131,13 @@ export function AdvisorsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={3} className="py-6 text-center text-slate-400">
+                  <td colSpan={4} className="py-6 text-center text-slate-400">
                     Cargando…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-6 text-center text-slate-400">
+                  <td colSpan={4} className="py-6 text-center text-slate-400">
                     No hay asesores. Agrega uno arriba.
                   </td>
                 </tr>
@@ -127,6 +145,7 @@ export function AdvisorsPage() {
                 rows.map((a) => (
                   <tr key={a.id}>
                     <td className="font-medium text-white">{a.displayName}</td>
+                    <td>{a.managerTeam ? `Gerente ${a.managerTeam}` : '—'}</td>
                     <td>{a.email}</td>
                     <td className="text-right">
                       <button type="button" className="btn-danger text-xs" onClick={() => onRemove(a.id, a.displayName)}>

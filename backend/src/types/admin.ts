@@ -1,6 +1,6 @@
 import type { AssetClass } from './market';
 
-export type StaffRole = 'ADMIN' | 'SUPERVISOR' | 'ADVISOR' | 'COMPLIANCE' | 'SUPPORT';
+export type StaffRole = 'ADMIN' | 'SUPERVISOR' | 'MANAGER' | 'ADVISOR' | 'COMPLIANCE' | 'SUPPORT';
 export type AccountStatus = 'ACTIVA' | 'SUSPENDIDA' | 'BLOQUEADA' | 'CERRADA';
 export type KycStatus = 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
 export type DocumentType = 'INE' | 'PASAPORTE' | 'COMPROBANTE_DOMICILIO' | 'CONSTANCIA_FISCAL';
@@ -14,6 +14,7 @@ export interface Staff {
   passwordHash: string;
   displayName: string;
   role: StaffRole;
+  managerTeam?: number | null;
   active: boolean;
   lastLoginAt?: string;
   createdAt: string;

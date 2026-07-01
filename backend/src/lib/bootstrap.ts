@@ -5,6 +5,7 @@ import { initLegacyStore } from '../data/adminStore';
 import { applyDatabaseEnv, isDatabaseEnabled } from './database';
 import { purgeAllDemoClients } from './purgeDemoClients';
 import { prisma } from './prisma';
+import { ensureManagerTeamsSeeded } from '../repositories/staff.repository';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
 
@@ -183,6 +184,8 @@ async function seedStaff(): Promise<void> {
       },
     });
   }
+
+  await ensureManagerTeamsSeeded(demoHash);
 }
 
 export async function pingDatabase(): Promise<boolean> {
