@@ -66,29 +66,40 @@ export function Landing() {
       <main id="top">
         {/* HERO */}
         <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-600/20 via-ink-900 to-ink-900" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-600/20 via-ink-900/80 to-ink-900" />
+          <div className="hero-aurora" aria-hidden>
+            <div className="hero-aurora__orb hero-aurora__orb--sunset" />
+            <div className="hero-aurora__orb hero-aurora__orb--blue" />
+            <div className="hero-aurora__orb hero-aurora__orb--white" />
+            <div className="hero-aurora__orb hero-aurora__orb--gold" />
+          </div>
           <div className="relative mx-auto max-w-3xl px-4 py-20 text-center lg:py-28">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-600/10 px-3 py-1 text-xs font-medium text-brand-100">
+            <div className="hero-spotlight">
+              <span className="relative inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.25)]">
                 Firma de intermediación profesional · México
               </span>
-              <h1 className="mt-5 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
+              <h1 className="hero-headline relative mt-5 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
                 No dejes que la inflación devore tu esfuerzo.
               </h1>
-              <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
+              <p className="relative mx-auto mt-4 max-w-xl text-lg text-slate-200">
                 Pon tu dinero a trabajar en los grandes mercados globales y construye la{' '}
-                <strong className="text-white">libertad financiera</strong> que tu familia merece hoy.
+                <strong className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.35)]">
+                  libertad financiera
+                </strong>{' '}
+                que tu familia merece hoy.
               </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <div className="relative mt-8 flex flex-wrap justify-center gap-3">
                 <Link to="/registro" className="btn-primary px-6 py-3 text-base">
                   Comienza a invertir desde hoy
                 </Link>
                 <Link to="/login" className="btn-ghost px-6 py-3 text-base">
                   Iniciar sesión
                 </Link>
-                <a href="#mercados" className="btn-ghost px-6 py-3 text-base">Ver mercados</a>
+                <a href="#mercados" className="btn-ghost px-6 py-3 text-base">
+                  Ver mercados
+                </a>
               </div>
-              <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+              <div className="hero-trust-line relative mt-8 flex flex-wrap justify-center gap-6 text-sm text-slate-300">
                 <span>✓ Asesor personal asignado</span>
                 <span>✓ Respaldo legal</span>
                 <span>✓ Depósitos por SPEI</span>
