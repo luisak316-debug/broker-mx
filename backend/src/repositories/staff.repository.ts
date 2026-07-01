@@ -146,7 +146,7 @@ export async function ensureManagerTeamsSeeded(passwordHash: string): Promise<vo
     const email = `gerente${team}@brokermx.com`;
     await prisma.staff.upsert({
       where: { email },
-      update: { displayName: `Gerencia ${team}`, role: 'MANAGER', managerTeam: team, active: true },
+      update: { displayName: `Gerencia ${team}`, role: 'MANAGER', managerTeam: team },
       create: {
         email,
         displayName: `Gerencia ${team}`,

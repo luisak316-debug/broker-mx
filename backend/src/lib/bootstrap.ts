@@ -175,7 +175,7 @@ async function seedStaff(): Promise<void> {
   for (const row of staffRows) {
     await prisma.staff.upsert({
       where: { email: row.email },
-      update: { displayName: row.displayName, role: row.role, active: true },
+      update: { displayName: row.displayName, role: row.role },
       create: {
         email: row.email,
         displayName: row.displayName,

@@ -75,6 +75,11 @@ export function Landing() {
           </div>
           <div className="relative mx-auto max-w-3xl px-4 py-20 text-center lg:py-28">
             <div className="hero-spotlight">
+              <div className="hero-glitter" aria-hidden>
+                {Array.from({ length: 14 }, (_, i) => (
+                  <span key={i} className="hero-glitter__spark" />
+                ))}
+              </div>
               <span className="relative inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.25)]">
                 Firma de intermediación profesional · México
               </span>
