@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client';
+import { useClientAuth } from '../../auth/ClientAuthContext';
 import { getUploadsBase } from '../../lib/apiConfig';
 
 type Props = {
@@ -25,6 +26,7 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [failed, setFailed] = useState(false);
+  const { client, refreshSession } = useClientAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -71,31 +73,30 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
 
   async function capturePhoto() {
     const video = videoRef.current;
-    if (!video || !video.videoWidth) return;
+    if (!video || !video.videoWidth || !client?.id) return;
 
     setBusy(true);
     setError('');
+    setFailed(false);
     try {
-      const size = Math.min(video.videoWidth, video.videoHeight);
+      const side = Math.min(video.videoWidth, video.videoHeight);
       const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
+      canvas.width = side;
+      canvas.height = side;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('No se pudo capturar la imagen.');
 
-      const sx = (video.videoWidth - size) / 2;
-      const sy = (video.videoHeight - size) / 2;
-      ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+      const sx = (video.videoWidth - side) / 2;
+      const sy = (video.videoHeight - side) / 2;
+      ctx.drawImage(video, sx, sy, side, side, 0, 0, side, side);
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
       const base64 = dataUrl.split(',')[1];
       if (!base64) throw new Error('No se pudo procesar la foto.');
 
-      const res = await api.uploadProfilePhoto({
-        data: base64,
-        capturedAt: new Date().toISOString(),
-      });
+      const res = await api.uploadProfilePhoto(client.id, { data: base64 });
       onPhotoSaved(res.profilePhotoUrl);
+      await refreshSession();
       setOpen(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar la foto.');
@@ -121,6 +122,7 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
       >
         {resolved && !failed ? (
           <img
+            key={resolved}
             src={resolved}
             alt="Foto de perfil"
             className={`${s.box} rounded-full object-cover ring-2 ring-amber-400/50`}

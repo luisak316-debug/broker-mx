@@ -35,6 +35,7 @@ export function ClientAvatar({ displayName, photoUrl, size = 'sm' }: Props) {
   if (resolved && !failed) {
     return (
       <img
+        key={resolved}
         src={resolved}
         alt={`Foto de ${displayName}`}
         className={`${box} shrink-0 rounded-full object-cover ring-2 ring-amber-400/50`}

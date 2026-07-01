@@ -32,11 +32,15 @@ function resolveProfilePhotoUrl(user: {
   clientCode: string;
   profilePhotoUrl?: string | null;
   profilePhotoData?: string | null;
+  profilePhotoUpdatedAt?: Date | null;
+  updatedAt?: Date;
 }): string | undefined {
-  if (user.profilePhotoData || user.profilePhotoUrl) {
-    return profilePhotoApiPath(user.clientCode);
-  }
-  return undefined;
+  if (!user.profilePhotoData && !user.profilePhotoUrl) return undefined;
+  const v =
+    user.profilePhotoUpdatedAt?.getTime() ??
+    user.updatedAt?.getTime() ??
+    0;
+  return `${profilePhotoApiPath(user.clientCode)}?v=${v}`;
 }
 
 function buildDepositAccount(user: DbUser): Client['depositAccount'] {
@@ -343,6 +347,7 @@ export async function updateClientProfilePhoto(
     data: {
       profilePhotoData,
       profilePhotoUrl: profilePhotoApiPath(user.clientCode),
+      profilePhotoUpdatedAt: new Date(),
     },
   });
 

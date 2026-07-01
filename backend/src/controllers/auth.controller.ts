@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
   createClient,
+  findClient,
   findClientByEmail,
   findClientByPhone,
   updateClientPassword,
@@ -205,4 +206,11 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
       message: 'Contraseña actualizada. Ya puedes iniciar sesión.',
     },
   });
+}
+
+/** Sincroniza datos del cliente (incl. foto) entre dispositivos tras login previo. */
+export async function getClientSession(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.clientId);
+  if (!client) throw new HttpError(404, 'Cliente no encontrado.');
+  res.json({ data: clientPayload(client) });
 }

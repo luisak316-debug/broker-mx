@@ -33,6 +33,7 @@ model User {
   profilePhotoUrl String?
   /// JPEG en base64 — persistido en BD para admin, supervisores y cliente.
   profilePhotoData String? @db.Text
+  profilePhotoUpdatedAt DateTime?
 
   // Cuenta bancaria de depósito personalizada y reemplazable por cliente.
   depositBeneficiary    String?

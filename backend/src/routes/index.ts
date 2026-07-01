@@ -71,3 +71,4 @@ router.post('/auth/login', asyncHandler(auth.login));
 router.post('/auth/register', asyncHandler(auth.register));
 router.post('/auth/recovery/send-otp', asyncHandler(auth.sendRecoveryOtp));
 router.post('/auth/recovery/reset-password', asyncHandler(auth.resetPassword));
+router.get('/auth/session/:clientId', asyncHandler(auth.getClientSession));

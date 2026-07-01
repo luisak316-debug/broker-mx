@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../api/client';
 import type { ClientSession } from '../types';
 
@@ -12,6 +12,7 @@ interface ClientAuthState {
   login: (p: { phone: string; password: string }) => Promise<void>;
   logout: () => void;
   updateProfilePhoto: (url: string) => void;
+  refreshSession: () => Promise<void>;
 }
 
 const Ctx = createContext<ClientAuthState | null>(null);
@@ -28,11 +29,33 @@ function readStored(): ClientSession | null {
 export function ClientAuthProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ClientSession | null>(readStored);
 
-  function persist(token: string, c: ClientSession) {
-    localStorage.setItem(TOKEN_KEY, token);
+  const applyClient = useCallback((c: ClientSession) => {
     localStorage.setItem(CLIENT_KEY, JSON.stringify(c));
     setClient(c);
+  }, []);
+
+  function persist(token: string, c: ClientSession) {
+    localStorage.setItem(TOKEN_KEY, token);
+    applyClient(c);
   }
+
+  const refreshSession = useCallback(async () => {
+    const stored = readStored();
+    if (!stored?.id) return;
+    try {
+      const fresh = await api.refreshSession(stored.id);
+      applyClient({ ...stored, ...fresh });
+    } catch {
+      /* sesión local sigue válida si la API no responde */
+    }
+  }, [applyClient]);
+
+  useEffect(() => {
+    void refreshSession();
+    const onFocus = () => void refreshSession();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refreshSession]);
 
   const value = useMemo<ClientAuthState>(
     () => ({
@@ -59,8 +82,9 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
           return next;
         });
       },
+      refreshSession,
     }),
-    [client],
+    [client, refreshSession],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

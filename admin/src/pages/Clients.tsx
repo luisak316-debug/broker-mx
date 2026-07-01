@@ -26,6 +26,21 @@ export function Clients() {
     return () => clearTimeout(t);
   }, [q, status, kyc]);
 
+  useEffect(() => {
+    function reload() {
+      api
+        .clients({ q, status: status || undefined, kyc: kyc || undefined })
+        .then(setRows)
+        .catch(() => undefined);
+    }
+    window.addEventListener('focus', reload);
+    const interval = window.setInterval(reload, 30_000);
+    return () => {
+      window.removeEventListener('focus', reload);
+      window.clearInterval(interval);
+    };
+  }, [q, status, kyc]);
+
   return (
     <div className="space-y-6">
       <header>

@@ -293,7 +293,7 @@ export function updateClientProfilePhoto(
   const client = findClient(idOrCode);
   if (!client) return undefined;
   client.profilePhotoData = profilePhotoData;
-  client.profilePhotoUrl = `/api/profile/${client.id}/photo`;
+  client.profilePhotoUrl = `/api/profile/${client.id}/photo?v=${Date.now()}`;
   persistSnapshot();
   return client;
 }

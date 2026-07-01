@@ -9,7 +9,6 @@ import { HttpError } from '../middleware/errorHandler';
 
 const uploadPhotoSchema = z.object({
   data: z.string().min(1, 'No se recibió la foto.'),
-  capturedAt: z.string().datetime().optional(),
 });
 
 export async function uploadProfilePhoto(req: Request, res: Response): Promise<void> {
@@ -30,11 +29,11 @@ export async function uploadProfilePhoto(req: Request, res: Response): Promise<v
   }
 
   const updated = await updateClientProfilePhoto(client.id, parsed.data);
-  if (!updated) throw new HttpError(500, 'No se pudo actualizar el perfil.');
+  if (!updated?.profilePhotoUrl) throw new HttpError(500, 'No se pudo actualizar el perfil.');
 
   res.json({
     data: {
-      profilePhotoUrl: updated.profilePhotoUrl ?? `/api/profile/${client.id}/photo`,
+      profilePhotoUrl: updated.profilePhotoUrl,
     },
   });
 }
@@ -47,6 +46,7 @@ export async function getProfilePhoto(req: Request, res: Response): Promise<void
   if (!buffer?.length) throw new HttpError(404, 'Foto no encontrada.');
 
   res.setHeader('Content-Type', 'image/jpeg');
-  res.setHeader('Cache-Control', 'public, max-age=600');
+  res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=60');
+  res.setHeader('Vary', 'Accept');
   res.send(buffer);
 }

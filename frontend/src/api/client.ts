@@ -126,15 +126,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  uploadProfilePhoto: (payload: { data: string; capturedAt?: string }) => {
-    const clientRaw = localStorage.getItem('brokermx_client');
-    const clientId = clientRaw ? (JSON.parse(clientRaw) as { id?: string }).id : undefined;
-    if (!clientId) throw new Error('Inicia sesión para actualizar tu foto.');
-    return http<{ profilePhotoUrl: string }>(`/profile/${encodeURIComponent(clientId)}/photo`, {
+  uploadProfilePhoto: (clientId: string, payload: { data: string }) =>
+    http<{ profilePhotoUrl: string }>(`/profile/${encodeURIComponent(clientId)}/photo`, {
       method: 'POST',
       body: JSON.stringify(payload),
-    });
-  },
+    }),
+  refreshSession: (clientId: string) =>
+    http<import('../types').ClientSession>(`/auth/session/${encodeURIComponent(clientId)}`),
   placeOrder: (payload: {
     userId?: string;
     symbol: string;
