@@ -37,7 +37,7 @@ export function Topbar({ connected }: { connected: boolean }) {
   const phone = client?.phone ? fmtPhone(client.phone) : '';
 
   return (
-    <header className="w-full max-w-[100dvw] shrink-0 overflow-hidden border-b border-ink-600/60 bg-ink-900/60 backdrop-blur">
+    <header className="relative z-10 w-full max-w-[100dvw] shrink-0 border-b border-ink-600/60 bg-ink-900/60 backdrop-blur">
       {/* Móvil */}
       <div className="md:hidden">
         <div className="flex items-center justify-between gap-2 px-3 py-2.5">
