@@ -3,28 +3,8 @@ import { Link } from 'react-router-dom';
 import { wakeApi } from '../api/client';
 import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
 import { MarketNewsSection } from '../components/landing/MarketNewsSection';
+import { TestimonialsCarousel } from '../components/landing/TestimonialsCarousel';
 import { MARKET_CATEGORIES, type MarketCategoryId } from '../data/marketCategories';
-
-const TESTIMONIALS = [
-  {
-    name: 'Abraham González',
-    role: 'Inversionista · CDMX',
-    initials: 'AG',
-    text: 'Estoy muy contento. He invertido hasta el momento $200,000 MXN y mis ganancias han sido de $450,000 MXN en tan solo cuatro meses. Estoy muy agradecido.',
-  },
-  {
-    name: 'Johana Jiménez',
-    role: 'Inversionista · Guadalajara',
-    initials: 'JJ',
-    text: 'Excelente transparencia y el acompañamiento de mi asesor asignado me dio toda la confianza para empezar.',
-  },
-  {
-    name: 'Griselda Barrueta',
-    role: 'Inversionista · Monterrey',
-    initials: 'GB',
-    text: 'Por fin un broker en México que habla claro y te respalda legalmente.',
-  },
-];
 
 export function Landing() {
   const [activeMarket, setActiveMarket] = useState<MarketCategoryId | null>(null);
@@ -161,24 +141,10 @@ export function Landing() {
         <section id="testimonios" className="border-t border-ink-700/60 bg-ink-800/30 py-20">
           <div className="mx-auto max-w-7xl px-4">
             <h2 className="text-center text-3xl font-bold text-white">Lo que dicen nuestros clientes</h2>
-            <p className="mt-2 text-center text-slate-400">Resultados y experiencias reales de inversionistas mexicanos.</p>
-            <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
-              {TESTIMONIALS.map((t) => (
-                <figure key={t.name} className="card flex flex-col">
-                  <div className="mb-3 flex items-center gap-3">
-                    <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-semibold text-white">
-                      {t.initials}
-                    </span>
-                    <figcaption>
-                      <p className="font-semibold text-white">{t.name}</p>
-                      <p className="text-xs text-slate-400">{t.role}</p>
-                    </figcaption>
-                    <span className="ml-auto text-bull">★★★★★</span>
-                  </div>
-                  <blockquote className="text-sm leading-relaxed text-slate-300">"{t.text}"</blockquote>
-                </figure>
-              ))}
-            </div>
+            <p className="mt-2 text-center text-slate-400">
+              Resultados y experiencias reales de inversionistas mexicanos satisfechos.
+            </p>
+            <TestimonialsCarousel />
           </div>
         </section>
 

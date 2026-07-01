@@ -326,3 +326,23 @@ body {
     animation: none;
   }
 }
+
+.testimonial-card {
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  border-radius: 0.75rem;
+  background: linear-gradient(145deg, rgba(17, 26, 46, 0.92) 0%, rgba(11, 17, 32, 0.88) 100%);
+  padding: 1.25rem;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(251, 191, 36, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.testimonial-card:hover {
+  border-color: rgba(251, 191, 36, 0.62);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.4),
+    0 0 32px rgba(251, 191, 36, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
