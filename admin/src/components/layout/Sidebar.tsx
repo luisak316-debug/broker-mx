@@ -10,8 +10,26 @@ const NAV: Array<{ to: string; label: string; icon: string; roles?: StaffRole[];
   { to: '/auditoria', label: 'Bitácora de auditoría', icon: '🛡', roles: ['COMPLIANCE'] },
 ];
 
-export function Sidebar() {
+function NavItems() {
   const { can } = useAuth();
+  return (
+    <>
+      {NAV.filter((item) => !item.roles || can(...item.roles)).map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.end}
+          className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+        >
+          <span className="text-base">{item.icon}</span>
+          {item.label}
+        </NavLink>
+      ))}
+    </>
+  );
+}
+
+export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-ink-600/60 bg-ink-900/80 p-4 md:flex">
       <div className="mb-6 flex items-center gap-2 px-2">
@@ -23,18 +41,30 @@ export function Sidebar() {
         </div>
       </div>
       <nav className="flex flex-col gap-1">
-        {NAV.filter((item) => !item.roles || can(...item.roles)).map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
-          >
-            <span className="text-base">{item.icon}</span>
-            {item.label}
-          </NavLink>
-        ))}
+        <NavItems />
       </nav>
     </aside>
+  );
+}
+
+export function MobileAdminNav() {
+  const { can } = useAuth();
+  return (
+    <nav className="flex gap-1 overflow-x-auto border-b border-ink-600/60 bg-ink-900/50 px-2 py-2 md:hidden">
+      {NAV.filter((item) => !item.roles || can(...item.roles)).map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.end}
+          className={({ isActive }) =>
+            `whitespace-nowrap rounded-lg px-3 py-1.5 text-xs ${
+              isActive ? 'bg-brand-600/30 text-brand-100' : 'text-slate-400'
+            }`
+          }
+        >
+          {item.label}
+        </NavLink>
+      ))}
+    </nav>
   );
 }

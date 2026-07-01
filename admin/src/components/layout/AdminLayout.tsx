@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
+import { MobileAdminNav, Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAuth } from '../../auth/AuthContext';
 
@@ -18,6 +18,7 @@ export function AdminLayout() {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
+        <MobileAdminNav />
         <main className="flex-1 overflow-x-hidden px-4 py-6">
           <div className="mx-auto max-w-7xl">
             <Outlet />

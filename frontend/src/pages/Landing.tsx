@@ -51,9 +51,14 @@ export function Landing() {
             <a href="#noticias" className="hover:text-white">Noticias</a>
             <a href="#testimonios" className="hover:text-white">Testimonios</a>
           </nav>
-          <div className="flex items-center gap-2">
-            <Link to="/login" className="btn-ghost hidden sm:inline-flex">Iniciar Sesión</Link>
-            <Link to="/registro" className="btn-primary">Crear Cuenta</Link>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Link to="/login" className="btn-ghost inline-flex px-2 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Iniciar Sesión</span>
+            </Link>
+            <Link to="/registro" className="btn-primary px-2 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
+              Crear Cuenta
+            </Link>
           </div>
         </div>
       </header>
@@ -77,6 +82,9 @@ export function Landing() {
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link to="/registro" className="btn-primary px-6 py-3 text-base">
                   Comienza a invertir desde hoy
+                </Link>
+                <Link to="/login" className="btn-ghost px-6 py-3 text-base">
+                  Iniciar sesión
                 </Link>
                 <a href="#mercados" className="btn-ghost px-6 py-3 text-base">Ver mercados</a>
               </div>
