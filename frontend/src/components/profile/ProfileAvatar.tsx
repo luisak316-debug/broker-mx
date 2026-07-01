@@ -11,8 +11,8 @@ type Props = {
 };
 
 const SIZE = {
-  md: { box: 'h-12 w-12', text: 'text-sm', cam: 'h-4 w-4 text-[10px]' },
-  lg: { box: 'h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]', text: 'text-lg', cam: 'h-5 w-5 text-xs' },
+  md: { box: 'h-11 w-11 sm:h-12 sm:w-12', text: 'text-sm', cam: 'h-4 w-4 text-[10px]' },
+  lg: { box: 'h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16', text: 'text-base lg:text-lg', cam: 'h-4 w-4 sm:h-5 sm:w-5 text-[10px] sm:text-xs' },
 } as const;
 
 function resolvePhotoUrl(url?: string): string | undefined {

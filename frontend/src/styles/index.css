@@ -10,6 +10,8 @@ html,
 body,
 #root {
   height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -18,6 +20,8 @@ body {
   color: #e5e9f0;
   font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 @layer components {

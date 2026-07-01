@@ -32,41 +32,82 @@ export function Topbar({ connected }: { connected: boolean }) {
     navigate('/', { replace: true });
   }
 
+  const balance = cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—';
+  const displayName = client?.displayName ?? 'Cliente';
+  const phone = client?.phone ? fmtPhone(client.phone) : '';
+
   return (
-    <header className="flex items-center justify-between border-b border-ink-600/60 bg-ink-900/60 px-4 py-3 backdrop-blur">
-      <div className="flex items-center gap-2 text-sm text-slate-400">
-        <span
-          className={`inline-block h-2 w-2 rounded-full ${connected ? 'bg-bull' : 'bg-bear'}`}
-          title={connected ? 'Feed en vivo conectado' : 'Reconectando...'}
-        />
-        {connected ? 'Datos en tiempo real' : 'Reconectando…'}
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="text-right">
-          <p className="text-xs text-slate-400">Saldo disponible</p>
-          <p className="text-sm font-semibold text-white">
-            {cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—'}
-          </p>
+    <header className="w-full max-w-[100dvw] shrink-0 overflow-hidden border-b border-ink-600/60 bg-ink-900/60 backdrop-blur">
+      {/* Móvil */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span
+              className={`inline-block h-2 w-2 shrink-0 rounded-full ${connected ? 'bg-bull' : 'bg-bear'}`}
+              title={connected ? 'Datos en vivo' : 'Reconectando'}
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                Saldo disponible
+              </p>
+              <p className="truncate text-sm font-semibold text-white">{balance}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="btn-ghost shrink-0 px-2.5 py-1.5 text-xs"
+          >
+            Salir
+          </button>
         </div>
-        <div className="flex items-center gap-3 rounded-xl border border-ink-600/50 bg-ink-800/40 px-3 py-2">
+
+        <div className="flex w-full min-w-0 items-center gap-2.5 border-t border-ink-600/40 px-3 py-2.5">
           <ProfileAvatar
             photoUrl={client?.profilePhotoUrl}
             initials={initials}
             onPhotoSaved={updateProfilePhoto}
-            size="lg"
+            size="md"
           />
-          <div className="min-w-0 text-left">
-            <p className="truncate text-base font-semibold text-white sm:text-lg">
-              {client?.displayName ?? 'Cliente'}
-            </p>
-            <p className="truncate text-sm text-slate-300">
-              {client?.phone ? fmtPhone(client.phone) : ''}
-            </p>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <p className="truncate text-sm font-semibold leading-tight text-white">{displayName}</p>
+            {phone ? (
+              <p className="truncate text-xs leading-tight text-slate-400">{phone}</p>
+            ) : null}
           </div>
         </div>
-        <button onClick={onLogout} className="btn-ghost">
-          Salir
-        </button>
+      </div>
+
+      {/* Escritorio */}
+      <div className="hidden items-center justify-between gap-4 px-4 py-3 md:flex">
+        <div className="flex min-w-0 items-center gap-2 text-sm text-slate-400">
+          <span
+            className={`inline-block h-2 w-2 shrink-0 rounded-full ${connected ? 'bg-bull' : 'bg-bear'}`}
+            title={connected ? 'Feed en vivo conectado' : 'Reconectando...'}
+          />
+          {connected ? 'Datos en tiempo real' : 'Reconectando…'}
+        </div>
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="shrink-0 text-right">
+            <p className="text-xs text-slate-400">Saldo disponible</p>
+            <p className="text-sm font-semibold text-white">{balance}</p>
+          </div>
+          <div className="flex min-w-0 max-w-xs items-center gap-3 rounded-xl border border-ink-600/50 bg-ink-800/40 px-3 py-2 lg:max-w-sm">
+            <ProfileAvatar
+              photoUrl={client?.profilePhotoUrl}
+              initials={initials}
+              onPhotoSaved={updateProfilePhoto}
+              size="lg"
+            />
+            <div className="min-w-0 overflow-hidden text-left">
+              <p className="truncate text-base font-semibold text-white lg:text-lg">{displayName}</p>
+              {phone ? <p className="truncate text-sm text-slate-300">{phone}</p> : null}
+            </div>
+          </div>
+          <button type="button" onClick={onLogout} className="btn-ghost shrink-0">
+            Salir
+          </button>
+        </div>
       </div>
     </header>
   );
