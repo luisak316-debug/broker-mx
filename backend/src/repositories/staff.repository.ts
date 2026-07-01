@@ -92,7 +92,7 @@ export async function listManagerTeams(): Promise<
   if (!isDatabaseEnabled()) {
     return teams.map((team) => ({
       team,
-      displayName: `Gerente ${team}`,
+      displayName: `Gerencia ${team}`,
       advisorCount: legacy.staff.filter(
         (s) => s.role === 'ADVISOR' && s.active && (s as Staff).managerTeam === team,
       ).length,
@@ -112,7 +112,7 @@ export async function listManagerTeams(): Promise<
     const mgr = managers.find((m) => m.managerTeam === team);
     return {
       team,
-      displayName: mgr?.displayName ?? `Gerente ${team}`,
+      displayName: mgr?.displayName ?? `Gerencia ${team}`,
       managerId: mgr?.id,
       advisorCount: advisorCounts[i],
     };
@@ -126,10 +126,10 @@ export async function ensureManagerTeamsSeeded(passwordHash: string): Promise<vo
     const email = `gerente${team}@brokermx.com`;
     await prisma.staff.upsert({
       where: { email },
-      update: { displayName: `Gerente ${team}`, role: 'MANAGER', managerTeam: team, active: true },
+      update: { displayName: `Gerencia ${team}`, role: 'MANAGER', managerTeam: team, active: true },
       create: {
         email,
-        displayName: `Gerente ${team}`,
+        displayName: `Gerencia ${team}`,
         role: 'MANAGER',
         managerTeam: team,
         passwordHash,

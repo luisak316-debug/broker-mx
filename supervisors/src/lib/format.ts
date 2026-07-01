@@ -10,7 +10,15 @@ export const fmtDate = (iso: string) =>
   });
 
 export function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Fecha de llamadas: siempre el día siguiente en hora local del navegador. */
+export function assignmentDate(base: Date = new Date()): string {
+  return isoDate(shiftDays(base, 1));
 }
 
 export function shiftDays(base: Date, delta: number): Date {

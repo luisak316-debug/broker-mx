@@ -28,7 +28,7 @@ export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props)
       const meta = teams.find((t) => t.team === team);
       return {
         team,
-        label: meta?.displayName ?? `Gerente ${team}`,
+        label: meta?.displayName ?? `Gerencia ${team}`,
         advisorCount: teamAdvisors.length,
         parsed,
         distribution: teamAdvisors.map((a, i) => ({
@@ -81,11 +81,11 @@ export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props)
   }
 
   return (
-    <Card title="Asignación por equipos de gerentes">
+    <Card title="Asignación por equipos de gerencia">
       <form onSubmit={onSubmit} className="space-y-6">
         <p className="text-sm text-slate-400">
           Pega contactos en cada equipo que quieras cargar hoy. Cada bloque se reparte solo entre los
-          asesores de ese gerente (equipo 1, 2, 3 o 4). Puedes enviar 50 a un equipo y 2 a otro, como
+          asesores de esa gerencia (equipo 1, 2, 3 o 4). Puedes enviar 50 a un equipo y 2 a otro, como
           necesites.
         </p>
 

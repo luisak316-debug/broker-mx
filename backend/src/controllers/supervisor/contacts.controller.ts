@@ -292,7 +292,7 @@ export async function bulkAssignContactsToManagers(req: Request, res: Response):
   await record({
     actor: req.staff!,
     action: 'CONTACT_BULK_ASSIGN',
-    description: `Asignación por gerentes: ${totalSaved} contactos en ${teamResults.filter((t) => t.saved > 0).length} equipo(s).`,
+    description: `Asignación por gerencia: ${totalSaved} contactos en ${teamResults.filter((t) => t.saved > 0).length} equipo(s).`,
     ip: clientIp(req),
   });
 
