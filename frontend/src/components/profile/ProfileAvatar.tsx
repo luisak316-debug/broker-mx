@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../api/client';
 import { useClientAuth } from '../../auth/ClientAuthContext';
 import { getUploadsBase } from '../../lib/apiConfig';
@@ -33,7 +34,16 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   }, []);
+
+  const closeModal = useCallback(() => {
+    stopCamera();
+    setOpen(false);
+    setError('');
+  }, [stopCamera]);
 
   useEffect(() => {
     if (!open) {
@@ -97,7 +107,7 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
       const res = await api.uploadProfilePhoto(client.id, { data: base64 });
       onPhotoSaved(res.profilePhotoUrl);
       await refreshSession();
-      setOpen(false);
+      closeModal();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar la foto.');
     } finally {
@@ -111,6 +121,50 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
   useEffect(() => {
     setFailed(false);
   }, [photoUrl]);
+
+  const modal =
+    open &&
+    createPortal(
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-amber-400/40 bg-ink-900 p-5 shadow-2xl">
+          <h3 className="text-lg font-semibold text-white">Foto de perfil</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            Usa tu cámara frontal en tiempo real. No se permiten fotos de galería.
+          </p>
+
+          <div className="relative mt-4 overflow-hidden rounded-xl bg-black">
+            <video
+              ref={videoRef}
+              className="aspect-square w-full object-cover mirror"
+              playsInline
+              muted
+            />
+          </div>
+
+          {error && <p className="mt-3 text-sm text-bear">{error}</p>}
+
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={busy}
+              onClick={closeModal}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={busy || !!error}
+              onClick={() => void capturePhoto()}
+            >
+              {busy ? 'Guardando…' : 'Capturar foto'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
 
   return (
     <>
@@ -142,46 +196,7 @@ export function ProfileAvatar({ photoUrl, initials, onPhotoSaved, size = 'md' }:
         </span>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-amber-400/40 bg-ink-900 p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white">Foto de perfil</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Usa tu cámara frontal en tiempo real. No se permiten fotos de galería.
-            </p>
-
-            <div className="relative mt-4 overflow-hidden rounded-xl bg-black">
-              <video
-                ref={videoRef}
-                className="aspect-square w-full object-cover mirror"
-                playsInline
-                muted
-              />
-            </div>
-
-            {error && <p className="mt-3 text-sm text-bear">{error}</p>}
-
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                className="btn-ghost"
-                disabled={busy}
-                onClick={() => setOpen(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={busy || !!error}
-                onClick={() => void capturePhoto()}
-              >
-                {busy ? 'Guardando…' : 'Capturar foto'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {modal}
     </>
   );
 }
