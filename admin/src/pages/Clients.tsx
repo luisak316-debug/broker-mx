@@ -5,7 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClientAvatar } from '../components/ui/ClientAvatar';
 import type { ClientRow } from '../types';
-import { fmtDate, fmtMxn } from '../lib/format';
+import { fmtDate, fmtMxn, clientFirstName, fmtPhone } from '../lib/format';
 
 export function Clients() {
   const navigate = useNavigate();
@@ -84,7 +84,16 @@ export function Clients() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {loading && (
+          <p className="py-8 text-center text-slate-400 md:hidden">Cargando…</p>
+        )}
+        {!loading && rows.length === 0 && (
+          <p className="py-8 text-center text-slate-400 md:hidden">
+            No se encontraron clientes con esos criterios.
+          </p>
+        )}
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="table-base">
             <thead>
               <tr>
@@ -114,7 +123,9 @@ export function Clients() {
                         size="md"
                       />
                       <div className="min-w-0">
-                        <div className="font-medium text-white">{c.displayName}</div>
+                        <div className="truncate font-medium text-white" title={c.displayName}>
+                          {c.displayName}
+                        </div>
                         <div className="text-xs text-slate-400">
                           {c.id} · {c.email}
                         </div>
@@ -158,6 +169,38 @@ export function Clients() {
             </tbody>
           </table>
         </div>
+
+        {!loading && rows.length > 0 && (
+          <div className="space-y-3 md:hidden">
+            {rows.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className="flex w-full gap-3 rounded-xl border border-ink-600/60 bg-ink-800/40 p-3 text-left"
+                onClick={() => navigate(`/clientes/${c.id}`)}
+              >
+                <ClientAvatar
+                  displayName={c.displayName}
+                  photoUrl={c.profilePhotoUrl}
+                  size="md"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base font-semibold text-white" title={c.displayName}>
+                    {clientFirstName(c.displayName)}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">{c.id}</p>
+                  <p className="mt-1 truncate text-xs text-slate-400">
+                    {fmtPhone(c.phone)} · {c.accountStatus}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+                    <span className="font-semibold text-white">{fmtMxn(c.cashMxn)}</span>
+                    <span className="text-slate-400">{fmtMxn(c.totalInvestedMxn)} inv.</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );

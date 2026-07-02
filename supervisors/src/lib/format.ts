@@ -16,6 +16,19 @@ export function isoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Primer nombre para listas y móvil (nombre completo en title/atributo). */
+export function clientFirstName(name: string): string {
+  const first = name.trim().split(/\s+/).filter(Boolean)[0];
+  if (!first) return name;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+export function fmtPhone(phone?: string): string {
+  const digits = (phone ?? '').replace(/\D/g, '').slice(-10);
+  if (digits.length !== 10) return phone ?? '—';
+  return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+}
+
 export function shiftDays(base: Date, delta: number): Date {
   const d = new Date(base);
   d.setDate(d.getDate() + delta);

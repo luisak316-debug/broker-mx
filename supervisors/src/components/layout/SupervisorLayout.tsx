@@ -37,7 +37,7 @@ export function SupervisorLayout() {
         </nav>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="flex items-center justify-between border-b border-ink-600 bg-ink-900/50 px-4 py-3">
           <div className="lg:hidden">
             <p className="font-semibold text-white">Supervisores</p>
@@ -72,7 +72,7 @@ export function SupervisorLayout() {
           ))}
         </nav>
 
-        <main className="flex-1 px-4 py-6">
+        <main className="flex-1 overflow-x-hidden px-3 py-6 sm:px-4">
           <div className="mx-auto max-w-6xl">
             <Outlet />
           </div>

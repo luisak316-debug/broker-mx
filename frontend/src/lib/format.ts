@@ -17,9 +17,15 @@ export const fmtDate = (iso: string) =>
 export const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-/** Formato legible del celular mexicano (10 dígitos). */
 export const fmtPhone = (phone?: string) => {
   const digits = (phone ?? '').replace(/\D/g, '').slice(-10);
   if (digits.length !== 10) return phone ?? '';
   return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+};
+
+/** Primer nombre para cabecera móvil (nombre completo en title). */
+export function clientFirstName(name: string): string {
+  const first = name.trim().split(/\s+/).filter(Boolean)[0];
+  if (!first) return name;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 };

@@ -35,6 +35,19 @@ export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
   CONSTANCIA_FISCAL: 'Constancia fiscal (RFC)',
 };
 
+/** Primer nombre para listas y móvil (nombre completo en title/atributo). */
+export function clientFirstName(name: string): string {
+  const first = name.trim().split(/\s+/).filter(Boolean)[0];
+  if (!first) return name;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+export function fmtPhone(phone?: string): string {
+  const digits = (phone ?? '').replace(/\D/g, '').slice(-10);
+  if (digits.length !== 10) return phone ?? '—';
+  return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+}
+
 /** Formatea un monto mientras se escribe: 10000 → 10,000 · 5000.50 → 5,000.50 */
 export function formatMoneyInput(raw: string): string {
   const stripped = raw.replace(/,/g, '').replace(/[^\d.]/g, '');
