@@ -133,6 +133,24 @@ export const api = {
     }),
   refreshSession: (clientId: string) =>
     http<import('../types').ClientSession>(`/auth/session/${encodeURIComponent(clientId)}`),
+  getProfile: (clientId: string) =>
+    http<import('../types').ClientProfileData>(`/profile/${encodeURIComponent(clientId)}`),
+  updateProfile: (
+    clientId: string,
+    payload: { city?: string | null; homeAddress?: string | null },
+  ) =>
+    http<import('../types').ClientProfileData>(`/profile/${encodeURIComponent(clientId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  uploadDocument: (
+    clientId: string,
+    payload: { type: string; fileName: string; mimeType: string; data: string },
+  ) =>
+    http<{ document: import('../types').ClientDocument }>(
+      `/profile/${encodeURIComponent(clientId)}/documents`,
+      { method: 'POST', body: JSON.stringify(payload) },
+    ),
   placeOrder: (payload: {
     userId?: string;
     symbol: string;

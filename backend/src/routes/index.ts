@@ -60,7 +60,10 @@ router.get('/portfolio/:userId', asyncHandler(portfolio.getPortfolio));
 router.get('/deposit-account/:clientId', asyncHandler(deposit.getDepositAccount));
 router.post('/cash-requests/withdraw', asyncHandler(cashRequest.requestWithdrawal));
 
-// Foto de perfil (captura en tiempo real desde la app del cliente)
+// Perfil del cliente (datos personales y documentos KYC)
+router.get('/profile/:clientId', asyncHandler(profile.getClientProfile));
+router.patch('/profile/:clientId', asyncHandler(profile.updateClientProfile));
+router.post('/profile/:clientId/documents', asyncHandler(profile.uploadClientDocument));
 router.get('/profile/:clientId/photo', asyncHandler(profile.getProfilePhoto));
 router.post('/profile/:clientId/photo', asyncHandler(profile.uploadProfilePhoto));
 

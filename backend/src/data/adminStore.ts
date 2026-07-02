@@ -297,3 +297,15 @@ export function updateClientProfilePhoto(
   persistSnapshot();
   return client;
 }
+
+export function updateClientProfileDetails(
+  idOrCode: string,
+  data: { city?: string | null; homeAddress?: string | null },
+): Client | undefined {
+  const client = findClient(idOrCode);
+  if (!client) return undefined;
+  if (data.city !== undefined) client.city = data.city || undefined;
+  if (data.homeAddress !== undefined) client.homeAddress = data.homeAddress || undefined;
+  persistSnapshot();
+  return client;
+}

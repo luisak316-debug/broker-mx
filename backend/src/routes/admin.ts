@@ -5,7 +5,6 @@ import * as auth from '../controllers/admin/auth.controller';
 import * as clientsCtrl from '../controllers/admin/clients.controller';
 import * as finance from '../controllers/admin/finance.controller';
 import * as deposit from '../controllers/admin/depositAccount.controller';
-import * as documents from '../controllers/admin/documents.controller';
 import * as txns from '../controllers/admin/transactions.controller';
 import * as cash from '../controllers/admin/cashRequests.controller';
 import * as audit from '../controllers/admin/audit.controller';
@@ -48,13 +47,6 @@ adminRouter.put(
   '/clients/:id/deposit-account',
   requireRole('ADVISOR', 'COMPLIANCE'),
   asyncHandler(deposit.updateDepositAccount),
-);
-
-// Documentos de identidad (carga por el asesor)
-adminRouter.post(
-  '/clients/:id/documents',
-  requireRole('ADVISOR', 'COMPLIANCE'),
-  asyncHandler(documents.uploadDocument),
 );
 
 // Módulo 3: Historial de transacciones y solicitudes de efectivo

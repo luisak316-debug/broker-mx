@@ -12,6 +12,7 @@ import { Commodities } from './pages/Commodities';
 import { Forex } from './pages/Forex';
 import { Crypto } from './pages/Crypto';
 import { Fund } from './pages/Fund';
+import { Profile } from './pages/Profile';
 
 function RequireClient({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useClientAuth();
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
       { path: 'forex', element: <Forex /> },
       { path: 'cripto', element: <Crypto /> },
       { path: 'fondear', element: <Fund /> },
+      { path: 'perfil', element: <Profile /> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

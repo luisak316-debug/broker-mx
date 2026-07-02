@@ -25,6 +25,8 @@ function clientPayload(client: {
   email: string;
   displayName: string;
   phone?: string;
+  city?: string;
+  homeAddress?: string;
   kycStatus: string;
   accountStatus: string;
   profilePhotoUrl?: string;
@@ -37,6 +39,8 @@ function clientPayload(client: {
     email: client.email,
     phone: client.phone ?? '',
     displayName: client.displayName,
+    city: client.city ?? '',
+    homeAddress: client.homeAddress ?? '',
     kycStatus: client.kycStatus,
     profilePhotoUrl: client.profilePhotoUrl ?? '',
   };

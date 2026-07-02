@@ -84,6 +84,8 @@ export function mapUserToClient(user: DbUser): Client {
     profilePhotoData: user.profilePhotoData ?? undefined,
     curp: user.curp ?? undefined,
     rfc: user.rfc ?? undefined,
+    city: user.city ?? undefined,
+    homeAddress: user.homeAddress ?? undefined,
     kycStatus: user.kycStatus as KycStatus,
     accountStatus: user.accountStatus as AccountStatus,
     riskProfile: user.riskProfile,
@@ -349,6 +351,29 @@ export async function updateClientProfilePhoto(
       profilePhotoUrl: profilePhotoApiPath(user.clientCode),
       profilePhotoUpdatedAt: new Date(),
     },
+  });
+
+  return findClient(user.clientCode);
+}
+
+export async function updateClientProfileDetails(
+  idOrCode: string,
+  data: { city?: string | null; homeAddress?: string | null },
+): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) {
+    return legacy.updateClientProfileDetails(idOrCode, data);
+  }
+
+  const user = await prisma.user.findFirst({ where: userWhere(idOrCode) });
+  if (!user) return undefined;
+
+  const patch: Prisma.UserUpdateInput = {};
+  if (data.city !== undefined) patch.city = data.city || null;
+  if (data.homeAddress !== undefined) patch.homeAddress = data.homeAddress || null;
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: patch,
   });
 
   return findClient(user.clientCode);

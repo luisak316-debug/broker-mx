@@ -25,3 +25,9 @@ export function getUploadsBase(): string {
   const server = getServerUrl();
   return server || '';
 }
+
+export function resolveUploadUrl(path: string): string {
+  if (path.startsWith('http')) return path;
+  const server = getServerUrl();
+  return server ? `${server}${path}` : path;
+}

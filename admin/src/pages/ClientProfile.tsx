@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
@@ -7,8 +7,7 @@ import { ClientAvatar } from '../components/ui/ClientAvatar';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
-import { CATEGORY_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, parseMoneyInput } from '../lib/format';
-import { resolveUploadUrl } from '../lib/apiConfig';
+import { CATEGORY_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, parseMoneyInput } from '../lib/format';
 
 export function ClientProfile() {
   const { id = '' } = useParams();
@@ -40,12 +39,6 @@ export function ClientProfile() {
   const [initialInvestment, setInitialInvestment] = useState(''); // opcional
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositError, setDepositError] = useState<string | null>(null);
-
-  const [docType, setDocType] = useState('INE');
-  const [docFile, setDocFile] = useState<File | null>(null);
-  const [docBusy, setDocBusy] = useState(false);
-  const [docError, setDocError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [confirm, setConfirm] = useState<null | 'balance' | 'funds'>(null);
   const [busy, setBusy] = useState(false);
@@ -104,56 +97,6 @@ export function ClientProfile() {
     } finally {
       setDepositBusy(false);
     }
-  }
-
-  async function uploadDocument() {
-    if (!docFile) {
-      setDocError('Selecciona un archivo PDF o imagen.');
-      return;
-    }
-    setDocBusy(true);
-    setDocError(null);
-    try {
-      const data = await readFileAsBase64(docFile);
-      await api.uploadDocument(id, {
-        type: docType,
-        fileName: docFile.name,
-        mimeType: docFile.type,
-        data,
-      });
-      setDocFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setFeedback('Documento de identidad cargado correctamente.');
-      load();
-    } catch (e) {
-      setDocError(e instanceof Error ? e.message : 'Error al subir el documento.');
-    } finally {
-      setDocBusy(false);
-    }
-  }
-
-  function onDocumentFileChange(file: File | null) {
-    if (!file) {
-      setDocFile(null);
-      return;
-    }
-    const ok =
-      /\.(pdf|png|jpe?g|webp|gif)$/i.test(file.name) ||
-      /^(application\/pdf|image\/(png|jpeg|jpg|webp|gif))$/i.test(file.type);
-    if (!ok) {
-      setDocError('Formato no permitido. Usa PDF, PNG, JPG o WEBP.');
-      setDocFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setDocError('El archivo no debe superar 10 MB.');
-      setDocFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-    setDocError(null);
-    setDocFile(file);
   }
 
   useEffect(load, [id]);
@@ -284,7 +227,7 @@ export function ClientProfile() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Información personal */}
         <Card title="Información personal">
           <dl className="space-y-2 text-sm">
@@ -305,95 +248,6 @@ export function ClientProfile() {
             <Row label="Asesor asignado" value={client.advisorName} />
             <Row label="Correo del asesor" value={client.advisorEmail} />
           </dl>
-        </Card>
-
-        {/* Documentos */}
-        <Card title="Documentos de identidad">
-          {canEdit && (
-            <div className="mb-4 space-y-3 rounded-lg border border-ink-600 bg-ink-900/40 p-3">
-              <p className="text-xs text-slate-400">
-                Carga la identificación oficial del cliente (INE, pasaporte, etc.) en PDF o imagen.
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="label">Tipo de documento</span>
-                  <select
-                    className="input"
-                    value={docType}
-                    onChange={(e) => setDocType(e.target.value)}
-                  >
-                    {Object.entries(DOCUMENT_TYPE_LABEL).map(([k, v]) => (
-                      <option key={k} value={k}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="label">Archivo (PDF, PNG, JPG, WEBP · máx. 10 MB)</span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf"
-                    className="input cursor-pointer file:mr-2 file:rounded file:border-0 file:bg-brand-600 file:px-2 file:py-1 file:text-xs file:text-white"
-                    onChange={(e) => onDocumentFileChange(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-              </div>
-              {docFile && (
-                <p className="text-xs text-slate-400">
-                  Seleccionado: <span className="text-slate-200">{docFile.name}</span> (
-                  {(docFile.size / 1024).toFixed(0)} KB)
-                </p>
-              )}
-              {docError && (
-                <p className="rounded-lg bg-danger/15 px-3 py-2 text-xs text-danger">{docError}</p>
-              )}
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={!docFile || docBusy}
-                onClick={uploadDocument}
-              >
-                {docBusy ? 'Subiendo…' : 'Subir documento'}
-              </button>
-            </div>
-          )}
-
-          {client.documents.length === 0 ? (
-            <p className="text-sm text-slate-400">Aún no hay documentos en el expediente.</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {client.documents.map((d) => (
-                <li
-                  key={d.id}
-                  className="flex flex-col gap-2 rounded-lg bg-ink-900/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium text-slate-200">
-                      {DOCUMENT_TYPE_LABEL[d.type] ?? d.type.replace(/_/g, ' ')}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">{d.fileName}</p>
-                    <p className="text-xs text-slate-600">
-                      {fmtDateTime(d.uploadedAt)}
-                      {d.uploadedByName ? ` · ${d.uploadedByName}` : ''}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <a
-                      href={resolveUploadUrl(d.fileUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-ghost px-2 py-1 text-xs"
-                    >
-                      Ver / Descargar
-                    </a>
-                    <Badge value={d.status} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
         </Card>
 
         {/* Resumen financiero */}
@@ -743,16 +597,4 @@ function Row({ label, value }: { label: string; value?: string }) {
       <dd className="text-right text-slate-200">{value ?? '—'}</dd>
     </div>
   );
-}
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(',')[1] ?? '');
-    };
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
-    reader.readAsDataURL(file);
-  });
 }

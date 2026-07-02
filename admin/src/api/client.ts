@@ -1,7 +1,6 @@
 import type {
   AuditLog,
   CashRequest,
-  ClientDocument,
   ClientProfile,
   ClientRow,
   DashboardMetrics,
@@ -85,31 +84,6 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(payload),
     }),
-
-  uploadDocument: async (
-    clientId: string,
-    payload: { type: string; fileName: string; mimeType: string; data: string },
-  ) => {
-    const token = tokenStore.get();
-    const res = await fetch(`${getApiBase()}/clients/${clientId}/documents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(payload),
-    });
-    if (res.status === 401) {
-      tokenStore.clear();
-      throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
-    }
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error ?? `Error ${res.status}`);
-    }
-    const json = (await res.json()) as { data: { document: ClientDocument } };
-    return json.data;
-  },
 
   transactions: (params?: { userId?: string; category?: string }) => {
     const qs = new URLSearchParams();

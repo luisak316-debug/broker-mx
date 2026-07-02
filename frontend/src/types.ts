@@ -70,8 +70,37 @@ export interface ClientSession {
   email: string;
   phone: string;
   displayName: string;
+  city?: string;
+  homeAddress?: string;
   kycStatus?: string;
   profilePhotoUrl?: string;
+}
+
+export type DocumentType = 'INE' | 'PASAPORTE' | 'COMPROBANTE_DOMICILIO' | 'CONSTANCIA_FISCAL';
+export type DocumentStatus = 'EN_REVISION' | 'VALIDADO' | 'RECHAZADO';
+
+export interface ClientDocument {
+  id: string;
+  type: DocumentType;
+  fileName: string;
+  mimeType: string;
+  fileUrl: string;
+  status: DocumentStatus;
+  uploadedAt: string;
+  uploadedByName?: string;
+}
+
+export interface ClientProfileData {
+  id: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  city: string;
+  homeAddress: string;
+  kycStatus: string;
+  profilePhotoUrl: string;
+  documents: ClientDocument[];
+  createdAt: string;
 }
 
 export interface SendOtpResult {

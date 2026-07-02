@@ -65,6 +65,8 @@ export interface Client {
   profilePhotoData?: string;
   curp?: string;
   rfc?: string;
+  city?: string;
+  homeAddress?: string;
   kycStatus: KycStatus;
   accountStatus: AccountStatus;
   riskProfile: 'CONSERVADOR' | 'MODERADO' | 'AGRESIVO';
