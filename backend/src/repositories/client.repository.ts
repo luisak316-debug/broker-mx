@@ -4,7 +4,7 @@ import path from 'node:path';
 import { isDatabaseEnabled } from '../lib/database';
 import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
-import type { AccountStatus, Client, DepositMethod, KycStatus } from '../types/admin';
+import type { AccountStatus, Client, ClientDocument, DepositMethod, KycStatus } from '../types/admin';
 
 const userInclude = {
   balance: true,
@@ -71,6 +71,16 @@ function buildDepositAccount(user: DbUser): Client['depositAccount'] {
   };
 }
 
+function guessDocumentMime(fileName: string): string {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (/\.jpe?g$/.test(lower)) return 'image/jpeg';
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  return 'application/octet-stream';
+}
+
 export function mapUserToClient(user: DbUser): Client {
   return {
     id: user.clientCode,
@@ -97,8 +107,8 @@ export function mapUserToClient(user: DbUser): Client {
       id: d.id,
       type: d.type,
       fileName: d.fileName,
-      mimeType: 'application/pdf',
-      fileUrl: `/uploads/clients/${user.clientCode}/${d.fileName}`,
+      mimeType: d.mimeType ?? guessDocumentMime(d.fileName),
+      fileUrl: `/api/profile/${user.clientCode}/documents/${d.id}/file`,
       status: d.status,
       uploadedAt: d.uploadedAt.toISOString(),
     })),
@@ -409,4 +419,49 @@ export async function getProfilePhotoBuffer(idOrCode: string): Promise<Buffer | 
   }
 
   return undefined;
+}
+
+export async function getClientDocumentFile(
+  clientIdOrCode: string,
+  documentId: string,
+): Promise<{ buffer: Buffer; mimeType: string; fileName: string } | undefined> {
+  if (!isDatabaseEnabled()) {
+    const client = legacy.findClient(clientIdOrCode);
+    const doc = client?.documents.find((d) => d.id === documentId);
+    if (!doc) return undefined;
+    const fileData = (doc as ClientDocument & { fileData?: string }).fileData;
+    if (fileData) {
+      return {
+        buffer: Buffer.from(fileData, 'base64'),
+        mimeType: doc.mimeType,
+        fileName: doc.fileName,
+      };
+    }
+    if (doc.fileUrl.startsWith('/uploads/')) {
+      const filePath = path.join(process.cwd(), doc.fileUrl.replace(/^\//, ''));
+      if (existsSync(filePath)) {
+        return {
+          buffer: readFileSync(filePath),
+          mimeType: doc.mimeType,
+          fileName: doc.fileName,
+        };
+      }
+    }
+    return undefined;
+  }
+
+  const row = await prisma.clientDocument.findFirst({
+    where: {
+      id: documentId,
+      user: userWhere(clientIdOrCode),
+    },
+    select: { fileName: true, mimeType: true, fileData: true },
+  });
+  if (!row?.fileData) return undefined;
+
+  return {
+    buffer: Buffer.from(row.fileData, 'base64'),
+    mimeType: row.mimeType ?? guessDocumentMime(row.fileName),
+    fileName: row.fileName,
+  };
 }

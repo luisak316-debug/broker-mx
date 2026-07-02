@@ -133,6 +133,9 @@ model ClientDocument {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type       DocumentType
   fileName   String
+  mimeType   String?
+  /// Archivo en base64 — persiste en BD (Render no conserva disco).
+  fileData   String?  @db.Text
   status     DocumentStatus @default(EN_REVISION)
   uploadedAt DateTime @default(now())
 }

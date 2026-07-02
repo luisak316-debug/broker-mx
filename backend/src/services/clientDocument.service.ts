@@ -41,7 +41,8 @@ export async function uploadClientIdentityDocument(params: {
   };
 
   if (!isDatabaseEnabled()) {
-    addClientDocument(params.client.id, doc);
+    addClientDocument(params.client.id, { ...doc, fileData: params.dataBase64 });
+    doc.fileUrl = `/api/profile/${params.client.id}/documents/${doc.id}/file`;
     return doc;
   }
 
@@ -53,6 +54,8 @@ export async function uploadClientIdentityDocument(params: {
       userId: internalId,
       type: params.type,
       fileName: params.fileName,
+      mimeType: params.mimeType,
+      fileData: params.dataBase64,
       status: 'EN_REVISION',
     },
   });
@@ -65,6 +68,7 @@ export async function uploadClientIdentityDocument(params: {
   }
 
   doc.id = row.id;
+  doc.fileUrl = `/api/profile/${params.client.id}/documents/${row.id}/file`;
   doc.uploadedAt = row.uploadedAt.toISOString();
   return doc;
 }

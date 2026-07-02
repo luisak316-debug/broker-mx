@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
 import { Card } from '../components/common/Card';
 import { ProfileAvatar } from '../components/profile/ProfileAvatar';
-import { resolveUploadUrl } from '../lib/apiConfig';
+import { IdentityDocumentPreview } from '../components/profile/IdentityDocumentPreview';
 import {
   DOCUMENT_TYPE_LABEL,
   fmtDate,
@@ -54,7 +54,6 @@ export function Profile() {
   const [error, setError] = useState<string | null>(null);
 
   const [docType, setDocType] = useState('INE');
-  const [docFile, setDocFile] = useState<File | null>(null);
   const [docBusy, setDocBusy] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,9 +102,8 @@ export function Profile() {
     }
   }
 
-  function onDocumentFileChange(file: File | null) {
-    if (!file) {
-      setDocFile(null);
+  async function onDocumentFileSelected(file: File | null) {
+    if (!file || !client?.id) {
       return;
     }
     const ok =
@@ -113,50 +111,44 @@ export function Profile() {
       /^(application\/pdf|image\/(png|jpeg|jpg|webp|gif))$/i.test(file.type);
     if (!ok) {
       setDocError('Formato no permitido. Usa PDF, PNG, JPG o WEBP.');
-      setDocFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
       setDocError('El archivo no debe superar 10 MB.');
-      setDocFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-    setDocError(null);
-    setDocFile(file);
-  }
 
-  async function uploadDocument() {
-    if (!client?.id || !docFile) {
-      setDocError('Selecciona un archivo PDF o imagen.');
-      return;
-    }
     setDocBusy(true);
     setDocError(null);
+    setFeedback(null);
     try {
-      const data = await readFileAsBase64(docFile);
+      const data = await readFileAsBase64(file);
       const res = await api.uploadDocument(client.id, {
         type: docType,
-        fileName: docFile.name,
-        mimeType: docFile.type || 'application/octet-stream',
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
         data,
       });
       setProfile((prev) =>
         prev ? { ...prev, documents: [res.document, ...prev.documents] } : prev,
       );
-      setDocFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setFeedback('Documento cargado. Lo revisaremos para completar tu verificación.');
+      setFeedback('Documento guardado.');
       await refreshSession();
     } catch (e) {
-      setDocError(e instanceof Error ? e.message : 'Error al subir el documento.');
+      setDocError(e instanceof Error ? e.message : 'Error al guardar el documento.');
     } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setDocBusy(false);
     }
   }
 
   if (!client) return null;
+
+  const identityDocuments = (profile?.documents ?? []).filter((d) =>
+    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+  );
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -243,17 +235,30 @@ export function Profile() {
 
           <Card title="Documentos de identidad">
             <p className="mb-4 text-sm text-slate-400">
-              Sube tu identificación oficial: INE, pasaporte o constancia fiscal (RFC) en PDF o
-              imagen. Solo tú puedes cargar estos documentos.
+              Elige el tipo y selecciona tu archivo. Se guarda al instante y aparece arriba.
             </p>
 
-            <div className="mb-4 space-y-3 rounded-lg border border-ink-600 bg-ink-900/40 p-3">
+            {identityDocuments.length > 0 && (
+              <div className="mb-4 space-y-3">
+                {identityDocuments.map((d) => (
+                  <IdentityDocumentPreview
+                    key={d.id}
+                    doc={d}
+                    label={DOCUMENT_TYPE_LABEL[d.type] ?? d.type}
+                    subtitle={fmtDateTime(d.uploadedAt)}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-3 rounded-lg border border-ink-600 bg-ink-900/40 p-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1 block text-sm text-slate-300">Tipo de documento</span>
                   <select
                     className="input"
                     value={docType}
+                    disabled={docBusy}
                     onChange={(e) => setDocType(e.target.value)}
                   >
                     {IDENTITY_DOCUMENT_TYPES.map((k) => (
@@ -271,82 +276,20 @@ export function Profile() {
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf"
-                    className="input cursor-pointer file:mr-2 file:rounded file:border-0 file:bg-brand-600 file:px-2 file:py-1 file:text-xs file:text-white"
-                    onChange={(e) => onDocumentFileChange(e.target.files?.[0] ?? null)}
+                    disabled={docBusy}
+                    className="input cursor-pointer file:mr-2 file:rounded file:border-0 file:bg-brand-600 file:px-2 file:py-1 file:text-xs file:text-white disabled:opacity-60"
+                    onChange={(e) => void onDocumentFileSelected(e.target.files?.[0] ?? null)}
                   />
                 </label>
               </div>
-              {docFile && (
-                <p className="text-xs text-slate-400">
-                  Seleccionado: <span className="text-slate-200">{docFile.name}</span> (
-                  {(docFile.size / 1024).toFixed(0)} KB)
-                </p>
-              )}
+              {docBusy && <p className="text-sm text-brand-300">Guardando documento…</p>}
               {docError && (
                 <p className="rounded-lg bg-bear/15 px-3 py-2 text-xs text-bear">{docError}</p>
               )}
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={!docFile || docBusy}
-                onClick={() => void uploadDocument()}
-              >
-                {docBusy ? 'Subiendo…' : 'Subir documento'}
-              </button>
             </div>
 
-            {profile.documents.filter((d) =>
-              IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
-            ).length === 0 ? (
-              <p className="text-sm text-slate-400">Aún no has subido documentos.</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {profile.documents
-                  .filter((d) =>
-                    IDENTITY_DOCUMENT_TYPES.includes(
-                      d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number],
-                    ),
-                  )
-                  .map((d) => (
-                  <li
-                    key={d.id}
-                    className="flex flex-col gap-2 rounded-lg bg-ink-900/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-slate-200">
-                        {DOCUMENT_TYPE_LABEL[d.type] ?? d.type.replace(/_/g, ' ')}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">{d.fileName}</p>
-                      <p className="text-xs text-slate-600">{fmtDateTime(d.uploadedAt)}</p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <a
-                        href={resolveUploadUrl(d.fileUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-ghost px-2 py-1 text-xs"
-                      >
-                        Ver
-                      </a>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs ${
-                          d.status === 'VALIDADO'
-                            ? 'bg-ok/20 text-ok'
-                            : d.status === 'RECHAZADO'
-                              ? 'bg-bear/20 text-bear'
-                              : 'bg-amber-500/20 text-amber-200'
-                        }`}
-                      >
-                        {d.status === 'VALIDADO'
-                          ? 'Validado'
-                          : d.status === 'RECHAZADO'
-                            ? 'Rechazado'
-                            : 'En revisión'}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {identityDocuments.length === 0 && !docBusy && (
+              <p className="mt-3 text-sm text-slate-400">Aún no has subido documentos.</p>
             )}
           </Card>
         </>

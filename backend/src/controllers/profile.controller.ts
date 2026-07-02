@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
   findClient,
+  getClientDocumentFile,
   getProfilePhotoBuffer,
   updateClientProfileDetails,
   updateClientProfilePhoto,
@@ -90,6 +91,16 @@ export async function uploadClientDocument(req: Request, res: Response): Promise
   } catch (e) {
     throw new HttpError(400, e instanceof Error ? e.message : 'No se pudo guardar el archivo.');
   }
+}
+
+export async function getDocumentFile(req: Request, res: Response): Promise<void> {
+  const file = await getClientDocumentFile(req.params.clientId, req.params.documentId);
+  if (!file) throw new HttpError(404, 'Documento no encontrado.');
+
+  res.setHeader('Content-Type', file.mimeType);
+  res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=60');
+  res.setHeader('Content-Disposition', `inline; filename="${file.fileName.replace(/"/g, '')}"`);
+  res.send(file.buffer);
 }
 
 export async function uploadProfilePhoto(req: Request, res: Response): Promise<void> {

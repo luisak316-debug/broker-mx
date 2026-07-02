@@ -4,12 +4,11 @@ import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClientAvatar } from '../components/ui/ClientAvatar';
+import { IdentityDocumentPreview } from '../components/ui/IdentityDocumentPreview';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
 import { CATEGORY_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
-import { resolveUploadUrl } from '../lib/apiConfig';
-import type { ClientDocument } from '../types';
 
 export function ClientProfile() {
   const { id = '' } = useParams();
@@ -294,17 +293,20 @@ export function ClientProfile() {
         {/* Documentos de identidad (solo lectura — subidos por el cliente) */}
         <Card title="Documentos de identidad">
           <p className="mb-3 text-xs text-slate-400">
-            Archivos que el cliente subió desde su cuenta (INE, pasaporte o constancia fiscal).
-            Se actualizan automáticamente cada pocos segundos.
+            Vista del archivo que subió el cliente. Se actualiza automáticamente.
           </p>
           {identityDocuments.length === 0 ? (
             <p className="text-sm text-slate-400">
               El cliente aún no ha subido identificación oficial.
             </p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3">
               {identityDocuments.map((d) => (
-                <IdentityDocumentRow key={d.id} doc={d} />
+                <IdentityDocumentPreview
+                  key={d.id}
+                  doc={d}
+                  label={DOCUMENT_TYPE_LABEL[d.type] ?? d.type.replace(/_/g, ' ')}
+                />
               ))}
             </ul>
           )}
@@ -656,33 +658,5 @@ function Row({ label, value }: { label: string; value?: string }) {
       <dt className="text-slate-400">{label}</dt>
       <dd className="text-right text-slate-200">{value ?? '—'}</dd>
     </div>
-  );
-}
-
-function IdentityDocumentRow({ doc }: { doc: ClientDocument }) {
-  return (
-    <li className="flex flex-col gap-2 rounded-lg bg-ink-900/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <p className="font-medium text-slate-200">
-          {DOCUMENT_TYPE_LABEL[doc.type] ?? doc.type.replace(/_/g, ' ')}
-        </p>
-        <p className="truncate text-xs text-slate-500">{doc.fileName}</p>
-        <p className="text-xs text-slate-600">
-          {fmtDateTime(doc.uploadedAt)}
-          {doc.uploadedByName ? ` · ${doc.uploadedByName}` : ''}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <a
-          href={resolveUploadUrl(doc.fileUrl)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-ghost px-2 py-1 text-xs"
-        >
-          Ver / Descargar
-        </a>
-        <Badge value={doc.status} />
-      </div>
-    </li>
   );
 }

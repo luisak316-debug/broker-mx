@@ -34,6 +34,7 @@ export interface ClientDocument {
   status: DocumentStatus;
   uploadedAt: string;
   uploadedByName?: string;
+  fileData?: string;
 }
 
 /** Forma en que el cliente debe fondear su cuenta. */

@@ -61,6 +61,7 @@ router.get('/deposit-account/:clientId', asyncHandler(deposit.getDepositAccount)
 router.post('/cash-requests/withdraw', asyncHandler(cashRequest.requestWithdrawal));
 
 // Perfil del cliente (datos personales y documentos KYC)
+router.get('/profile/:clientId/documents/:documentId/file', asyncHandler(profile.getDocumentFile));
 router.get('/profile/:clientId', asyncHandler(profile.getClientProfile));
 router.patch('/profile/:clientId', asyncHandler(profile.updateClientProfile));
 router.post('/profile/:clientId/documents', asyncHandler(profile.uploadClientDocument));
