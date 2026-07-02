@@ -10,6 +10,7 @@ import {
   fmtDate,
   fmtDateTime,
   fmtPhone,
+  IDENTITY_DOCUMENT_TYPES,
   KYC_STATUS_LABEL,
 } from '../lib/format';
 import type { ClientProfileData } from '../types';
@@ -242,8 +243,8 @@ export function Profile() {
 
           <Card title="Documentos de identidad">
             <p className="mb-4 text-sm text-slate-400">
-              Sube tu identificación oficial (INE, pasaporte, comprobante de domicilio, etc.) en PDF
-              o imagen. Solo tú puedes cargar estos documentos.
+              Sube tu identificación oficial: INE, pasaporte o constancia fiscal (RFC) en PDF o
+              imagen. Solo tú puedes cargar estos documentos.
             </p>
 
             <div className="mb-4 space-y-3 rounded-lg border border-ink-600 bg-ink-900/40 p-3">
@@ -255,9 +256,9 @@ export function Profile() {
                     value={docType}
                     onChange={(e) => setDocType(e.target.value)}
                   >
-                    {Object.entries(DOCUMENT_TYPE_LABEL).map(([k, v]) => (
+                    {IDENTITY_DOCUMENT_TYPES.map((k) => (
                       <option key={k} value={k}>
-                        {v}
+                        {DOCUMENT_TYPE_LABEL[k]}
                       </option>
                     ))}
                   </select>
@@ -294,11 +295,19 @@ export function Profile() {
               </button>
             </div>
 
-            {profile.documents.length === 0 ? (
+            {profile.documents.filter((d) =>
+              IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+            ).length === 0 ? (
               <p className="text-sm text-slate-400">Aún no has subido documentos.</p>
             ) : (
               <ul className="space-y-2 text-sm">
-                {profile.documents.map((d) => (
+                {profile.documents
+                  .filter((d) =>
+                    IDENTITY_DOCUMENT_TYPES.includes(
+                      d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number],
+                    ),
+                  )
+                  .map((d) => (
                   <li
                     key={d.id}
                     className="flex flex-col gap-2 rounded-lg bg-ink-900/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"

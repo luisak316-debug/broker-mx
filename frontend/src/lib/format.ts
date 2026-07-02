@@ -26,9 +26,11 @@ export const fmtPhone = (phone?: string) => {
 export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
   INE: 'INE / Credencial para votar',
   PASAPORTE: 'Pasaporte',
-  COMPROBANTE_DOMICILIO: 'Comprobante de domicilio',
   CONSTANCIA_FISCAL: 'Constancia fiscal (RFC)',
 };
+
+/** Tipos de identidad que el cliente puede subir desde su cuenta. */
+export const IDENTITY_DOCUMENT_TYPES = ['INE', 'PASAPORTE', 'CONSTANCIA_FISCAL'] as const;
 
 export const KYC_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pendiente',

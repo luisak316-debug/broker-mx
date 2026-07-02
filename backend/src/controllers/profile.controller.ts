@@ -19,7 +19,7 @@ const updateProfileSchema = z.object({
 });
 
 const uploadDocumentSchema = z.object({
-  type: z.enum(['INE', 'PASAPORTE', 'COMPROBANTE_DOMICILIO', 'CONSTANCIA_FISCAL']),
+  type: z.enum(['INE', 'PASAPORTE', 'CONSTANCIA_FISCAL']),
   fileName: z.string().min(1),
   mimeType: z.string().min(1),
   data: z.string().min(1, 'No se recibió el archivo.'),

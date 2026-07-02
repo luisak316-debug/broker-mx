@@ -7,7 +7,9 @@ import { ClientAvatar } from '../components/ui/ClientAvatar';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
-import { CATEGORY_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, parseMoneyInput } from '../lib/format';
+import { CATEGORY_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
+import { resolveUploadUrl } from '../lib/apiConfig';
+import type { ClientDocument } from '../types';
 
 export function ClientProfile() {
   const { id = '' } = useParams();
@@ -102,6 +104,41 @@ export function ClientProfile() {
   useEffect(load, [id]);
 
   useEffect(() => {
+    if (!id) return;
+
+    function refreshIdentityDocuments() {
+      api
+        .client(id)
+        .then((c) => {
+          setClient((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  documents: c.documents,
+                  kycStatus: c.kycStatus,
+                }
+              : c,
+          );
+        })
+        .catch(() => undefined);
+    }
+
+    refreshIdentityDocuments();
+    window.addEventListener('focus', refreshIdentityDocuments);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshIdentityDocuments();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    const interval = window.setInterval(refreshIdentityDocuments, 10_000);
+
+    return () => {
+      window.removeEventListener('focus', refreshIdentityDocuments);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(interval);
+    };
+  }, [id]);
+
+  useEffect(() => {
     if (window.location.hash !== '#gestion-fondos') return;
     const t = setTimeout(() => {
       document.getElementById('gestion-fondos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -111,6 +148,10 @@ export function ClientProfile() {
 
   if (error) return <p className="text-danger">{error}</p>;
   if (!client) return <p className="text-slate-400">Cargando ficha…</p>;
+
+  const identityDocuments = client.documents.filter((d) =>
+    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+  );
 
   async function submitBalance() {
     setBusy(true);
@@ -227,7 +268,7 @@ export function ClientProfile() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Información personal */}
         <Card title="Información personal">
           <dl className="space-y-2 text-sm">
@@ -248,6 +289,25 @@ export function ClientProfile() {
             <Row label="Asesor asignado" value={client.advisorName} />
             <Row label="Correo del asesor" value={client.advisorEmail} />
           </dl>
+        </Card>
+
+        {/* Documentos de identidad (solo lectura — subidos por el cliente) */}
+        <Card title="Documentos de identidad">
+          <p className="mb-3 text-xs text-slate-400">
+            Archivos que el cliente subió desde su cuenta (INE, pasaporte o constancia fiscal).
+            Se actualizan automáticamente cada pocos segundos.
+          </p>
+          {identityDocuments.length === 0 ? (
+            <p className="text-sm text-slate-400">
+              El cliente aún no ha subido identificación oficial.
+            </p>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {identityDocuments.map((d) => (
+                <IdentityDocumentRow key={d.id} doc={d} />
+              ))}
+            </ul>
+          )}
         </Card>
 
         {/* Resumen financiero */}
@@ -596,5 +656,33 @@ function Row({ label, value }: { label: string; value?: string }) {
       <dt className="text-slate-400">{label}</dt>
       <dd className="text-right text-slate-200">{value ?? '—'}</dd>
     </div>
+  );
+}
+
+function IdentityDocumentRow({ doc }: { doc: ClientDocument }) {
+  return (
+    <li className="flex flex-col gap-2 rounded-lg bg-ink-900/60 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="font-medium text-slate-200">
+          {DOCUMENT_TYPE_LABEL[doc.type] ?? doc.type.replace(/_/g, ' ')}
+        </p>
+        <p className="truncate text-xs text-slate-500">{doc.fileName}</p>
+        <p className="text-xs text-slate-600">
+          {fmtDateTime(doc.uploadedAt)}
+          {doc.uploadedByName ? ` · ${doc.uploadedByName}` : ''}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <a
+          href={resolveUploadUrl(doc.fileUrl)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-ghost px-2 py-1 text-xs"
+        >
+          Ver / Descargar
+        </a>
+        <Badge value={doc.status} />
+      </div>
+    </li>
   );
 }
