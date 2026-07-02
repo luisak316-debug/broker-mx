@@ -75,10 +75,7 @@ function kycTone(status: string): string {
 export function Profile() {
   const { client, updateProfilePhoto, refreshSession } = useClientAuth();
   const [profile, setProfile] = useState<ClientProfileData | null>(null);
-  const [city, setCity] = useState('');
-  const [homeAddress, setHomeAddress] = useState('');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,34 +107,12 @@ export function Profile() {
       .getProfile(client.id)
       .then((p) => {
         setProfile(p);
-        setCity(p.city ?? '');
-        setHomeAddress(p.homeAddress ?? '');
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'No se pudo cargar tu perfil.'))
       .finally(() => setLoading(false));
   }
 
   useEffect(load, [client?.id]);
-
-  async function saveProfile() {
-    if (!client?.id) return;
-    setSaving(true);
-    setFeedback(null);
-    setError(null);
-    try {
-      const updated = await api.updateProfile(client.id, {
-        city: city.trim() || null,
-        homeAddress: homeAddress.trim() || null,
-      });
-      setProfile(updated);
-      await refreshSession();
-      setFeedback('Datos guardados correctamente.');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudieron guardar los datos.');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function uploadCapturedDocument(
     type: 'INE' | 'PASAPORTE',
@@ -228,7 +203,7 @@ export function Profile() {
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-white">Mi perfil</h1>
         <p className="text-sm text-slate-400">
-          Administra tu información personal y sube tus documentos de identidad.
+          Consulta tu información y sube tus documentos de identidad.
         </p>
       </header>
 
@@ -270,37 +245,6 @@ export function Profile() {
               <Row label="Correo" value={formatAccountEmail(profile.email, profile.phone)} />
               <Row label="Cliente desde" value={fmtDate(profile.createdAt)} />
             </dl>
-
-            <div className="mt-4 space-y-3 border-t border-ink-600/60 pt-4">
-              <label className="block">
-                <span className="mb-1 block text-sm text-slate-300">Ciudad</span>
-                <input
-                  className="input"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Ej. Guadalajara, Jalisco"
-                  maxLength={120}
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm text-slate-300">Domicilio</span>
-                <textarea
-                  className="input min-h-[88px] resize-y"
-                  value={homeAddress}
-                  onChange={(e) => setHomeAddress(e.target.value)}
-                  placeholder="Calle, número, colonia, CP…"
-                  maxLength={500}
-                />
-              </label>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={saving}
-                onClick={() => void saveProfile()}
-              >
-                {saving ? 'Guardando…' : 'Guardar datos'}
-              </button>
-            </div>
           </Card>
 
           <Card title="Documentos de identidad">
