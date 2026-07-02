@@ -17,7 +17,6 @@ import {
   fmtDateTime,
   fmtPhone,
   IDENTITY_DOCUMENT_TYPES,
-  KYC_STATUS_LABEL,
 } from '../lib/format';
 import type { ClientDocument, ClientProfileData } from '../types';
 
@@ -63,13 +62,6 @@ function formatAccountEmail(email: string, phone: string): string {
     return phone ? `Cuenta vinculada al celular ${fmtPhone(phone)}` : 'Cuenta vinculada a tu celular';
   }
   return email;
-}
-
-function kycTone(status: string): string {
-  if (status === 'APPROVED') return 'text-ok';
-  if (status === 'REJECTED') return 'text-bear';
-  if (status === 'IN_REVIEW') return 'text-amber-300';
-  return 'text-slate-400';
 }
 
 export function Profile() {
@@ -235,12 +227,7 @@ export function Profile() {
                 onPhotoSaved={updateProfilePhoto}
                 size="lg"
               />
-              <div>
-                <h2 className="text-xl font-bold text-white">{profile.displayName}</h2>
-                <p className={`mt-1 text-sm font-medium ${kycTone(profile.kycStatus)}`}>
-                  Verificación: {KYC_STATUS_LABEL[profile.kycStatus] ?? profile.kycStatus}
-                </p>
-              </div>
+              <h2 className="text-xl font-bold text-white">{profile.displayName}</h2>
             </div>
           </Card>
 

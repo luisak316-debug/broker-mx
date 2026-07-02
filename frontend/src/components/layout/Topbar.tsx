@@ -47,6 +47,59 @@ function ProfileAvatarDisplay({
   );
 }
 
+function ProfileAccountCard({
+  photoUrl,
+  initials,
+  displayName,
+  clientId,
+  phone,
+  onOpenProfile,
+  layout,
+}: {
+  photoUrl?: string;
+  initials: string;
+  displayName: string;
+  clientId: string;
+  phone: string;
+  onOpenProfile: () => void;
+  layout: 'stacked' | 'inline';
+}) {
+  const isStacked = layout === 'stacked';
+
+  return (
+    <div
+      className={`profile-account-card ${isStacked ? 'profile-account-card--stacked' : 'profile-account-card--inline'}`}
+    >
+      <div className="profile-account-card__identity">
+        <ProfileAvatarDisplay photoUrl={photoUrl} initials={initials} size={isStacked ? 'md' : 'lg'} />
+        <div className="min-w-0 flex-1">
+          <p className="profile-account-card__name" title={displayName}>
+            {displayName}
+          </p>
+          {clientId ? (
+            <p className="profile-account-card__id" title={clientId}>
+              {clientId}
+            </p>
+          ) : null}
+          {phone ? (
+            <p className="profile-account-card__phone" title={phone}>
+              {phone}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <button
+        type="button"
+        className={`btn-mi-perfil ${isStacked ? 'btn-mi-perfil--full' : ''}`}
+        onClick={onOpenProfile}
+        aria-label="Abrir mi perfil"
+      >
+        <span>Mi perfil</span>
+      </button>
+    </div>
+  );
+}
+
 export function Topbar({ connected }: { connected: boolean }) {
   const [cash, setCash] = useState<number | null>(null);
   const { client, logout } = useClientAuth();
@@ -81,9 +134,7 @@ export function Topbar({ connected }: { connected: boolean }) {
   const balance = cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—';
   const displayName = client?.displayName ?? 'Cliente';
   const phone = client?.phone ? fmtPhone(client.phone) : '';
-
-  const profileButtonClass =
-    'flex min-w-0 items-center gap-2.5 rounded-xl border border-transparent text-left transition hover:border-ink-600/50 hover:bg-ink-800/40';
+  const clientId = client?.id ?? '';
 
   return (
     <header className="w-full max-w-[100dvw] shrink-0 overflow-hidden border-b border-ink-600/60 bg-ink-900/60 backdrop-blur">
@@ -111,26 +162,17 @@ export function Topbar({ connected }: { connected: boolean }) {
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={openProfile}
-          className={`${profileButtonClass} w-full border-t border-ink-600/40 px-3 py-2.5`}
-          aria-label="Abrir mi perfil"
-        >
-          <ProfileAvatarDisplay
+        <div className="border-t border-ink-600/40 px-3 py-2.5">
+          <ProfileAccountCard
             photoUrl={client?.profilePhotoUrl}
             initials={initials}
-            size="md"
+            displayName={displayName}
+            clientId={clientId}
+            phone={phone}
+            onOpenProfile={openProfile}
+            layout="stacked"
           />
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <p className="truncate text-sm font-semibold leading-tight text-white" title={displayName}>
-              {displayName}
-            </p>
-            {phone ? (
-              <p className="truncate text-xs leading-tight text-slate-400">{phone}</p>
-            ) : null}
-          </div>
-        </button>
+        </div>
       </div>
 
       {/* Escritorio */}
@@ -147,22 +189,15 @@ export function Topbar({ connected }: { connected: boolean }) {
             <p className="text-xs text-slate-400">Saldo disponible</p>
             <p className="text-sm font-semibold text-white">{balance}</p>
           </div>
-          <button
-            type="button"
-            onClick={openProfile}
-            className={`${profileButtonClass} max-w-xs px-3 py-2 lg:max-w-sm`}
-            aria-label="Abrir mi perfil"
-          >
-            <ProfileAvatarDisplay
-              photoUrl={client?.profilePhotoUrl}
-              initials={initials}
-              size="lg"
-            />
-            <div className="min-w-0 overflow-hidden text-left">
-              <p className="truncate text-base font-semibold text-white lg:text-lg">{displayName}</p>
-              {phone ? <p className="truncate text-sm text-slate-300">{phone}</p> : null}
-            </div>
-          </button>
+          <ProfileAccountCard
+            photoUrl={client?.profilePhotoUrl}
+            initials={initials}
+            displayName={displayName}
+            clientId={clientId}
+            phone={phone}
+            onOpenProfile={openProfile}
+            layout="inline"
+          />
           <button type="button" onClick={onLogout} className="btn-ghost shrink-0">
             Salir
           </button>

@@ -481,3 +481,191 @@ body {
     opacity: 1;
   }
 }
+
+/* Tarjeta de cuenta + botón «Mi perfil» (topbar cliente) */
+.profile-account-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: linear-gradient(155deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.99));
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  padding: 0.875rem 1rem;
+}
+
+.profile-account-card--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-account-card--inline {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 28rem;
+}
+
+.profile-account-card__identity {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-account-card__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.profile-account-card__id {
+  margin-top: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #7dd3fc;
+}
+
+.profile-account-card__phone {
+  margin-top: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.btn-mi-perfil {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  background: rgba(15, 23, 42, 0.92);
+  padding: 0.55rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  animation: miPerfilGlow 2.6s ease-in-out infinite;
+  transition: transform 0.15s ease;
+}
+
+.btn-mi-perfil--full {
+  width: 100%;
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+}
+
+.btn-mi-perfil:hover {
+  transform: scale(1.03);
+}
+
+.btn-mi-perfil:active {
+  transform: scale(0.98);
+}
+
+.btn-mi-perfil::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    #38bdf8,
+    #818cf8,
+    #22d3ee,
+    #a78bfa,
+    #6366f1,
+    #38bdf8
+  );
+  background-size: 320% 320%;
+  opacity: 0.5;
+  filter: blur(8px);
+  animation: miPerfilBorder 3.5s linear infinite;
+}
+
+.btn-mi-perfil::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  z-index: 1;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: miPerfilShine 2.4s ease-in-out infinite;
+}
+
+.btn-mi-perfil span {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(90deg, #38bdf8, #60a5fa, #818cf8, #22d3ee, #6366f1, #38bdf8);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: miPerfilText 2.8s linear infinite;
+}
+
+@keyframes miPerfilGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(56, 189, 248, 0.35),
+      0 0 22px rgba(99, 102, 241, 0.22);
+  }
+  33% {
+    box-shadow:
+      0 0 16px rgba(167, 139, 250, 0.5),
+      0 0 30px rgba(34, 211, 238, 0.28);
+  }
+  66% {
+    box-shadow:
+      0 0 14px rgba(99, 102, 241, 0.42),
+      0 0 26px rgba(56, 189, 248, 0.32);
+  }
+}
+
+@keyframes miPerfilBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 320% 50%;
+  }
+}
+
+@keyframes miPerfilShine {
+  0% {
+    left: -120%;
+  }
+  45%,
+  100% {
+    left: 140%;
+  }
+}
+
+@keyframes miPerfilText {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 220% center;
+  }
+}
