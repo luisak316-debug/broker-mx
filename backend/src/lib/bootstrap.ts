@@ -5,7 +5,10 @@ import { initLegacyStore } from '../data/adminStore';
 import { applyDatabaseEnv, isDatabaseEnabled } from './database';
 import { purgeAllDemoClients } from './purgeDemoClients';
 import { prisma } from './prisma';
-import { ensureManagerTeamsSeeded } from '../repositories/staff.repository';
+import {
+  ensureManagerTeamsSeeded,
+  reassignOrphanedClientAdvisors,
+} from '../repositories/staff.repository';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
 
@@ -104,6 +107,7 @@ async function runSlowBootstrapTasks(): Promise<void> {
     }
     await seedInstruments();
     await seedStaff();
+    await reassignOrphanedClientAdvisors();
     await purgeAllDemoClients();
     console.log('[broker.mx] Sincronización en segundo plano completada.');
   } catch (err) {
@@ -152,7 +156,6 @@ async function seedStaff(): Promise<void> {
   const staffRows = [
     { email: 'admin@brokermx.com', displayName: 'Administración', role: 'ADMIN' as const },
     { email: 'supervisor@brokermx.com', displayName: 'María Supervisora', role: 'SUPERVISOR' as const },
-    { email: 'juan.perez@brokermx.com', displayName: 'Juan Pérez', role: 'ADVISOR' as const },
     { email: 'laura.cumplimiento@brokermx.com', displayName: 'Laura Cumplimiento', role: 'COMPLIANCE' as const },
     { email: 'soporte@brokermx.com', displayName: 'Carlos Soporte', role: 'SUPPORT' as const },
   ];

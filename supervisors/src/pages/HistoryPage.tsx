@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
-import { fmtDate, isoDate, shiftDays } from '../lib/format';
+import { fmtDate, isoDate, shiftDays, clientFirstName } from '../lib/format';
 import type { AdvisorRow, ContactRow } from '../types';
 
 export function HistoryPage() {
@@ -148,7 +148,9 @@ export function HistoryPage() {
                   <tr key={c.id}>
                     <td>{fmtDate(c.assignedDate)}</td>
                     <td>{c.advisorName}</td>
-                    <td className="font-medium text-white">{c.clientName}</td>
+                    <td className="max-w-[140px] truncate font-medium text-white" title={c.clientName}>
+                      {clientFirstName(c.clientName)}
+                    </td>
                     <td>{c.phone}</td>
                     <td>{c.email || '—'}</td>
                     <td className="max-w-sm text-slate-300">{c.description || '—'}</td>

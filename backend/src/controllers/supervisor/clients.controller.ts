@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { listClients } from '../../repositories/client.repository';
-import { findStaffById } from '../../repositories/staff.repository';
+import { resolveActiveAdvisorDisplayName } from '../../repositories/staff.repository';
 
 /** Resumen de clientes con inversión — solo lectura para supervisores. */
 export async function listClientsSummary(req: Request, res: Response): Promise<void> {
@@ -15,7 +15,7 @@ export async function listClientsSummary(req: Request, res: Response): Promise<v
       phone: c.phone,
       totalInvestedMxn: c.totalInvestedMxn,
       cashMxn: c.cashMxn,
-      advisorName: c.advisorId ? (await findStaffById(c.advisorId))?.displayName : undefined,
+      advisorName: await resolveActiveAdvisorDisplayName(c.advisorId),
       accountStatus: c.accountStatus,
       createdAt: c.createdAt,
       profilePhotoUrl: c.profilePhotoUrl,

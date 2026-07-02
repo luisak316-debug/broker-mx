@@ -35,7 +35,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <div className="rounded-xl border border-brand-500/30 bg-gradient-to-r from-brand-600/20 to-ink-800 p-5">
         <h1 className="text-2xl font-bold text-white">
-          ¡Bienvenido{client ? `, ${client.displayName.split(' ')[0]}` : ''}! 👋
+          ¡Bienvenido{client ? `, ${client.displayName}` : ''}! 👋
         </h1>
         <p className="mt-1 text-sm text-slate-300">
           Tu cuenta está lista. Fondea tu cuenta para comenzar a invertir en las cuatro grandes

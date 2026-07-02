@@ -31,16 +31,6 @@ async function main() {
       role: 'ADMIN',
     },
   });
-  const advisor = await prisma.staff.upsert({
-    where: { email: 'juan.perez@brokermx.com' },
-    update: {},
-    create: {
-      email: 'juan.perez@brokermx.com',
-      passwordHash: demoHash,
-      displayName: 'Juan Pérez',
-      role: 'ADVISOR',
-    },
-  });
   await prisma.staff.upsert({
     where: { email: 'laura.cumplimiento@brokermx.com' },
     update: {},
@@ -62,7 +52,7 @@ async function main() {
     },
   });
 
-  console.log(`Seed completado. Admin: ${adminStaff.email} · Asesor: ${advisor.email}`);
+  console.log(`Seed completado. Admin: ${adminStaff.email}`);
 }
 
 main()

@@ -117,7 +117,7 @@ export function ClientsPage() {
                           />
                           <div className="min-w-0">
                             <p className="truncate font-medium text-white" title={c.displayName}>
-                              {c.displayName}
+                              {clientFirstName(c.displayName)}
                             </p>
                             <p className="text-xs text-slate-500">{c.id}</p>
                           </div>

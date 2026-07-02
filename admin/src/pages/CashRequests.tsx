@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { CashRequest } from '../types';
-import { fmtDateTime, fmtMxn } from '../lib/format';
+import { fmtDateTime, fmtMxn, clientFirstName } from '../lib/format';
 
 export function CashRequests() {
   const { can } = useAuth();
@@ -89,8 +89,12 @@ export function CashRequests() {
                 <tr key={r.id}>
                   <td className="text-slate-300">{fmtDateTime(r.createdAt)}</td>
                   <td>
-                    <Link to={`/clientes/${r.userId}`} className="text-brand-400 hover:underline">
-                      {r.clientName}
+                    <Link
+                      to={`/clientes/${r.userId}`}
+                      className="truncate text-brand-400 hover:underline"
+                      title={r.clientName}
+                    >
+                      {clientFirstName(r.clientName)}
                     </Link>
                   </td>
                   <td><Badge value={r.type} /></td>

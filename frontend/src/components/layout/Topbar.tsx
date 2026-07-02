@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
-import { fmtMxn, fmtPhone, clientFirstName } from '../../lib/format';
+import { fmtMxn, fmtPhone } from '../../lib/format';
 import { useClientAuth } from '../../auth/ClientAuthContext';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 
@@ -34,7 +34,6 @@ export function Topbar({ connected }: { connected: boolean }) {
 
   const balance = cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—';
   const displayName = client?.displayName ?? 'Cliente';
-  const mobileName = clientFirstName(displayName);
   const phone = client?.phone ? fmtPhone(client.phone) : '';
 
   return (
@@ -72,7 +71,7 @@ export function Topbar({ connected }: { connected: boolean }) {
           />
           <div className="min-w-0 flex-1 overflow-hidden">
             <p className="truncate text-sm font-semibold leading-tight text-white" title={displayName}>
-              {mobileName}
+              {displayName}
             </p>
             {phone ? (
               <p className="truncate text-xs leading-tight text-slate-400">{phone}</p>

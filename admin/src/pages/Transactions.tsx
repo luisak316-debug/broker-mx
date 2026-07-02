@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import type { Transaction } from '../types';
-import { CATEGORY_LABEL, fmtDateTime, fmtMxn } from '../lib/format';
+import { CATEGORY_LABEL, fmtDateTime, fmtMxn, clientFirstName } from '../lib/format';
 
 const CATS = ['', 'stock', 'commodity', 'forex', 'crypto'];
 
@@ -60,8 +60,12 @@ export function Transactions() {
                 <tr key={t.id}>
                   <td className="text-slate-300">{fmtDateTime(t.createdAt)}</td>
                   <td>
-                    <Link to={`/clientes/${t.userId}`} className="text-brand-400 hover:underline">
-                      {t.clientName ?? t.userId}
+                    <Link
+                      to={`/clientes/${t.userId}`}
+                      className="truncate text-brand-400 hover:underline"
+                      title={t.clientName ?? t.userId}
+                    >
+                      {clientFirstName(t.clientName ?? t.userId)}
                     </Link>
                   </td>
                   <td className="text-slate-300">{CATEGORY_LABEL[t.category]}</td>

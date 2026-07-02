@@ -64,6 +64,56 @@ export async function findStaffById(id: string): Promise<Staff | undefined> {
   return row ? mapStaff(row) : undefined;
 }
 
+export async function resolveActiveAdvisorDisplayName(
+  advisorId: string | undefined | null,
+): Promise<string | undefined> {
+  if (!advisorId) return undefined;
+  if (!isDatabaseEnabled()) {
+    const staff = legacy.findStaffById(advisorId);
+    return staff?.active && staff.role === 'ADVISOR' ? staff.displayName : undefined;
+  }
+
+  const row = await prisma.staff.findFirst({
+    where: { id: advisorId, role: 'ADVISOR', active: true },
+    select: { displayName: true },
+  });
+  return row?.displayName;
+}
+
+async function pickReplacementAdvisor(excludeId?: string): Promise<string | null> {
+  if (!isDatabaseEnabled()) return null;
+
+  const advisor = await prisma.staff.findFirst({
+    where: {
+      role: 'ADVISOR',
+      active: true,
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true },
+  });
+  return advisor?.id ?? null;
+}
+
+/** Reasigna clientes cuyo asesor ya no está activo (p. ej. Juan Pérez eliminado). */
+export async function reassignOrphanedClientAdvisors(): Promise<number> {
+  if (!isDatabaseEnabled()) return 0;
+
+  const replacementId = await pickReplacementAdvisor();
+  const result = await prisma.user.updateMany({
+    where: {
+      advisorId: { not: null },
+      advisor: { OR: [{ active: false }, { role: { not: 'ADVISOR' } }] },
+    },
+    data: { advisorId: replacementId },
+  });
+
+  if (result.count > 0) {
+    console.log(`[broker.mx] ${result.count} cliente(s) reasignados de asesores inactivos.`);
+  }
+  return result.count;
+}
+
 export async function touchStaffLogin(id: string): Promise<void> {
   if (!isDatabaseEnabled()) {
     legacy.touchStaffLogin(id);
@@ -274,5 +324,11 @@ export async function deactivateStaff(id: string, inactiveDate?: string | null):
       active: false,
       inactiveDate: date ?? undefined,
     },
+  });
+
+  const replacementId = await pickReplacementAdvisor(id);
+  await prisma.user.updateMany({
+    where: { advisorId: id },
+    data: { advisorId: replacementId },
   });
 }

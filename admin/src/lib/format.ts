@@ -35,7 +35,7 @@ export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
   CONSTANCIA_FISCAL: 'Constancia fiscal (RFC)',
 };
 
-/** Primer nombre para listas y móvil (nombre completo en title/atributo). */
+/** Primer nombre — solo en listas/tablas admin y supervisores donde el nombre completo no cabe. */
 export function clientFirstName(name: string): string {
   const first = name.trim().split(/\s+/).filter(Boolean)[0];
   if (!first) return name;

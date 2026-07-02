@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
-import { fmtDate, isoDate } from '../lib/format';
+import { fmtDate, isoDate, clientFirstName } from '../lib/format';
 import { parseBulkContacts, previewDistribution } from '../lib/parseBulkContacts';
 import { ManagerTeamsBulkForm } from '../components/assign/ManagerTeamsBulkForm';
 import type { AdvisorRow, ContactRow } from '../types';
@@ -242,7 +242,9 @@ export function AssignContactsPage() {
                       <tbody>
                         {bulkPreview.contacts.slice(0, 5).map((c, i) => (
                           <tr key={`${c.phone}-${i}`}>
-                            <td className="font-medium text-white">{c.clientName}</td>
+                            <td className="max-w-[120px] truncate font-medium text-white" title={c.clientName}>
+                              {clientFirstName(c.clientName)}
+                            </td>
                             <td>{c.phone}</td>
                             <td>{c.email}</td>
                             <td className="max-w-xs truncate text-slate-300">{c.description}</td>
@@ -396,7 +398,9 @@ export function AssignContactsPage() {
                 ) : (
                   todayRows.map((c) => (
                     <tr key={c.id}>
-                      <td className="font-medium text-white">{c.clientName}</td>
+                      <td className="max-w-[120px] truncate font-medium text-white" title={c.clientName}>
+                        {clientFirstName(c.clientName)}
+                      </td>
                       <td>{c.phone}</td>
                       <td>{c.email || '—'}</td>
                       <td className="max-w-xs text-slate-300">{c.description || '—'}</td>

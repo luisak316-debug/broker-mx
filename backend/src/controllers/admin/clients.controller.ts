@@ -5,7 +5,10 @@ import {
   listClients,
   updateAccountStatus,
 } from '../../repositories/client.repository';
-import { findStaffById } from '../../repositories/staff.repository';
+import {
+  findStaffById,
+  resolveActiveAdvisorDisplayName,
+} from '../../repositories/staff.repository';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
@@ -33,7 +36,7 @@ export async function listClientsHandler(req: Request, res: Response): Promise<v
       riskProfile: c.riskProfile,
       cashMxn: c.cashMxn,
       totalInvestedMxn: c.totalInvestedMxn,
-      advisorName: c.advisorId ? (await findStaffById(c.advisorId))?.displayName : undefined,
+      advisorName: await resolveActiveAdvisorDisplayName(c.advisorId),
       createdAt: c.createdAt,
       lastWithdrawalRequestAt: c.lastWithdrawalRequestAt,
       profilePhotoUrl: c.profilePhotoUrl,
@@ -47,11 +50,12 @@ export async function getClient(req: Request, res: Response): Promise<void> {
   const client = await findClient(req.params.id);
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
   const advisor = client.advisorId ? await findStaffById(client.advisorId) : undefined;
+  const advisorActive = advisor?.active && advisor.role === 'ADVISOR';
   res.json({
     data: {
       ...client,
-      advisorName: advisor?.displayName,
-      advisorEmail: advisor?.email,
+      advisorName: advisorActive ? advisor.displayName : undefined,
+      advisorEmail: advisorActive ? advisor.email : undefined,
     },
   });
 }

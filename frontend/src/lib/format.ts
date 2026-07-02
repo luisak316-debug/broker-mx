@@ -23,7 +23,7 @@ export const fmtPhone = (phone?: string) => {
   return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
 };
 
-/** Primer nombre para cabecera móvil (nombre completo en title). */
+/** Primer nombre — solo en listas/tablas admin y supervisores donde el nombre completo no cabe. */
 export function clientFirstName(name: string): string {
   const first = name.trim().split(/\s+/).filter(Boolean)[0];
   if (!first) return name;

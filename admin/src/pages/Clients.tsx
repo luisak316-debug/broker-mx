@@ -124,7 +124,7 @@ export function Clients() {
                       />
                       <div className="min-w-0">
                         <div className="truncate font-medium text-white" title={c.displayName}>
-                          {c.displayName}
+                          {clientFirstName(c.displayName)}
                         </div>
                         <div className="text-xs text-slate-400">
                           {c.id} · {c.email}
