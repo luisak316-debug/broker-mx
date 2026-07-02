@@ -7,6 +7,7 @@ import {
 } from '../../data/marketCategories';
 import { fmtMxn, fmtPct } from '../../lib/format';
 import { projectInvestment } from '../../utils/investmentSimulator';
+import { MarketCategoryIcon } from './MarketCategoryIcon';
 
 type Props = {
   market: MarketCategoryInfo;
@@ -62,8 +63,8 @@ export function MarketCategoryModal({ market, onClose }: Props) {
 
         <div className={`border-b border-white/5 px-5 pb-4 pt-5 ${market.accentBg}`}>
           <div className="flex items-start gap-3 pr-10">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink-900/60 text-2xl">
-              {market.icon}
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-ink-900/60">
+              <MarketCategoryIcon id={market.id} className="h-8 w-8" />
             </span>
             <div>
               <p className={`text-xs font-semibold uppercase tracking-wide ${market.accentText}`}>

@@ -2,7 +2,6 @@ export type MarketCategoryId = 'stocks' | 'commodities' | 'forex' | 'crypto';
 
 export interface MarketCategoryInfo {
   id: MarketCategoryId;
-  icon: string;
   title: string;
   shortDesc: string;
   overview: string;
@@ -20,7 +19,6 @@ export const INVESTMENT_HORIZONS_MONTHS = [1, 2, 4] as const;
 export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   {
     id: 'stocks',
-    icon: '📈',
     title: 'Bolsa de Valores',
     shortDesc: 'Acciones de las empresas más grandes del mundo.',
     overview:
@@ -37,7 +35,6 @@ export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   },
   {
     id: 'commodities',
-    icon: '🛢️',
     title: 'Materias Primas',
     shortDesc: 'Oro, plata, petróleo y commodities agrícolas.',
     overview:
@@ -54,7 +51,6 @@ export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   },
   {
     id: 'forex',
-    icon: '💱',
     title: 'Divisas (Forex)',
     shortDesc: 'Pares internacionales frente al peso mexicano.',
     overview:
@@ -71,7 +67,6 @@ export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   },
   {
     id: 'crypto',
-    icon: '₿',
     title: 'Criptomonedas',
     shortDesc: 'Bitcoin, Ethereum y más, operando 24/7.',
     overview:

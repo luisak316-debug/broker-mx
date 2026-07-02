@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { wakeApi } from '../api/client';
+import { MarketCategoryCard } from '../components/landing/MarketCategoryCard';
 import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
 import { MarketNewsSection } from '../components/landing/MarketNewsSection';
 import { TestimonialsCarousel } from '../components/landing/TestimonialsCarousel';
@@ -113,23 +114,9 @@ export function Landing() {
             <p className="mb-8 text-center text-xl font-semibold text-white">
               Acceso a las 4 grandes categorías de mercados
             </p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {MARKET_CATEGORIES.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setActiveMarket(m.id)}
-                  className="card group w-full cursor-pointer text-center transition hover:border-brand-500/60 hover:bg-ink-700/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-                >
-                  <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-xl bg-brand-600/15 text-2xl transition group-hover:scale-105">
-                    {m.icon}
-                  </div>
-                  <h4 className="font-semibold text-white">{m.title}</h4>
-                  <p className="mt-1 text-sm text-slate-400">{m.shortDesc}</p>
-                  <p className="mt-3 text-xs font-semibold text-brand-300 opacity-80 transition group-hover:opacity-100">
-                    Ver simulador →
-                  </p>
-                </button>
+                <MarketCategoryCard key={m.id} market={m} onClick={() => setActiveMarket(m.id)} />
               ))}
             </div>
           </div>
