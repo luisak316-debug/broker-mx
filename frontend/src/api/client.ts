@@ -147,6 +147,7 @@ export const api = {
     clientId: string,
     payload: {
       type: string;
+      side?: 'ANVERSO' | 'REVERSO';
       fileName: string;
       mimeType: string;
       data: string;

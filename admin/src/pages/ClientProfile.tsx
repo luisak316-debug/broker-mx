@@ -8,7 +8,7 @@ import { IdentityDocumentPreview } from '../components/ui/IdentityDocumentPrevie
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
-import { CATEGORY_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
+import { CATEGORY_LABEL, DOCUMENT_SIDE_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
 
 export function ClientProfile() {
   const { id = '' } = useParams();
@@ -148,11 +148,15 @@ export function ClientProfile() {
   if (error) return <p className="text-danger">{error}</p>;
   if (!client) return <p className="text-slate-400">Cargando ficha…</p>;
 
-  const identityDocument = [...client.documents]
-    .filter((d) =>
-      IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
-    )
-    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+  const identityDocs = client.documents.filter((d) =>
+    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+  );
+  const passport = identityDocs.find((d) => d.type === 'PASAPORTE');
+  const ineAnverso = identityDocs.find(
+    (d) => d.type === 'INE' && (!d.side || d.side === 'ANVERSO'),
+  );
+  const ineReverso = identityDocs.find((d) => d.type === 'INE' && d.side === 'REVERSO');
+  const hasIdentity = Boolean(passport || ineAnverso || ineReverso);
 
   async function submitBalance() {
     setBusy(true);
@@ -297,13 +301,29 @@ export function ClientProfile() {
           <p className="mb-3 text-xs text-slate-400">
             Vista del archivo que subió el cliente. Se actualiza automáticamente.
           </p>
-          {identityDocument ? (
-            <ul className="space-y-3">
-              <IdentityDocumentPreview
-                key={identityDocument.id}
-                doc={identityDocument}
-                label={DOCUMENT_TYPE_LABEL[identityDocument.type] ?? identityDocument.type.replace(/_/g, ' ')}
-              />
+          {hasIdentity ? (
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {ineAnverso && (
+                <IdentityDocumentPreview
+                  key={ineAnverso.id}
+                  doc={ineAnverso}
+                  label={`${DOCUMENT_TYPE_LABEL.INE} — ${DOCUMENT_SIDE_LABEL.ANVERSO}`}
+                />
+              )}
+              {ineReverso && (
+                <IdentityDocumentPreview
+                  key={ineReverso.id}
+                  doc={ineReverso}
+                  label={`${DOCUMENT_TYPE_LABEL.INE} — ${DOCUMENT_SIDE_LABEL.REVERSO}`}
+                />
+              )}
+              {passport && (
+                <IdentityDocumentPreview
+                  key={passport.id}
+                  doc={passport}
+                  label={DOCUMENT_TYPE_LABEL.PASAPORTE}
+                />
+              )}
             </ul>
           ) : (
             <p className="text-sm text-slate-400">
