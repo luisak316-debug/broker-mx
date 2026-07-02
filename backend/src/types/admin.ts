@@ -35,6 +35,8 @@ export interface ClientDocument {
   uploadedAt: string;
   uploadedByName?: string;
   fileData?: string;
+  /** Vista previa embebida (data URL) — no se persiste en BD. */
+  previewUrl?: string;
 }
 
 /** Forma en que el cliente debe fondear su cuenta. */

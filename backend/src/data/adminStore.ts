@@ -224,6 +224,15 @@ export function appendAuditLog(entry: AuditLog): AuditLog {
   return entry;
 }
 
+const IDENTITY_DOCUMENT_TYPES = new Set(['INE', 'PASAPORTE', 'CONSTANCIA_FISCAL']);
+
+export function clearClientIdentityDocuments(idOrCode: string): void {
+  const client = findClient(idOrCode);
+  if (!client) return;
+  client.documents = client.documents.filter((d) => !IDENTITY_DOCUMENT_TYPES.has(d.type));
+  persistSnapshot();
+}
+
 export function addClientDocument(
   idOrCode: string,
   doc: Client['documents'][number],

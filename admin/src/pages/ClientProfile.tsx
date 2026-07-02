@@ -148,9 +148,11 @@ export function ClientProfile() {
   if (error) return <p className="text-danger">{error}</p>;
   if (!client) return <p className="text-slate-400">Cargando ficha…</p>;
 
-  const identityDocuments = client.documents.filter((d) =>
-    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
-  );
+  const identityDocument = [...client.documents]
+    .filter((d) =>
+      IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+    )
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
 
   async function submitBalance() {
     setBusy(true);
@@ -295,19 +297,17 @@ export function ClientProfile() {
           <p className="mb-3 text-xs text-slate-400">
             Vista del archivo que subió el cliente. Se actualiza automáticamente.
           </p>
-          {identityDocuments.length === 0 ? (
+          {identityDocument == null ? (
             <p className="text-sm text-slate-400">
               El cliente aún no ha subido identificación oficial.
             </p>
           ) : (
             <ul className="space-y-3">
-              {identityDocuments.map((d) => (
-                <IdentityDocumentPreview
-                  key={d.id}
-                  doc={d}
-                  label={DOCUMENT_TYPE_LABEL[d.type] ?? d.type.replace(/_/g, ' ')}
-                />
-              ))}
+              <IdentityDocumentPreview
+                key={identityDocument.id}
+                doc={identityDocument}
+                label={DOCUMENT_TYPE_LABEL[identityDocument.type] ?? identityDocument.type.replace(/_/g, ' ')}
+              />
             </ul>
           )}
         </Card>

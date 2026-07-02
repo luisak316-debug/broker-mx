@@ -131,9 +131,13 @@ export function Profile() {
         mimeType: file.type || 'application/octet-stream',
         data,
       });
-      setProfile((prev) =>
-        prev ? { ...prev, documents: [res.document, ...prev.documents] } : prev,
-      );
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const other = prev.documents.filter(
+          (d) => !IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+        );
+        return { ...prev, documents: [...other, res.document] };
+      });
       setFeedback('Documento guardado.');
       await refreshSession();
     } catch (e) {
@@ -146,9 +150,11 @@ export function Profile() {
 
   if (!client) return null;
 
-  const identityDocuments = (profile?.documents ?? []).filter((d) =>
-    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
-  );
+  const identityDocument = [...(profile?.documents ?? [])]
+    .filter((d) =>
+      IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+    )
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -235,19 +241,16 @@ export function Profile() {
 
           <Card title="Documentos de identidad">
             <p className="mb-4 text-sm text-slate-400">
-              Elige el tipo y selecciona tu archivo. Se guarda al instante y aparece arriba.
+              Solo puedes tener un documento de identidad. Al subir uno nuevo, reemplaza al anterior.
             </p>
 
-            {identityDocuments.length > 0 && (
-              <div className="mb-4 space-y-3">
-                {identityDocuments.map((d) => (
-                  <IdentityDocumentPreview
-                    key={d.id}
-                    doc={d}
-                    label={DOCUMENT_TYPE_LABEL[d.type] ?? d.type}
-                    subtitle={fmtDateTime(d.uploadedAt)}
-                  />
-                ))}
+            {identityDocument && (
+              <div className="mb-4">
+                <IdentityDocumentPreview
+                  doc={identityDocument}
+                  label={DOCUMENT_TYPE_LABEL[identityDocument.type] ?? identityDocument.type}
+                  subtitle={fmtDateTime(identityDocument.uploadedAt)}
+                />
               </div>
             )}
 
@@ -288,8 +291,8 @@ export function Profile() {
               )}
             </div>
 
-            {identityDocuments.length === 0 && !docBusy && (
-              <p className="mt-3 text-sm text-slate-400">Aún no has subido documentos.</p>
+            {identityDocument == null && !docBusy && (
+              <p className="mt-3 text-sm text-slate-400">Aún no has subido tu documento de identidad.</p>
             )}
           </Card>
         </>

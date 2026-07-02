@@ -33,6 +33,7 @@ export interface ClientDocument {
   status: string;
   uploadedAt: string;
   uploadedByName?: string;
+  previewUrl?: string;
 }
 
 export type DepositMethod = 'TRANSFERENCIA' | 'VENTANILLA';

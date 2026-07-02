@@ -88,6 +88,7 @@ export interface ClientDocument {
   status: DocumentStatus;
   uploadedAt: string;
   uploadedByName?: string;
+  previewUrl?: string;
 }
 
 export interface ClientProfileData {

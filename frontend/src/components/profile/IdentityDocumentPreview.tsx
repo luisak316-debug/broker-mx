@@ -6,6 +6,7 @@ type Doc = {
   fileName: string;
   mimeType: string;
   fileUrl: string;
+  previewUrl?: string;
   uploadedAt?: string;
 };
 
@@ -26,7 +27,7 @@ export function IdentityDocumentPreview({
   label: string;
   subtitle?: string;
 }) {
-  const url = resolveUploadUrl(doc.fileUrl);
+  const url = doc.previewUrl ?? resolveUploadUrl(doc.fileUrl);
   const image = isImage(doc.mimeType, doc.fileName);
   const pdf = isPdf(doc.mimeType, doc.fileName);
 

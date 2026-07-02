@@ -81,6 +81,36 @@ function guessDocumentMime(fileName: string): string {
   return 'application/octet-stream';
 }
 
+function toPublicDocument(
+  d: {
+    id: string;
+    type: ClientDocument['type'];
+    fileName: string;
+    mimeType?: string | null;
+    fileData?: string | null;
+    status: ClientDocument['status'];
+    uploadedAt: Date | string;
+    uploadedByName?: string;
+    fileUrl: string;
+  },
+): ClientDocument {
+  const mimeType = d.mimeType ?? guessDocumentMime(d.fileName);
+  const uploadedAt =
+    typeof d.uploadedAt === 'string' ? d.uploadedAt : d.uploadedAt.toISOString();
+  const previewUrl = d.fileData ? `data:${mimeType};base64,${d.fileData}` : undefined;
+  return {
+    id: d.id,
+    type: d.type,
+    fileName: d.fileName,
+    mimeType,
+    fileUrl: d.fileUrl,
+    status: d.status,
+    uploadedAt,
+    uploadedByName: d.uploadedByName,
+    ...(previewUrl ? { previewUrl } : {}),
+  };
+}
+
 export function mapUserToClient(user: DbUser): Client {
   return {
     id: user.clientCode,
@@ -103,15 +133,18 @@ export function mapUserToClient(user: DbUser): Client {
     cashMxn: dec(user.balance?.cashMxn),
     totalInvestedMxn: dec(user.totalInvestedMxn),
     lastWithdrawalRequestAt: user.cashRequests[0]?.createdAt.toISOString(),
-    documents: user.documents.map((d) => ({
-      id: d.id,
-      type: d.type,
-      fileName: d.fileName,
-      mimeType: d.mimeType ?? guessDocumentMime(d.fileName),
-      fileUrl: `/api/profile/${user.clientCode}/documents/${d.id}/file`,
-      status: d.status,
-      uploadedAt: d.uploadedAt.toISOString(),
-    })),
+    documents: user.documents.map((d) =>
+      toPublicDocument({
+        id: d.id,
+        type: d.type,
+        fileName: d.fileName,
+        mimeType: d.mimeType,
+        fileData: d.fileData,
+        fileUrl: `/api/profile/${user.clientCode}/documents/${d.id}/file`,
+        status: d.status,
+        uploadedAt: d.uploadedAt,
+      }),
+    ),
     depositAccount: buildDepositAccount(user),
     createdAt: user.createdAt.toISOString(),
   };
@@ -141,8 +174,26 @@ function userWhere(idOrCode: string): Prisma.UserWhereInput {
     : { OR: [{ id: idOrCode }, { clientCode: idOrCode }] };
 }
 
+function enrichLegacyClientDocuments(client: Client): Client {
+  return {
+    ...client,
+    documents: client.documents.map((d) =>
+      toPublicDocument({
+        ...d,
+        fileUrl:
+          d.fileUrl.startsWith('/api/') || d.fileUrl.startsWith('http')
+            ? d.fileUrl
+            : `/api/profile/${client.id}/documents/${d.id}/file`,
+      }),
+    ),
+  };
+}
+
 export async function findClient(idOrCode: string): Promise<Client | undefined> {
-  if (!isDatabaseEnabled()) return legacy.findClient(idOrCode);
+  if (!isDatabaseEnabled()) {
+    const client = legacy.findClient(idOrCode);
+    return client ? enrichLegacyClientDocuments(client) : undefined;
+  }
 
   const user = await prisma.user.findFirst({
     where: userWhere(idOrCode),
@@ -450,11 +501,11 @@ export async function getClientDocumentFile(
     return undefined;
   }
 
+  const internalId = await getInternalUserId(clientIdOrCode);
+  if (!internalId) return undefined;
+
   const row = await prisma.clientDocument.findFirst({
-    where: {
-      id: documentId,
-      user: userWhere(clientIdOrCode),
-    },
+    where: { id: documentId, userId: internalId },
     select: { fileName: true, mimeType: true, fileData: true },
   });
   if (!row?.fileData) return undefined;
