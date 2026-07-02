@@ -145,7 +145,13 @@ export const api = {
     }),
   uploadDocument: (
     clientId: string,
-    payload: { type: string; fileName: string; mimeType: string; data: string },
+    payload: {
+      type: string;
+      side?: 'ANVERSO' | 'REVERSO';
+      fileName: string;
+      mimeType: string;
+      data: string;
+    },
   ) =>
     http<{ document: import('../types').ClientDocument }>(
       `/profile/${encodeURIComponent(clientId)}/documents`,

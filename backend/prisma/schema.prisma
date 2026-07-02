@@ -132,12 +132,16 @@ model ClientDocument {
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type       DocumentType
+  /// Anverso o reverso (INE requiere ambos; pasaporte solo anverso).
+  side       DocumentSide?
   fileName   String
   mimeType   String?
   /// Archivo en base64 — persiste en BD (Render no conserva disco).
   fileData   String?  @db.Text
   status     DocumentStatus @default(EN_REVISION)
   uploadedAt DateTime @default(now())
+
+  @@index([userId, type, side])
 }
 
 /// Solicitudes de depósito o retiro de efectivo realizadas desde la app.
@@ -305,6 +309,11 @@ enum DocumentStatus {
   EN_REVISION
   VALIDADO
   RECHAZADO
+}
+
+enum DocumentSide {
+  ANVERSO
+  REVERSO
 }
 
 enum CashRequestType {

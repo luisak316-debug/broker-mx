@@ -27,6 +27,7 @@ export interface ClientRow {
 export interface ClientDocument {
   id: string;
   type: string;
+  side?: string;
   fileName: string;
   mimeType: string;
   fileUrl: string;

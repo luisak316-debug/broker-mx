@@ -79,9 +79,12 @@ export interface ClientSession {
 export type DocumentType = 'INE' | 'PASAPORTE' | 'COMPROBANTE_DOMICILIO' | 'CONSTANCIA_FISCAL';
 export type DocumentStatus = 'EN_REVISION' | 'VALIDADO' | 'RECHAZADO';
 
+export type DocumentSide = 'ANVERSO' | 'REVERSO';
+
 export interface ClientDocument {
   id: string;
   type: DocumentType;
+  side?: DocumentSide;
   fileName: string;
   mimeType: string;
   fileUrl: string;

@@ -233,6 +233,30 @@ export function clearClientIdentityDocuments(idOrCode: string): void {
   persistSnapshot();
 }
 
+export function removeClientIdentityDocuments(
+  idOrCode: string,
+  opts: {
+    type: 'INE' | 'PASAPORTE';
+    side?: 'ANVERSO' | 'REVERSO';
+    clearPassport?: boolean;
+    clearIne?: boolean;
+  },
+): void {
+  const client = findClient(idOrCode);
+  if (!client) return;
+
+  client.documents = client.documents.filter((d) => {
+    if (opts.clearIne && d.type === 'INE') return false;
+    if (opts.clearPassport && d.type === 'PASAPORTE') return false;
+    if (d.type !== opts.type) return true;
+    if (opts.type === 'PASAPORTE') return false;
+    if (!opts.side) return false;
+    return d.side !== opts.side;
+  });
+
+  persistSnapshot();
+}
+
 export function addClientDocument(
   idOrCode: string,
   doc: Client['documents'][number],

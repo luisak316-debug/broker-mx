@@ -4,6 +4,7 @@ export type StaffRole = 'ADMIN' | 'SUPERVISOR' | 'MANAGER' | 'ADVISOR' | 'COMPLI
 export type AccountStatus = 'ACTIVA' | 'SUSPENDIDA' | 'BLOQUEADA' | 'CERRADA';
 export type KycStatus = 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
 export type DocumentType = 'INE' | 'PASAPORTE' | 'COMPROBANTE_DOMICILIO' | 'CONSTANCIA_FISCAL';
+export type DocumentSide = 'ANVERSO' | 'REVERSO';
 export type DocumentStatus = 'EN_REVISION' | 'VALIDADO' | 'RECHAZADO';
 export type CashRequestType = 'DEPOSITO' | 'RETIRO';
 export type RequestStatus = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
@@ -28,6 +29,7 @@ export type StaffPublic = Omit<Staff, 'passwordHash'>;
 export interface ClientDocument {
   id: string;
   type: DocumentType;
+  side?: DocumentSide;
   fileName: string;
   mimeType: string;
   fileUrl: string;

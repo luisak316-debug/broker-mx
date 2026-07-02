@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
 import { Card } from '../components/common/Card';
 import { ProfileAvatar } from '../components/profile/ProfileAvatar';
+import {
+  DocumentCameraCapture,
+  type DocumentCaptureSide,
+} from '../components/profile/DocumentCameraCapture';
 import { IdentityDocumentPreview } from '../components/profile/IdentityDocumentPreview';
 import {
+  DOCUMENT_SIDE_LABEL,
   DOCUMENT_TYPE_LABEL,
   fmtDate,
   fmtDateTime,
@@ -13,20 +18,34 @@ import {
   IDENTITY_DOCUMENT_TYPES,
   KYC_STATUS_LABEL,
 } from '../lib/format';
-import type { ClientProfileData } from '../types';
+import type { ClientDocument, ClientProfileData } from '../types';
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(',')[1];
-      if (!base64) reject(new Error('No se pudo leer el archivo.'));
-      else resolve(base64);
-    };
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
-    reader.readAsDataURL(file);
-  });
+function mergeUploadedDocument(
+  prev: ClientProfileData,
+  uploaded: ClientDocument,
+): ClientProfileData {
+  const withoutSame =
+    uploaded.type === 'PASAPORTE'
+      ? prev.documents.filter(
+          (d) => !IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+        )
+      : prev.documents.filter(
+          (d) =>
+            !(d.type === uploaded.type && (d.side ?? 'ANVERSO') === (uploaded.side ?? 'ANVERSO')),
+        );
+  return { ...prev, documents: [...withoutSame, uploaded] };
+}
+
+function pickIdentityDocs(documents: ClientDocument[]) {
+  const identity = documents.filter((d) =>
+    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+  );
+  const passport = identity.find((d) => d.type === 'PASAPORTE');
+  const ineAnverso = identity.find(
+    (d) => d.type === 'INE' && (!d.side || d.side === 'ANVERSO'),
+  );
+  const ineReverso = identity.find((d) => d.type === 'INE' && d.side === 'REVERSO');
+  return { passport, ineAnverso, ineReverso };
 }
 
 function formatAccountEmail(email: string, phone: string): string {
@@ -53,10 +72,15 @@ export function Profile() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [docType, setDocType] = useState('INE');
+  const [docType, setDocType] = useState<'INE' | 'PASAPORTE'>('INE');
   const [docBusy, setDocBusy] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [captureSide, setCaptureSide] = useState<DocumentCaptureSide>('ANVERSO');
+  const [pendingAnverso, setPendingAnverso] = useState<{
+    base64: string;
+    mimeType: string;
+  } | null>(null);
 
   const initials = (profile?.displayName ?? client?.displayName ?? 'Cliente')
     .split(' ')
@@ -102,59 +126,84 @@ export function Profile() {
     }
   }
 
-  async function onDocumentFileSelected(file: File | null) {
-    if (!file || !client?.id) {
+  async function uploadCapturedDocument(
+    type: 'INE' | 'PASAPORTE',
+    side: DocumentCaptureSide,
+    base64: string,
+    mimeType: string,
+  ) {
+    if (!client?.id) return;
+    const res = await api.uploadDocument(client.id, {
+      type,
+      side,
+      fileName: `${type.toLowerCase()}-${side.toLowerCase()}.jpg`,
+      mimeType,
+      data: base64,
+    });
+    setProfile((prev) => (prev ? mergeUploadedDocument(prev, res.document) : prev));
+  }
+
+  function startDocumentScan() {
+    setDocError(null);
+    setFeedback(null);
+    setPendingAnverso(null);
+    setCaptureSide('ANVERSO');
+    setCameraOpen(true);
+  }
+
+  async function onDocumentCaptured(base64: string, mimeType: string) {
+    if (!client?.id) return;
+
+    if (docType === 'PASAPORTE') {
+      setDocBusy(true);
+      setDocError(null);
+      setCameraOpen(false);
+      try {
+        await uploadCapturedDocument('PASAPORTE', 'ANVERSO', base64, mimeType);
+        setFeedback('Pasaporte guardado.');
+        await refreshSession();
+      } catch (e) {
+        setDocError(e instanceof Error ? e.message : 'Error al guardar el pasaporte.');
+      } finally {
+        setDocBusy(false);
+      }
       return;
     }
-    const ok =
-      /\.(pdf|png|jpe?g|webp|gif)$/i.test(file.name) ||
-      /^(application\/pdf|image\/(png|jpeg|jpg|webp|gif))$/i.test(file.type);
-    if (!ok) {
-      setDocError('Formato no permitido. Usa PDF, PNG, JPG o WEBP.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+
+    if (captureSide === 'ANVERSO') {
+      setPendingAnverso({ base64, mimeType });
+      setCaptureSide('REVERSO');
+      setFeedback('Frente capturado. Ahora fotografía el reverso de tu INE.');
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setDocError('El archivo no debe superar 10 MB.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+
+    if (!pendingAnverso) {
+      setDocError('Falta la foto del frente. Vuelve a iniciar el escaneo.');
       return;
     }
 
     setDocBusy(true);
     setDocError(null);
-    setFeedback(null);
+    setCameraOpen(false);
     try {
-      const data = await readFileAsBase64(file);
-      const res = await api.uploadDocument(client.id, {
-        type: docType,
-        fileName: file.name,
-        mimeType: file.type || 'application/octet-stream',
-        data,
-      });
-      setProfile((prev) => {
-        if (!prev) return prev;
-        const other = prev.documents.filter(
-          (d) => !IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
-        );
-        return { ...prev, documents: [...other, res.document] };
-      });
-      setFeedback('Documento guardado.');
+      await uploadCapturedDocument('INE', 'ANVERSO', pendingAnverso.base64, pendingAnverso.mimeType);
+      await uploadCapturedDocument('INE', 'REVERSO', base64, mimeType);
+      setPendingAnverso(null);
+      setCaptureSide('ANVERSO');
+      setFeedback('INE guardada (frente y reverso).');
       await refreshSession();
     } catch (e) {
-      setDocError(e instanceof Error ? e.message : 'Error al guardar el documento.');
+      setDocError(e instanceof Error ? e.message : 'Error al guardar la INE.');
     } finally {
-      if (fileInputRef.current) fileInputRef.current.value = '';
       setDocBusy(false);
     }
   }
 
   if (!client) return null;
 
-  const identityDocument = [...(profile?.documents ?? [])]
-    .filter((d) =>
-      IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
-    )
-    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+  const { passport, ineAnverso, ineReverso } = pickIdentityDocs(profile?.documents ?? []);
+  const hasIne = Boolean(ineAnverso && ineReverso);
+  const hasPassport = Boolean(passport);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -241,60 +290,88 @@ export function Profile() {
 
           <Card title="Documentos de identidad">
             <p className="mb-4 text-sm text-slate-400">
-              Solo puedes tener un documento de identidad. Al subir uno nuevo, reemplaza al anterior.
+              Solo INE o pasaporte. La INE requiere frente y reverso con la cámara. Al escanear de
+              nuevo, reemplazas el documento anterior.
             </p>
 
-            {identityDocument && (
+            {hasIne && ineAnverso && ineReverso && (
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                <IdentityDocumentPreview
+                  doc={ineAnverso}
+                  label={`${DOCUMENT_TYPE_LABEL.INE} — ${DOCUMENT_SIDE_LABEL.ANVERSO}`}
+                  subtitle={fmtDateTime(ineAnverso.uploadedAt)}
+                />
+                <IdentityDocumentPreview
+                  doc={ineReverso}
+                  label={`${DOCUMENT_TYPE_LABEL.INE} — ${DOCUMENT_SIDE_LABEL.REVERSO}`}
+                  subtitle={fmtDateTime(ineReverso.uploadedAt)}
+                />
+              </div>
+            )}
+
+            {hasPassport && passport && (
               <div className="mb-4">
                 <IdentityDocumentPreview
-                  doc={identityDocument}
-                  label={DOCUMENT_TYPE_LABEL[identityDocument.type] ?? identityDocument.type}
-                  subtitle={fmtDateTime(identityDocument.uploadedAt)}
+                  doc={passport}
+                  label={DOCUMENT_TYPE_LABEL.PASAPORTE}
+                  subtitle={fmtDateTime(passport.uploadedAt)}
                 />
               </div>
             )}
 
             <div className="space-y-3 rounded-lg border border-ink-600 bg-ink-900/40 p-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1 block text-sm text-slate-300">Tipo de documento</span>
-                  <select
-                    className="input"
-                    value={docType}
-                    disabled={docBusy}
-                    onChange={(e) => setDocType(e.target.value)}
-                  >
-                    {IDENTITY_DOCUMENT_TYPES.map((k) => (
-                      <option key={k} value={k}>
-                        {DOCUMENT_TYPE_LABEL[k]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-sm text-slate-300">
-                    Archivo (PDF, PNG, JPG, WEBP · máx. 10 MB)
-                  </span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf"
-                    disabled={docBusy}
-                    className="input cursor-pointer file:mr-2 file:rounded file:border-0 file:bg-brand-600 file:px-2 file:py-1 file:text-xs file:text-white disabled:opacity-60"
-                    onChange={(e) => void onDocumentFileSelected(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-              </div>
+              <label className="block">
+                <span className="mb-1 block text-sm text-slate-300">Tipo de documento</span>
+                <select
+                  className="input"
+                  value={docType}
+                  disabled={docBusy || cameraOpen}
+                  onChange={(e) => setDocType(e.target.value as 'INE' | 'PASAPORTE')}
+                >
+                  {IDENTITY_DOCUMENT_TYPES.map((k) => (
+                    <option key={k} value={k}>
+                      {DOCUMENT_TYPE_LABEL[k]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                className="btn-primary w-full"
+                disabled={docBusy || cameraOpen}
+                onClick={startDocumentScan}
+              >
+                {docType === 'INE'
+                  ? 'Escanear INE (frente y reverso)'
+                  : 'Escanear pasaporte'}
+              </button>
+
               {docBusy && <p className="text-sm text-brand-300">Guardando documento…</p>}
               {docError && (
                 <p className="rounded-lg bg-bear/15 px-3 py-2 text-xs text-bear">{docError}</p>
               )}
             </div>
 
-            {identityDocument == null && !docBusy && (
-              <p className="mt-3 text-sm text-slate-400">Aún no has subido tu documento de identidad.</p>
+            {!hasIne && !hasPassport && !docBusy && (
+              <p className="mt-3 text-sm text-slate-400">
+                Aún no has escaneado tu documento de identidad.
+              </p>
             )}
           </Card>
+
+          <DocumentCameraCapture
+            key={`${docType}-${captureSide}`}
+            open={cameraOpen}
+            kind={docType === 'PASAPORTE' ? 'passport' : 'ine'}
+            side={docType === 'INE' ? captureSide : 'ANVERSO'}
+            onCapture={(base64, mimeType) => void onDocumentCaptured(base64, mimeType)}
+            onClose={() => {
+              setCameraOpen(false);
+              setPendingAnverso(null);
+              setCaptureSide('ANVERSO');
+            }}
+          />
         </>
       ) : null}
     </div>

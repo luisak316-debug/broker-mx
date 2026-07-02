@@ -30,7 +30,12 @@ export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
 };
 
 /** Tipos de identidad que el cliente puede subir desde su cuenta. */
-export const IDENTITY_DOCUMENT_TYPES = ['INE', 'PASAPORTE', 'CONSTANCIA_FISCAL'] as const;
+export const IDENTITY_DOCUMENT_TYPES = ['INE', 'PASAPORTE'] as const;
+
+export const DOCUMENT_SIDE_LABEL: Record<string, string> = {
+  ANVERSO: 'Frente',
+  REVERSO: 'Reverso',
+};
 
 export const KYC_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pendiente',

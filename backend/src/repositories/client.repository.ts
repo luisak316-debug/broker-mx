@@ -85,6 +85,7 @@ function toPublicDocument(
   d: {
     id: string;
     type: ClientDocument['type'];
+    side?: ClientDocument['side'] | null;
     fileName: string;
     mimeType?: string | null;
     fileData?: string | null;
@@ -101,6 +102,7 @@ function toPublicDocument(
   return {
     id: d.id,
     type: d.type,
+    ...(d.side ? { side: d.side } : {}),
     fileName: d.fileName,
     mimeType,
     fileUrl: d.fileUrl,
@@ -137,6 +139,7 @@ export function mapUserToClient(user: DbUser): Client {
       toPublicDocument({
         id: d.id,
         type: d.type,
+        side: d.side,
         fileName: d.fileName,
         mimeType: d.mimeType,
         fileData: d.fileData,

@@ -38,6 +38,11 @@ export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
 /** Tipos de identidad que el cliente puede subir y el admin consulta. */
 export const IDENTITY_DOCUMENT_TYPES = ['INE', 'PASAPORTE', 'CONSTANCIA_FISCAL'] as const;
 
+export const DOCUMENT_SIDE_LABEL: Record<string, string> = {
+  ANVERSO: 'Frente',
+  REVERSO: 'Reverso',
+};
+
 export type IdentityDocumentType = (typeof IDENTITY_DOCUMENT_TYPES)[number];
 
 /** Primer nombre — solo en listas/tablas admin y supervisores donde el nombre completo no cabe. */

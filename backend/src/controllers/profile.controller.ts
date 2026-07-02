@@ -19,12 +19,33 @@ const updateProfileSchema = z.object({
   homeAddress: z.string().trim().max(500).nullable().optional(),
 });
 
-const uploadDocumentSchema = z.object({
-  type: z.enum(['INE', 'PASAPORTE', 'CONSTANCIA_FISCAL']),
-  fileName: z.string().min(1),
-  mimeType: z.string().min(1),
-  data: z.string().min(1, 'No se recibió el archivo.'),
-});
+const uploadDocumentSchema = z
+  .object({
+    type: z.enum(['INE', 'PASAPORTE']),
+    side: z.enum(['ANVERSO', 'REVERSO']).optional(),
+    fileName: z.string().min(1),
+    mimeType: z.string().min(1),
+    data: z.string().min(1, 'No se recibió el archivo.'),
+  })
+  .superRefine((body, ctx) => {
+    if (body.type === 'INE' && !body.side) {
+      ctx.addIssue({ code: 'custom', message: 'La INE requiere anverso o reverso.', path: ['side'] });
+    }
+    if (body.type === 'PASAPORTE' && body.side === 'REVERSO') {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'El pasaporte solo requiere la página principal.',
+        path: ['side'],
+      });
+    }
+    if (!body.mimeType.startsWith('image/')) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Solo se permiten fotos capturadas con la cámara.',
+        path: ['mimeType'],
+      });
+    }
+  });
 
 export async function getClientProfile(req: Request, res: Response): Promise<void> {
   const client = await findClient(req.params.clientId);
@@ -82,6 +103,7 @@ export async function uploadClientDocument(req: Request, res: Response): Promise
     const doc = await uploadClientIdentityDocument({
       client,
       type: parsed.type,
+      side: parsed.side,
       fileName: parsed.fileName,
       mimeType: parsed.mimeType,
       dataBase64: parsed.data,
