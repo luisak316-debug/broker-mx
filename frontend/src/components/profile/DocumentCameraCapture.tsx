@@ -16,22 +16,15 @@ export type DocumentCaptureSide = 'ANVERSO' | 'REVERSO';
 type Props = {
   open: boolean;
   kind: DocumentCaptureKind;
-  side?: DocumentCaptureSide;
   onCapture: (base64: string, mimeType: string) => void;
   onClose: () => void;
 };
 
-function sideLabel(side?: DocumentCaptureSide): string {
-  if (side === 'REVERSO') return 'reverso';
-  return 'frente';
+function documentLabel(kind: DocumentCaptureKind): string {
+  return kind === 'passport' ? 'pasaporte' : 'INE';
 }
 
-function documentLabel(kind: DocumentCaptureKind, side?: DocumentCaptureSide): string {
-  if (kind === 'passport') return 'pasaporte';
-  return `INE (${sideLabel(side)})`;
-}
-
-export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: Props) {
+export function DocumentCameraCapture({ open, kind, onCapture, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -202,7 +195,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
       <div className="flex items-center justify-between px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-white">
-            Captura tu {documentLabel(kind, side)}
+            Foto del frente — {documentLabel(kind)}
           </p>
           <p className="text-xs text-slate-400">{hint}</p>
         </div>
