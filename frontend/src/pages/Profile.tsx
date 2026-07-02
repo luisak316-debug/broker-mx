@@ -135,7 +135,12 @@ export function Profile() {
     setDocError(null);
     setFeedback(null);
     setFlipTransition(false);
-    setCaptureSide('ANVERSO');
+    const { ineAnverso: anverso, ineReverso: reverso } = pickIdentityDocs(profile?.documents ?? []);
+    if (docType === 'INE' && anverso && !reverso) {
+      setCaptureSide('REVERSO');
+    } else {
+      setCaptureSide('ANVERSO');
+    }
     setCameraOpen(true);
   }
 
@@ -315,8 +320,14 @@ export function Profile() {
                 onClick={startDocumentScan}
               >
                 {docType === 'INE'
-                  ? 'Escanear INE (frente y reverso)'
-                  : 'Escanear pasaporte'}
+                  ? hasIne
+                    ? 'Actualizar INE'
+                    : ineAnverso
+                      ? 'Completar reverso de la INE'
+                      : 'Escanear INE (frente y reverso)'
+                  : hasPassport
+                    ? 'Actualizar pasaporte'
+                    : 'Escanear pasaporte'}
               </button>
 
               {docBusy && <p className="text-sm text-brand-300">Guardando documento…</p>}
