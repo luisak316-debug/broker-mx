@@ -76,8 +76,9 @@ export function ClientsPage() {
                       {clientFirstName(c.displayName)}
                     </p>
                     <p className="truncate text-xs text-slate-500">{c.id}</p>
-                    <p className="mt-1 truncate text-xs text-slate-400">
-                      {fmtPhone(c.phone)} · {c.advisorName ?? 'Sin asesor'}
+                    <p className="mt-1 truncate text-xs text-slate-400">Tel. {fmtPhone(c.phone)}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      Asesor: {c.advisorName ?? 'Sin asignar'}
                     </p>
                     <div className="mt-2 flex items-center justify-between gap-2 text-xs">
                       <span className="font-medium text-brand-400">
