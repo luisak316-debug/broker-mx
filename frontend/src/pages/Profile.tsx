@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
@@ -8,6 +8,7 @@ import {
   DocumentCameraCapture,
   type DocumentCaptureSide,
 } from '../components/profile/DocumentCameraCapture';
+import { IneFlipTransition } from '../components/profile/IneFlipTransition';
 import { IdentityDocumentPreview } from '../components/profile/IdentityDocumentPreview';
 import {
   DOCUMENT_SIDE_LABEL,
@@ -86,6 +87,13 @@ export function Profile() {
   const [docError, setDocError] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [captureSide, setCaptureSide] = useState<DocumentCaptureSide>('ANVERSO');
+  const [flipTransition, setFlipTransition] = useState(false);
+
+  const completeFlipTransition = useCallback(() => {
+    setFlipTransition(false);
+    setCaptureSide('REVERSO');
+    setCameraOpen(true);
+  }, []);
 
   const initials = (profile?.displayName ?? client?.displayName ?? 'Cliente')
     .split(' ')
@@ -151,6 +159,7 @@ export function Profile() {
   function startDocumentScan() {
     setDocError(null);
     setFeedback(null);
+    setFlipTransition(false);
     setCaptureSide('ANVERSO');
     setCameraOpen(true);
   }
@@ -179,8 +188,8 @@ export function Profile() {
       setDocError(null);
       try {
         await uploadCapturedDocument('INE', 'ANVERSO', base64, mimeType);
-        setCaptureSide('REVERSO');
-        setFeedback('Frente guardado. Ahora fotografía el reverso de tu INE.');
+        setCameraOpen(false);
+        setFlipTransition(true);
       } catch (e) {
         setDocError(e instanceof Error ? e.message : 'Error al guardar el frente de la INE.');
         setCameraOpen(false);
@@ -379,6 +388,8 @@ export function Profile() {
             )}
           </Card>
 
+          <IneFlipTransition open={flipTransition} onComplete={completeFlipTransition} />
+
           <DocumentCameraCapture
             key={`${docType}-${captureSide}`}
             open={cameraOpen}
@@ -387,6 +398,7 @@ export function Profile() {
             onCapture={(base64, mimeType) => void onDocumentCaptured(base64, mimeType)}
             onClose={() => {
               setCameraOpen(false);
+              setFlipTransition(false);
               setCaptureSide('ANVERSO');
             }}
           />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DocumentDetectionTracker,
@@ -21,16 +21,22 @@ type Props = {
   onClose: () => void;
 };
 
-function sideLabel(side?: DocumentCaptureSide): string {
-  return side === 'REVERSO' ? 'reverso' : 'frente';
-}
-
 function documentLabel(kind: DocumentCaptureKind, side?: DocumentCaptureSide): string {
   if (kind === 'passport') return 'pasaporte';
-  return `INE (${sideLabel(side)})`;
+  return side === 'REVERSO' ? 'reverso de tu INE' : 'frente de tu INE';
+}
+
+function speakHint(text: string): void {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'es-MX';
+  utterance.rate = 0.92;
+  window.speechSynthesis.speak(utterance);
 }
 
 export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: Props) {
+  const maskId = useId();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -45,6 +51,8 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
   const [hint, setHint] = useState('Enfoca tu documento dentro del marco');
 
   const aspect = kind === 'passport' ? PASSPORT_ASPECT : INE_ASPECT;
+  const isReverse = kind === 'ine' && side === 'REVERSO';
+  const frameStroke = detected ? '#34d399' : isReverse ? '#38bdf8' : '#fbbf24';
 
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -74,7 +82,13 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
     setError('');
     setReady(false);
     setDetected(false);
-    setHint('Enfoca tu documento dentro del marco');
+    setHint(
+      isReverse
+        ? 'Voltea tu INE y alinea el reverso en el marco'
+        : kind === 'ine'
+          ? 'Fotografía del frente — alinea tu INE en el marco'
+          : 'Enfoca tu documento dentro del marco',
+    );
 
     async function startCamera() {
       try {
@@ -108,7 +122,16 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
       cancelled = true;
       stopCamera();
     };
-  }, [open, stopCamera]);
+  }, [open, stopCamera, kind, side, isReverse]);
+
+  useEffect(() => {
+    if (!open || !ready || kind !== 'ine') return;
+    if (side === 'REVERSO') {
+      speakHint('Ahora fotografía el reverso de tu I N E. Voltea tu credencial.');
+    } else if (side === 'ANVERSO') {
+      speakHint('Fotografía del frente. Alinea tu I N E en el marco.');
+    }
+  }, [open, ready, kind, side]);
 
   useEffect(() => {
     if (!open || !ready) return;
@@ -139,12 +162,20 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
       setDetected(stable);
       setHint(
         stable
-          ? 'Documento detectado — puedes capturar'
-          : result.meanLum < 35
-            ? 'Hay poca luz. Acércate a una fuente de luz.'
-            : result.variance < 350
-              ? 'Centra tu documento en el marco'
-              : 'Mantén la cámara firme sobre el documento',
+          ? isReverse
+            ? 'Reverso detectado — puedes capturar'
+            : kind === 'ine'
+              ? 'Frente detectado — puedes capturar'
+              : 'Documento detectado — puedes capturar'
+          : isReverse
+            ? 'Voltea tu INE y centra el reverso en el marco'
+            : result.meanLum < 35
+              ? 'Hay poca luz. Acércate a una fuente de luz.'
+              : result.variance < 350
+                ? kind === 'ine' && side === 'ANVERSO'
+                  ? 'Centra el frente de tu INE en el marco'
+                  : 'Centra tu documento en el marco'
+                : 'Mantén la cámara firme sobre el documento',
       );
 
       rafRef.current = requestAnimationFrame(tick);
@@ -152,7 +183,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [open, ready, aspect]);
+  }, [open, ready, aspect, isReverse, kind, side]);
 
   function capture() {
     const video = videoRef.current;
@@ -201,9 +232,11 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
       <div className="flex items-center justify-between px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-white">
-            Captura el {documentLabel(kind, side)} de tu documento
+            {isReverse ? 'Fotografía del reverso' : kind === 'ine' ? 'Fotografía del frente' : 'Captura tu documento'}
           </p>
-          <p className="text-xs text-slate-400">{hint}</p>
+          <p className="text-xs text-slate-400">
+            {kind === 'ine' ? `Captura el ${documentLabel(kind, side)}` : documentLabel(kind, side)} · {hint}
+          </p>
         </div>
         <button type="button" className="btn-ghost text-sm" disabled={busy} onClick={close}>
           Cancelar
@@ -219,9 +252,20 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
         />
         {guide && (
           <div className="pointer-events-none absolute inset-0">
+            {isReverse && (
+              <div
+                className="doc-capture-frame-reverse absolute rounded-xl border-[3px] border-sky-400/80 bg-sky-500/5"
+                style={{
+                  left: guide.x,
+                  top: guide.y,
+                  width: guide.w,
+                  height: guide.h,
+                }}
+              />
+            )}
             <svg className="h-full w-full" viewBox={`0 0 ${containerRef.current?.clientWidth ?? 1} ${containerRef.current?.clientHeight ?? 1}`}>
               <defs>
-                <mask id="doc-frame-mask">
+                <mask id={maskId}>
                   <rect width="100%" height="100%" fill="white" />
                   <rect
                     x={guide.x}
@@ -233,7 +277,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                   />
                 </mask>
               </defs>
-              <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#doc-frame-mask)" />
+              <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask={`url(#${maskId})`} />
               <rect
                 x={guide.x}
                 y={guide.y}
@@ -241,7 +285,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 height={guide.h}
                 rx="12"
                 fill="none"
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="3"
               />
               <line
@@ -249,7 +293,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + 12}
                 x2={guide.x + 36}
                 y2={guide.y + 12}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -258,7 +302,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + 12}
                 x2={guide.x + 12}
                 y2={guide.y + 36}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -267,7 +311,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + 12}
                 x2={guide.x + guide.w - 36}
                 y2={guide.y + 12}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -276,7 +320,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + 12}
                 x2={guide.x + guide.w - 12}
                 y2={guide.y + 36}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -285,7 +329,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + guide.h - 12}
                 x2={guide.x + 36}
                 y2={guide.y + guide.h - 12}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -294,7 +338,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + guide.h - 12}
                 x2={guide.x + 12}
                 y2={guide.y + guide.h - 36}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -303,7 +347,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + guide.h - 12}
                 x2={guide.x + guide.w - 36}
                 y2={guide.y + guide.h - 12}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -312,7 +356,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
                 y1={guide.y + guide.h - 12}
                 x2={guide.x + guide.w - 12}
                 y2={guide.y + guide.h - 36}
-                stroke={detected ? '#34d399' : '#fbbf24'}
+                stroke={frameStroke}
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -329,7 +373,7 @@ export function DocumentCameraCapture({ open, kind, side, onCapture, onClose }: 
           disabled={busy || !!error || !detected}
           onClick={capture}
         >
-          {busy ? 'Procesando…' : detected ? 'Tomar foto' : 'Alinea el documento en el marco'}
+          {busy ? 'Procesando…' : detected ? (isReverse ? 'Tomar foto del reverso' : kind === 'ine' ? 'Tomar foto del frente' : 'Tomar foto') : isReverse ? 'Voltea tu INE y alinea el reverso' : 'Alinea el documento en el marco'}
         </button>
         <p className="text-center text-xs text-slate-500">
           Solo se acepta la foto capturada aquí. Debe verse completa dentro del rectángulo.
