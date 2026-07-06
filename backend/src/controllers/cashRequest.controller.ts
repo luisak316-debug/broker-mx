@@ -55,6 +55,47 @@ export async function requestWithdrawal(req: Request, res: Response): Promise<vo
   });
 }
 
+const depositSchema = z.object({
+  clientId: z.string().min(1),
+  amountMxn: z.number().positive('El monto debe ser mayor a cero.'),
+  note: z.string().max(500).optional(),
+  method: z.enum(['SPEI', 'VENTANILLA', 'TARJETA', 'OXXO']).optional(),
+});
+
+/** Depósito: el cliente notifica un pago; el asesor lo aprueba y acredita el saldo. */
+export async function requestDeposit(req: Request, res: Response): Promise<void> {
+  const parsed = depositSchema.parse(req.body);
+  const { clientId, amountMxn, note, method } = parsed;
+
+  const client = await findClient(clientId);
+  if (!client) throw new HttpError(404, 'Cliente no encontrado.');
+  if (client.accountStatus !== 'ACTIVA') {
+    throw new HttpError(403, 'Tu cuenta no puede recibir depósitos en este momento.');
+  }
+
+  const internalId = await getInternalUserId(clientId);
+  if (!internalId) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const request = await createCashRequest({
+    userInternalId: internalId,
+    type: 'DEPOSITO',
+    amountMxn: round2(amountMxn),
+    method: method ?? 'SPEI',
+    note,
+    status: 'PENDIENTE',
+  });
+
+  res.status(201).json({
+    data: {
+      request,
+      message:
+        method === 'TARJETA'
+          ? 'Tu asesor te enviará un enlace seguro de pago con tarjeta.'
+          : 'Recibimos tu aviso de depósito. Tu asesor lo confirmará y acreditará tu saldo.',
+    },
+  });
+}
+
 function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }

@@ -42,7 +42,7 @@ export interface ClientDocument {
 }
 
 /** Forma en que el cliente debe fondear su cuenta. */
-export type DepositMethod = 'TRANSFERENCIA' | 'VENTANILLA';
+export type DepositMethod = 'TRANSFERENCIA' | 'TARJETA' | 'VENTANILLA' | 'OXXO';
 
 /** Cuenta bancaria de depósito personalizada y reemplazable por cliente. */
 export interface DepositAccount {

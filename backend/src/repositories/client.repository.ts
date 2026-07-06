@@ -49,16 +49,21 @@ function buildDepositAccount(user: DbUser): Client['depositAccount'] {
   const method: DepositMethod =
     user.depositMethod === 'VENTANILLA'
       ? 'VENTANILLA'
-      : user.depositMethod === 'TRANSFERENCIA'
-        ? 'TRANSFERENCIA'
-        : user.depositClabe
-          ? 'TRANSFERENCIA'
-          : user.depositAccountNumber
-            ? 'VENTANILLA'
-            : 'TRANSFERENCIA';
+      : user.depositMethod === 'TARJETA'
+        ? 'TARJETA'
+        : user.depositMethod === 'OXXO'
+          ? 'OXXO'
+          : user.depositMethod === 'TRANSFERENCIA'
+            ? 'TRANSFERENCIA'
+            : user.depositClabe
+              ? 'TRANSFERENCIA'
+              : user.depositAccountNumber
+                ? 'VENTANILLA'
+                : 'TRANSFERENCIA';
 
   if (method === 'TRANSFERENCIA' && !user.depositClabe) return undefined;
   if (method === 'VENTANILLA' && !user.depositAccountNumber) return undefined;
+  if (method === 'OXXO' && !user.depositAccountNumber) return undefined;
 
   return {
     depositMethod: method,
@@ -353,7 +358,12 @@ export async function updateDepositAccountFields(
       depositMethod: data.depositMethod,
       depositBeneficiary: data.beneficiary,
       depositBank: data.bank,
-      depositAccountNumber: data.depositMethod === 'VENTANILLA' ? data.accountNumber : data.accountNumber || null,
+      depositAccountNumber:
+        data.depositMethod === 'TRANSFERENCIA'
+          ? data.accountNumber || null
+          : data.depositMethod === 'TARJETA'
+            ? data.accountNumber || null
+            : data.accountNumber,
       depositClabe: data.depositMethod === 'TRANSFERENCIA' ? data.clabe : null,
       depositReference: data.reference,
       depositUpdatedAt: new Date(),

@@ -181,7 +181,10 @@ export function updateDepositAccountFields(
     depositMethod: data.depositMethod,
     beneficiary: data.beneficiary,
     bank: data.bank,
-    accountNumber: data.depositMethod === 'VENTANILLA' ? data.accountNumber : data.accountNumber || '',
+    accountNumber:
+      data.depositMethod === 'TRANSFERENCIA'
+        ? data.accountNumber || ''
+        : data.accountNumber,
     clabe: data.depositMethod === 'TRANSFERENCIA' ? data.clabe : '',
     reference: data.reference,
     updatedAt: new Date().toISOString(),

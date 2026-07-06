@@ -59,6 +59,7 @@ router.get('/portfolio/:userId', asyncHandler(portfolio.getPortfolio));
 // Cuenta de depósito asignada (vista del cliente: "Fondear cuenta")
 router.get('/deposit-account/:clientId', asyncHandler(deposit.getDepositAccount));
 router.post('/cash-requests/withdraw', asyncHandler(cashRequest.requestWithdrawal));
+router.post('/cash-requests/deposit', asyncHandler(cashRequest.requestDeposit));
 
 // Perfil del cliente (datos personales y documentos KYC)
 router.get('/profile/:clientId/documents/:documentId/file', asyncHandler(profile.getDocumentFile));

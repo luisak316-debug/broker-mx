@@ -9,9 +9,9 @@ import type { DepositMethod } from '../../types/admin';
 
 const depositSchema = z
   .object({
-    depositMethod: z.enum(['TRANSFERENCIA', 'VENTANILLA']),
+    depositMethod: z.enum(['TRANSFERENCIA', 'TARJETA', 'VENTANILLA', 'OXXO']),
     beneficiary: z.string().min(3, 'El beneficiario / razón social es obligatorio.'),
-    bank: z.string().min(2, 'El banco receptor es obligatorio.'),
+    bank: z.string().min(2, 'El banco o procesador es obligatorio.'),
     accountNumber: z.string().optional().default(''),
     clabe: z.string().optional().default(''),
     reference: z.string().min(1, 'La referencia única de pago es obligatoria.'),
@@ -26,18 +26,45 @@ const depositSchema = z
           message: 'Para transferencia/SPEI la CLABE interbancaria debe tener 18 dígitos.',
         });
       }
-    } else if (!/^\d{5,20}$/.test(data.accountNumber)) {
+      return;
+    }
+
+    if (data.depositMethod === 'VENTANILLA') {
+      if (!/^\d{5,20}$/.test(data.accountNumber)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['accountNumber'],
+          message: 'Para depósito en ventanilla el número de cuenta debe tener entre 5 y 20 dígitos.',
+        });
+      }
+      return;
+    }
+
+    if (data.depositMethod === 'OXXO') {
+      if (!/^[A-Za-z0-9]{8,24}$/.test(data.accountNumber)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['accountNumber'],
+          message: 'Para OXXO indica el número de referencia o convenio (8 a 24 caracteres alfanuméricos).',
+        });
+      }
+      return;
+    }
+
+    if (data.depositMethod === 'TARJETA' && data.accountNumber && !/^https?:\/\/.+/i.test(data.accountNumber)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['accountNumber'],
-        message: 'Para depósito en ventanilla el número de cuenta debe tener entre 5 y 20 dígitos.',
+        message: 'El enlace de pago debe ser una URL válida (https://…).',
       });
     }
   });
 
 const METHOD_LABEL: Record<DepositMethod, string> = {
   TRANSFERENCIA: 'Transferencia bancaria / SPEI',
-  VENTANILLA: 'Depósito en ventanilla',
+  TARJETA: 'Tarjeta débito / crédito',
+  VENTANILLA: 'Depósito en ventanilla bancaria',
+  OXXO: 'Depósito en tiendas OXXO',
 };
 
 export async function updateDepositAccount(req: Request, res: Response): Promise<void> {
@@ -69,10 +96,7 @@ export async function updateDepositAccount(req: Request, res: Response): Promise
     parsed.initialInvestmentMxn !== undefined
       ? ` · Monto inicial sugerido: ${fmtMxn(parsed.initialInvestmentMxn)}`
       : '';
-  const datoTxt =
-    parsed.depositMethod === 'TRANSFERENCIA'
-      ? `CLABE ${maskClabe(next.clabe)}`
-      : `Cuenta ${next.accountNumber}`;
+  const datoTxt = depositAuditDetail(parsed.depositMethod, next);
 
   const audit = await record({
     actor: req.staff!,
@@ -87,6 +111,24 @@ export async function updateDepositAccount(req: Request, res: Response): Promise
   });
 
   res.json({ data: { depositAccount: next, audit } });
+}
+
+function depositAuditDetail(
+  method: DepositMethod,
+  account: { clabe: string; accountNumber: string },
+): string {
+  switch (method) {
+    case 'TRANSFERENCIA':
+      return `CLABE ${maskClabe(account.clabe)}`;
+    case 'VENTANILLA':
+      return `Cuenta ${account.accountNumber}`;
+    case 'OXXO':
+      return `Ref. OXXO ${account.accountNumber}`;
+    case 'TARJETA':
+      return account.accountNumber ? `Enlace de pago` : 'Pago con tarjeta';
+    default:
+      return '—';
+  }
 }
 
 function maskClabe(clabe: string): string {
