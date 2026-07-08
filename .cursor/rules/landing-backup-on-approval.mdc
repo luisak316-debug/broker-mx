@@ -1,0 +1,59 @@
+---
+description: Solo crear respaldo de la landing cuando el usuario aprueba explícitamente con palabras de satisfacción.
+alwaysApply: true
+---
+
+# Respaldo de landing — solo con aprobación del usuario
+
+## Flujo obligatorio
+
+1. **Hacer cambios** cuando el usuario los pida.
+2. **NO crear respaldo** automáticamente después de cada cambio.
+3. **Solo guardar respaldo** cuando el usuario apruebe con palabras claras de satisfacción.
+
+## Palabras que significan «guárdalo / haz respaldo»
+
+Si el usuario dice (o equivalente en español/inglés):
+
+- me gustó / I liked it / me encantó
+- perfecto / perfect
+- asombroso / amazing
+- fascinante / fascinating
+- fabuloso / fabulous
+- estoy feliz / I'm happy / muy contento
+- gracias (en contexto de satisfacción con el resultado)
+- excelente / incredible / increíble
+
+→ **Entonces sí:** commit + tag git + actualizar `docs/BACKUP-LANDING.md` y `backups/landing-YYYY-MM-DD/`.
+
+## Si NO aprueba
+
+- No crear respaldo ni tag nuevo.
+- Revertir o corregir según indique.
+- No asumir que un cambio temporal debe persistir.
+
+## Qué incluir en cada respaldo aprobado
+
+- `frontend/src/pages/Landing.tsx`
+- `frontend/src/components/landing/MarketNewsSection.tsx`
+- Otros archivos de landing tocados en esa sesión
+- Actualizar `docs/BACKUP-LANDING.md` con fecha y estructura actual
+- Copia en `backups/landing-FECHA/`
+- Tag git: `backup/landing-ok-FECHA`
+- Commit con mensaje que indique aprobación del usuario
+
+## Estructura crítica (no romper sin pedirlo)
+
+- **Salinas Pliego** va **dentro** de `#quienes` (Quiénes Somos), como referencia de credibilidad.
+- **Qué hacemos** = 4 noticias con foto + botón Ver simulador (`#noticias`).
+- **No** usar diseño Capital (globo, narrativa scroll, `.cap-*`).
+- **No** resetear a commits viejos sin confirmación.
+
+## Restaurar si algo sale mal
+
+```powershell
+git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
+# o: backups\landing-FECHA\RESTORE.ps1
+```
+
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08`, commit `552269b`.
