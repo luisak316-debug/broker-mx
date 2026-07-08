@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 const LEGEND_LINES = [
   'La mayoría de los inversionistas pierde dinero',
@@ -32,10 +32,17 @@ type BarSpec = {
   blur: number;
 };
 
-export function LandingScrollNarrative() {
+type Props = {
+  mode?: 'full' | 'backdrop';
+  id?: string;
+  children?: ReactNode;
+};
+
+export function LandingScrollNarrative({ mode = 'full', id, children }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
   const [progress, setProgress] = useState(0);
   const [staticMode, setStaticMode] = useState(false);
+  const isBackdrop = mode === 'backdrop';
 
   const bars = useMemo<BarSpec[]>(() => {
     const seed = [42, 68, 35, 82, 55, 91, 48, 73, 38, 86, 52, 77, 44, 95, 58, 70, 33, 88, 61, 49, 80, 40, 74, 63, 36, 90, 47, 84];
@@ -75,9 +82,10 @@ export function LandingScrollNarrative() {
     };
   }, []);
 
-  const barShift = staticMode ? -12 : 38 - progress * 58;
-  const barBlur = staticMode ? 14 : 8 + progress * 22;
-  const barOpacity = staticMode ? 0.85 : 0.35 + progress * 0.55;
+  const barShift = staticMode ? -12 : isBackdrop ? 58 - progress * 108 : 38 - progress * 58;
+  const barBlur = staticMode ? 14 : isBackdrop ? 4 + progress * 32 : 8 + progress * 22;
+  const barOpacity = staticMode ? 0.85 : isBackdrop ? 0.5 + progress * 0.48 : 0.35 + progress * 0.55;
+  const barScale = staticMode ? 1 : isBackdrop ? 0.92 + progress * 0.18 : 1;
 
   const line1Opacity = staticMode ? 0.35 : segmentOpacity(progress, 0.12, 0.28) * 0.38;
   const line2Opacity = staticMode ? 0.72 : segmentOpacity(progress, 0.28, 0.48) * 0.88;
@@ -89,6 +97,18 @@ export function LandingScrollNarrative() {
   const legendFade = staticMode ? 0 : clamp01(1 - segmentOpacity(progress, 0.7, 0.82));
 
   if (staticMode) {
+    if (isBackdrop) {
+      return (
+        <section
+          id={id}
+          className="cap-scroll-narrative cap-scroll-narrative--backdrop cap-scroll-narrative--static"
+          aria-label="Confianza"
+        >
+          <div className="cap-scroll-narrative__backdrop-content">{children}</div>
+        </section>
+      );
+    }
+
     return (
       <section className="cap-scroll-narrative cap-scroll-narrative--static" aria-label="Narrativa de inversión">
         <div className="cap-scroll-narrative__static-block">
@@ -119,75 +139,86 @@ export function LandingScrollNarrative() {
   return (
     <section
       ref={sectionRef}
-      className="cap-scroll-narrative"
-      aria-label="Narrativa de inversión"
+      id={id}
+      className={`cap-scroll-narrative${isBackdrop ? ' cap-scroll-narrative--backdrop' : ''}`}
+      aria-label={isBackdrop ? 'Confianza' : 'Narrativa de inversión'}
     >
       <div className="cap-scroll-narrative__sticky">
-        <div
-          className="cap-scroll-narrative__legend"
-          style={{ opacity: legendFade }}
-        >
-          {LEGEND_LINES.map((line, i) => {
-            const opacity = i === 0 ? line1Opacity : i === 1 ? line2Opacity : line3Opacity;
-            return (
-              <p
-                key={line}
-                className={`cap-scroll-narrative__line${i === 2 ? ' cap-scroll-narrative__line--bright' : ''}`}
-                style={{ opacity }}
-              >
-                {line}
+        {!isBackdrop ? (
+          <>
+            <div className="cap-scroll-narrative__legend" style={{ opacity: legendFade }}>
+              {LEGEND_LINES.map((line, i) => {
+                const opacity = i === 0 ? line1Opacity : i === 1 ? line2Opacity : line3Opacity;
+                return (
+                  <p
+                    key={line}
+                    className={`cap-scroll-narrative__line${i === 2 ? ' cap-scroll-narrative__line--bright' : ''}`}
+                    style={{ opacity }}
+                  >
+                    {line}
+                  </p>
+                );
+              })}
+            </div>
+
+            <div
+              className="cap-scroll-narrative__phase cap-scroll-narrative__phase--calm"
+              style={{ opacity: calmOpacity, transform: `translateY(${(1 - calmOpacity) * 40}px)` }}
+            >
+              <h2 className="cap-scroll-narrative__phase-title">Configúralo con calma.</h2>
+              <ul className="cap-scroll-narrative__steps">
+                {CALM_STEPS.map((step, i) => (
+                  <li
+                    key={step}
+                    style={{ opacity: segmentOpacity(calmOpacity, i * 0.2, i * 0.2 + 0.35) }}
+                  >
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div
+              className="cap-scroll-narrative__phase cap-scroll-narrative__phase--pressure"
+              style={{ opacity: pressureOpacity, transform: `translateY(${(1 - pressureOpacity) * 32}px)` }}
+            >
+              <h2 className="cap-scroll-narrative__phase-title">Se activa bajo presión.</h2>
+              <p className="cap-scroll-narrative__phase-text">
+                La disciplina se nota cuando el mercado se mueve. Tu panel, tu asesor y tu estrategia siguen contigo.
               </p>
-            );
-          })}
-        </div>
-
-        <div
-          className="cap-scroll-narrative__phase cap-scroll-narrative__phase--calm"
-          style={{ opacity: calmOpacity, transform: `translateY(${(1 - calmOpacity) * 40}px)` }}
-        >
-          <h2 className="cap-scroll-narrative__phase-title">Configúralo con calma.</h2>
-          <ul className="cap-scroll-narrative__steps">
-            {CALM_STEPS.map((step, i) => (
-              <li
-                key={step}
-                style={{ opacity: segmentOpacity(calmOpacity, i * 0.2, i * 0.2 + 0.35) }}
-              >
-                {step}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div
-          className="cap-scroll-narrative__phase cap-scroll-narrative__phase--pressure"
-          style={{ opacity: pressureOpacity, transform: `translateY(${(1 - pressureOpacity) * 32}px)` }}
-        >
-          <h2 className="cap-scroll-narrative__phase-title">Se activa bajo presión.</h2>
-          <p className="cap-scroll-narrative__phase-text">
-            La disciplina se nota cuando el mercado se mueve. Tu panel, tu asesor y tu estrategia siguen contigo.
-          </p>
-        </div>
+            </div>
+          </>
+        ) : null}
 
         <div
           className="cap-scroll-narrative__bars"
           style={{
-            transform: `translateX(${barShift}%)`,
+            transform: `translateX(${barShift}%) scaleY(${barScale})`,
             filter: `blur(${barBlur}px)`,
             opacity: barOpacity,
           }}
           aria-hidden
         >
-          {bars.map((bar, i) => (
+          {bars.map((bar, i) => {
+            const wave = isBackdrop
+              ? 0.55 + progress * 0.55 + Math.sin(progress * Math.PI * 2.2 + i * 0.55) * 0.14
+              : bar.height;
+            return (
             <span
               key={i}
               className={`cap-scroll-narrative__bar${bar.warm ? ' cap-scroll-narrative__bar--warm' : ''}`}
               style={{
-                height: `${bar.height * 100}%`,
+                height: `${wave * 100}%`,
                 filter: `blur(${bar.blur}px)`,
               }}
             />
-          ))}
+            );
+          })}
         </div>
+
+        {isBackdrop && children ? (
+          <div className="cap-scroll-narrative__backdrop-content">{children}</div>
+        ) : null}
       </div>
     </section>
   );

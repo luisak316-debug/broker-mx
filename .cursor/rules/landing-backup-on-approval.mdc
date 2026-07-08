@@ -46,7 +46,6 @@ Si el usuario dice (o equivalente en español/inglés):
 
 - **Salinas Pliego** va **dentro** de `#quienes` (Quiénes Somos), como referencia de credibilidad.
 - **Qué hacemos** = 4 noticias con foto + botón Ver simulador (`#noticias`).
-- **No** usar diseño Capital (globo, narrativa scroll, `.cap-*`).
 - **No** resetear a commits viejos sin confirmación.
 
 ## Restaurar si algo sale mal
@@ -56,4 +55,5 @@ git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
 # o: backups\landing-FECHA\RESTORE.ps1
 ```
 
-Último respaldo aprobado: tag `backup/landing-ok-2026-07-08`, commit `552269b`.
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-video` (esfera Capital vídeo + scrollytelling).
+Respaldo anterior: `backup/landing-ok-2026-07-08`, commit `552269b`.
