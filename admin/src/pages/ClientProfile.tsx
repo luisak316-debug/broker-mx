@@ -10,6 +10,13 @@ import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
 import { CATEGORY_LABEL, DOCUMENT_SIDE_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
 
+const DEPOSIT_METHOD_LABEL: Record<DepositMethod, string> = {
+  TRANSFERENCIA: 'Transferencia bancaria / SPEI',
+  TARJETA: 'Tarjeta débito / crédito',
+  VENTANILLA: 'Depósito en ventanilla bancaria',
+  OXXO: 'Depósito en tiendas OXXO',
+};
+
 export function ClientProfile() {
   const { id = '' } = useParams();
   const { can } = useAuth();
@@ -71,11 +78,21 @@ export function ClientProfile() {
 
   const clabeValid = /^\d{18}$/.test(deposit.clabe);
   const accountValid = /^\d{5,20}$/.test(deposit.accountNumber);
+  const oxxoRefValid = /^[A-Za-z0-9]{8,24}$/.test(deposit.accountNumber);
+  const paymentLinkValid =
+    deposit.accountNumber.trim() === '' || /^https?:\/\/.+/i.test(deposit.accountNumber.trim());
+
   const depositReady =
     deposit.beneficiary.trim().length >= 3 &&
     deposit.bank.trim().length >= 2 &&
     deposit.reference.trim().length >= 1 &&
-    (depositMethod === 'TRANSFERENCIA' ? clabeValid : accountValid);
+    (depositMethod === 'TRANSFERENCIA'
+      ? clabeValid
+      : depositMethod === 'VENTANILLA'
+        ? accountValid
+        : depositMethod === 'OXXO'
+          ? oxxoRefValid
+          : paymentLinkValid);
 
   const investmentParsed = parseMoneyInput(initialInvestment);
   const investmentValid =
@@ -453,14 +470,24 @@ export function ClientProfile() {
                 <option value="TRANSFERENCIA">
                   Transferencia bancaria / SPEI (requiere CLABE interbancaria)
                 </option>
+                <option value="TARJETA">
+                  Tarjeta débito / crédito (enlace de pago seguro)
+                </option>
                 <option value="VENTANILLA">
-                  Depósito en ventanilla (requiere número de cuenta)
+                  Depósito en ventanilla bancaria (requiere número de cuenta)
+                </option>
+                <option value="OXXO">
+                  Depósito en tiendas OXXO (requiere referencia OXXO)
                 </option>
               </select>
               <p className="mt-1 text-xs text-slate-500">
                 {depositMethod === 'TRANSFERENCIA'
                   ? 'El cliente verá la CLABE para transferencia interbancaria o SPEI desde su banca en línea o app.'
-                  : 'El cliente verá el número de cuenta para depositar en sucursal bancaria en México.'}
+                  : depositMethod === 'TARJETA'
+                    ? 'El cliente verá la opción de pago con tarjeta y podrá solicitar un enlace seguro de pago.'
+                    : depositMethod === 'VENTANILLA'
+                      ? 'El cliente verá el número de cuenta para depositar en sucursal bancaria en México.'
+                      : 'El cliente verá la referencia para pagar en cualquier tienda OXXO del país.'}
               </p>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -471,15 +498,6 @@ export function ClientProfile() {
                   placeholder="Ej. Inversionistas S.A. de C.V."
                   value={deposit.beneficiary}
                   onChange={(e) => setDeposit({ ...deposit, beneficiary: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Banco receptor</label>
-                <input
-                  className="input"
-                  placeholder="Ej. BBVA, Banamex, Santander"
-                  value={deposit.bank}
-                  onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
                 />
               </div>
               {depositMethod === 'VENTANILLA' ? (
@@ -498,6 +516,40 @@ export function ClientProfile() {
                     <p className="mt-1 text-xs text-danger">
                       El número de cuenta debe tener entre 5 y 20 dígitos.
                     </p>
+                  )}
+                </div>
+              ) : depositMethod === 'OXXO' ? (
+                <div>
+                  <label className="label">Número de referencia OXXO</label>
+                  <input
+                    className="input"
+                    placeholder="Referencia o convenio para pago en OXXO"
+                    value={deposit.accountNumber}
+                    onChange={(e) =>
+                      setDeposit({
+                        ...deposit,
+                        accountNumber: e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 24),
+                      })
+                    }
+                  />
+                  {deposit.accountNumber && !oxxoRefValid && (
+                    <p className="mt-1 text-xs text-danger">
+                      La referencia OXXO debe tener entre 8 y 24 caracteres alfanuméricos.
+                    </p>
+                  )}
+                </div>
+              ) : depositMethod === 'TARJETA' ? (
+                <div>
+                  <label className="label">Enlace de pago seguro (opcional)</label>
+                  <input
+                    className="input"
+                    type="url"
+                    placeholder="https://… (pasarela PCI)"
+                    value={deposit.accountNumber}
+                    onChange={(e) => setDeposit({ ...deposit, accountNumber: e.target.value.trim() })}
+                  />
+                  {deposit.accountNumber && !paymentLinkValid && (
+                    <p className="mt-1 text-xs text-danger">Ingresa una URL válida que comience con http:// o https://</p>
                   )}
                 </div>
               ) : (
@@ -527,6 +579,37 @@ export function ClientProfile() {
                     onChange={(e) =>
                       setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
                     }
+                  />
+                </div>
+              )}
+              {depositMethod === 'TARJETA' ? (
+                <div>
+                  <label className="label">Pasarela / procesador de pago</label>
+                  <input
+                    className="input"
+                    placeholder="Ej. Conekta, OpenPay, Stripe"
+                    value={deposit.bank}
+                    onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
+                  />
+                </div>
+              ) : depositMethod === 'OXXO' ? (
+                <div>
+                  <label className="label">Red de pago</label>
+                  <input
+                    className="input"
+                    placeholder="Ej. OXXO"
+                    value={deposit.bank}
+                    onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="label">Banco receptor</label>
+                  <input
+                    className="input"
+                    placeholder="Ej. BBVA, Banamex, Santander"
+                    value={deposit.bank}
+                    onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
                   />
                 </div>
               )}
@@ -571,16 +654,18 @@ export function ClientProfile() {
           <dl className="space-y-2 text-sm">
             <Row
               label="Forma de depósito"
-              value={
-                client.depositAccount.depositMethod === 'VENTANILLA'
-                  ? 'Depósito en ventanilla'
-                  : 'Transferencia bancaria / SPEI'
-              }
+              value={DEPOSIT_METHOD_LABEL[client.depositAccount.depositMethod]}
             />
             <Row label="Beneficiario" value={client.depositAccount.beneficiary} />
-            <Row label="Banco" value={client.depositAccount.bank} />
+            <Row label="Banco / procesador" value={client.depositAccount.bank} />
             {client.depositAccount.depositMethod === 'VENTANILLA' ? (
               <Row label="Número de cuenta (ventanilla)" value={client.depositAccount.accountNumber} />
+            ) : client.depositAccount.depositMethod === 'OXXO' ? (
+              <Row label="Referencia OXXO" value={client.depositAccount.accountNumber} />
+            ) : client.depositAccount.depositMethod === 'TARJETA' ? (
+              client.depositAccount.accountNumber ? (
+                <Row label="Enlace de pago" value={client.depositAccount.accountNumber} />
+              ) : null
             ) : (
               <>
                 <Row label="CLABE interbancaria" value={client.depositAccount.clabe} />

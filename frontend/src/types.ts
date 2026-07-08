@@ -120,7 +120,7 @@ export interface AuthResult {
   redirectTo: string;
 }
 
-export type DepositMethod = 'TRANSFERENCIA' | 'VENTANILLA';
+export type DepositMethod = 'TRANSFERENCIA' | 'TARJETA' | 'VENTANILLA' | 'OXXO';
 
 export interface DepositAccount {
   depositMethod: DepositMethod;

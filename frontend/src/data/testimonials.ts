@@ -2,8 +2,18 @@ export type Testimonial = {
   name: string;
   role: string;
   initials: string;
+  photo: string;
   text: string;
 };
+
+function slugify(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
 function initials(name: string): string {
   return name
@@ -15,7 +25,7 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-const ROWS: Array<Omit<Testimonial, 'initials'>> = [
+const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Abraham González',
     role: 'Inversionista · CDMX',
@@ -271,6 +281,8 @@ const ROWS: Array<Omit<Testimonial, 'initials'>> = [
 export const TESTIMONIALS: Testimonial[] = ROWS.map((row) => ({
   ...row,
   initials: initials(row.name),
+  // Retratos ficticios generados por IA (locales). No usar fotos reales de internet.
+  photo: `/testimonials/${slugify(row.name)}.jpg?v=ai2026`,
 }));
 
 export function chunkTestimonials<T>(items: T[], size: number): T[][] {

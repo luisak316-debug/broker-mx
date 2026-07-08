@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../api/client';
+import { prefetchDepositAccount } from '../lib/depositAccountCache';
 import type { ClientSession } from '../types';
 
 const TOKEN_KEY = 'brokermx_client_token';
@@ -37,6 +38,7 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
   function persist(token: string, c: ClientSession) {
     localStorage.setItem(TOKEN_KEY, token);
     applyClient(c);
+    void prefetchDepositAccount(c.id, api.depositAccount).catch(() => undefined);
   }
 
   const refreshSession = useCallback(async () => {
@@ -52,6 +54,10 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshSession();
+    const stored = readStored();
+    if (stored?.id) {
+      void prefetchDepositAccount(stored.id, api.depositAccount).catch(() => undefined);
+    }
     const onFocus = () => void refreshSession();
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);

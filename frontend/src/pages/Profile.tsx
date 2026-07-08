@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
 import { Card } from '../components/common/Card';
@@ -104,7 +104,16 @@ export function Profile() {
       .finally(() => setLoading(false));
   }
 
+  const navigate = useNavigate();
+
   useEffect(load, [client?.id]);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#fondear' || hash === '#mi-inversion') {
+      navigate(`/app/fondear${hash}`, { replace: true });
+    }
+  }, [navigate]);
 
   async function uploadCapturedDocument(
     type: 'INE' | 'PASAPORTE',
@@ -193,14 +202,14 @@ export function Profile() {
   const hasPassport = Boolean(passport);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <header>
         <Link to="/app" className="text-sm text-brand-400 hover:underline">
           ← Volver al inicio
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-white">Mi perfil</h1>
         <p className="text-sm text-slate-400">
-          Consulta tu información y sube tus documentos de identidad.
+          Consulta tu información personal y sube tus documentos de identidad.
         </p>
       </header>
 

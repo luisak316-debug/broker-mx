@@ -4,13 +4,39 @@ import { TESTIMONIALS, chunkTestimonials, type Testimonial } from '../../data/te
 const SLIDE_MS = 10_000;
 const PER_SLIDE = 3;
 
+function TestimonialAvatar({ t }: { t: Testimonial }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <span
+        className="testimonial-avatar testimonial-avatar--fallback"
+        aria-hidden
+      >
+        {t.initials}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={t.photo}
+      alt={`Perfil de ${t.name}`}
+      className="testimonial-avatar"
+      width={64}
+      height={64}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function TestimonialCard({ t }: { t: Testimonial }) {
   return (
     <figure className="testimonial-card flex h-full flex-col">
       <div className="mb-3 flex items-center gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-400/90 to-brand-600 font-semibold text-white shadow-md">
-          {t.initials}
-        </span>
+        <TestimonialAvatar t={t} />
         <figcaption className="min-w-0 text-left">
           <p className="truncate font-semibold text-white">{t.name}</p>
           <p className="truncate text-xs text-slate-400">{t.role}</p>
@@ -45,7 +71,7 @@ export function TestimonialsCarousel() {
   const current = slides[index] ?? [];
 
   return (
-    <div className="mt-10">
+    <div>
       <div
         className={`grid grid-cols-1 gap-5 transition-opacity duration-300 md:grid-cols-3 ${
           fade ? 'opacity-100' : 'opacity-0'

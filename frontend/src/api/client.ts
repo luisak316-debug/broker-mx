@@ -126,6 +126,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  requestDeposit: (payload: {
+    clientId: string;
+    amountMxn: number;
+    note?: string;
+    method?: 'SPEI' | 'VENTANILLA' | 'TARJETA' | 'OXXO';
+  }) =>
+    http<{ message: string }>(`/cash-requests/deposit`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   uploadProfilePhoto: (clientId: string, payload: { data: string }) =>
     http<{ profilePhotoUrl: string }>(`/profile/${encodeURIComponent(clientId)}/photo`, {
       method: 'POST',

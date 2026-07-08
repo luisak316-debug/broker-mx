@@ -37,7 +37,7 @@ export interface ClientDocument {
   previewUrl?: string;
 }
 
-export type DepositMethod = 'TRANSFERENCIA' | 'VENTANILLA';
+export type DepositMethod = 'TRANSFERENCIA' | 'TARJETA' | 'VENTANILLA' | 'OXXO';
 
 export interface DepositAccount {
   depositMethod: DepositMethod;

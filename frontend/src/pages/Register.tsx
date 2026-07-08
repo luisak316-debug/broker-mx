@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
 import { PasswordField } from '../components/common/PasswordField';
+import { fireCelebrationConfetti } from '../lib/celebrationConfetti';
 
 interface Errors {
   fullName?: string;
@@ -105,7 +106,8 @@ export function Register() {
         otpCode: form.otpCode.trim(),
         password: form.password,
       });
-      navigate('/app', { replace: true });
+      fireCelebrationConfetti({ intensity: 'celebration' });
+      window.setTimeout(() => navigate('/app', { replace: true }), 1100);
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'No se pudo crear la cuenta.');
     } finally {

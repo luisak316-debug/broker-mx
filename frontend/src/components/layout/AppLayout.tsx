@@ -1,4 +1,8 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { api } from '../../api/client';
+import { useClientAuth } from '../../auth/ClientAuthContext';
+import { prefetchDepositAccount } from '../../lib/depositAccountCache';
 import { MobileClientNav, Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { Footer } from './Footer';
@@ -6,6 +10,13 @@ import { useLivePrices } from '../../hooks/useLivePrices';
 
 export function AppLayout() {
   const { connected } = useLivePrices();
+  const { client } = useClientAuth();
+
+  useEffect(() => {
+    if (!client?.id) return;
+    void prefetchDepositAccount(client.id, api.depositAccount).catch(() => undefined);
+  }, [client?.id]);
+
   return (
     <div className="flex min-h-[100dvh] w-full max-w-[100dvw] overflow-x-hidden">
       <Sidebar />
