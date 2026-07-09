@@ -55,5 +55,5 @@ git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
 # o: backups\landing-FECHA\RESTORE.ps1
 ```
 
-Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-leyenda-reveal` (leyenda reveal detrás tarjeta vidrio + scroll).
-Respaldo anterior: `backup/landing-ok-2026-07-08-video-esfera-scroll-lower`, commit `ad244ec`.
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-leyenda-solid` (leyenda blanco sólido, scroll suave sin parpadeo).
+Respaldo anterior: `backup/landing-ok-2026-07-08-leyenda-reveal`, commit `65c756f`.
