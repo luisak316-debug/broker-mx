@@ -55,5 +55,5 @@ git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
 # o: backups\landing-FECHA\RESTORE.ps1
 ```
 
-Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-video-esfera` (vídeo local VIDEO ESFERA + hero vidrio).
-Respaldo anterior: `backup/landing-ok-2026-07-08-video`, commit `49e2dff`.
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-video-esfera-overlay` (esfera detrás del vidrio, grid overlay).
+Respaldo anterior: `backup/landing-ok-2026-07-08-video-esfera`, commit `328dd68`.
