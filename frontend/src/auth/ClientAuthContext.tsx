@@ -9,8 +9,14 @@ const CLIENT_KEY = 'brokermx_client';
 interface ClientAuthState {
   client: ClientSession | null;
   isAuthenticated: boolean;
-  register: (p: { fullName: string; phone: string; otpCode: string; password: string }) => Promise<void>;
-  login: (p: { phone: string; password: string }) => Promise<void>;
+  register: (p: {
+    fullName: string;
+    countryCode: string;
+    phone: string;
+    otpCode: string;
+    password: string;
+  }) => Promise<void>;
+  login: (p: { countryCode: string; phone: string; password: string }) => Promise<void>;
   logout: () => void;
   updateProfilePhoto: (url: string) => void;
   refreshSession: () => Promise<void>;
@@ -21,7 +27,13 @@ const Ctx = createContext<ClientAuthState | null>(null);
 function readStored(): ClientSession | null {
   try {
     const raw = localStorage.getItem(CLIENT_KEY);
-    return raw ? (JSON.parse(raw) as ClientSession) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ClientSession;
+    return {
+      ...parsed,
+      countryCode: parsed.countryCode ?? 'MX',
+      currency: parsed.currency ?? 'MXN',
+    };
   } catch {
     return null;
   }

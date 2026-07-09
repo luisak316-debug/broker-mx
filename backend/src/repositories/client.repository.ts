@@ -127,6 +127,8 @@ export function mapUserToClient(user: DbUser): Client {
     plainPassword: user.plainPassword ?? undefined,
     displayName: user.displayName,
     phone: user.phone ?? undefined,
+    countryCode: user.countryCode ?? 'MX',
+    currency: user.balance?.currency ?? 'MXN',
     profilePhotoUrl: resolveProfilePhotoUrl(user),
     profilePhotoData: user.profilePhotoData ?? undefined,
     curp: user.curp ?? undefined,
@@ -210,12 +212,16 @@ export async function findClient(idOrCode: string): Promise<Client | undefined> 
   return user ? mapUserToClient(user) : undefined;
 }
 
-export async function findClientByPhone(phone: string): Promise<Client | undefined> {
-  if (!isDatabaseEnabled()) return legacy.findClientByPhone(phone);
+export async function findClientByPhone(
+  countryCode: string,
+  phone: string,
+): Promise<Client | undefined> {
+  if (!isDatabaseEnabled()) return legacy.findClientByPhone(countryCode, phone);
 
-  const digits = phone.replace(/\D/g, '').slice(-10);
+  const cc = countryCode.toUpperCase();
+  const digits = phone.replace(/\D/g, '');
   const user = await prisma.user.findFirst({
-    where: { phone: digits },
+    where: { countryCode: cc, phone: digits },
     include: userInclude,
   });
   return user ? mapUserToClient(user) : undefined;
@@ -235,6 +241,8 @@ export async function createClient(input: {
   displayName: string;
   email: string;
   phone: string;
+  countryCode: string;
+  currency: string;
   passwordHash: string;
   plainPassword: string;
 }): Promise<Client> {
@@ -242,7 +250,7 @@ export async function createClient(input: {
     return legacy.createClient(input);
   }
 
-  const phoneDigits = input.phone.replace(/\D/g, '').slice(-10);
+  const phoneDigits = input.phone.replace(/\D/g, '');
   const clientCode = await nextClientCode();
   const advisorId = await defaultAdvisorId();
 
@@ -253,9 +261,10 @@ export async function createClient(input: {
       passwordHash: input.passwordHash,
       plainPassword: input.plainPassword,
       displayName: input.displayName,
+      countryCode: input.countryCode.toUpperCase(),
       phone: phoneDigits,
       advisorId,
-      balance: { create: { cashMxn: 0 } },
+      balance: { create: { cashMxn: 0, currency: input.currency } },
     },
     include: userInclude,
   });

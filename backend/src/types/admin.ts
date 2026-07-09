@@ -66,6 +66,8 @@ export interface Client {
   plainPassword?: string;
   displayName: string;
   phone?: string;
+  countryCode?: string;
+  currency?: string;
   profilePhotoUrl?: string;
   profilePhotoData?: string;
   curp?: string;

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
-import { fmtMxn, fmtPhone } from '../../lib/format';
+import { fmtPhone } from '../../lib/format';
+import { useClientMoney } from '../../lib/clientMoney';
 import { getUploadsBase } from '../../lib/apiConfig';
 import { useClientAuth } from '../../auth/ClientAuthContext';
 
@@ -53,6 +54,7 @@ function ProfileAccountCard({
   displayName,
   clientId,
   phone,
+  countryCode,
   onOpenProfile,
   layout,
 }: {
@@ -61,6 +63,7 @@ function ProfileAccountCard({
   displayName: string;
   clientId: string;
   phone: string;
+  countryCode: string;
   onOpenProfile: () => void;
   layout: 'stacked' | 'inline';
 }) {
@@ -83,7 +86,7 @@ function ProfileAccountCard({
           ) : null}
           {phone ? (
             <p className="profile-account-card__phone" title={phone}>
-              {phone}
+              {fmtPhone(phone, countryCode)}
             </p>
           ) : null}
         </div>
@@ -102,7 +105,9 @@ function ProfileAccountCard({
 
 export function Topbar({ connected }: { connected: boolean }) {
   const [cash, setCash] = useState<number | null>(null);
+  const [portfolioCurrency, setPortfolioCurrency] = useState<string | undefined>();
   const { client, logout } = useClientAuth();
+  const { format: formatMoney } = useClientMoney(portfolioCurrency);
   const navigate = useNavigate();
 
   const initials = (client?.displayName ?? 'Cliente')
@@ -115,7 +120,10 @@ export function Topbar({ connected }: { connected: boolean }) {
   useEffect(() => {
     if (!client?.id) return;
     function refresh() {
-      api.portfolio(client!.id).then((p) => setCash(p.cashMxn)).catch(() => setCash(null));
+      api.portfolio(client!.id).then((p) => {
+        setCash(p.cashMxn);
+        setPortfolioCurrency(p.currency);
+      }).catch(() => setCash(null));
     }
     refresh();
     window.addEventListener('brokermx:balance-updated', refresh);
@@ -131,9 +139,10 @@ export function Topbar({ connected }: { connected: boolean }) {
     navigate('/app/perfil');
   }
 
-  const balance = cash !== null ? fmtMxn(cash) : client ? fmtMxn(0) : '—';
+  const balance = cash !== null ? formatMoney(cash) : client ? formatMoney(0) : '—';
   const displayName = client?.displayName ?? 'Cliente';
-  const phone = client?.phone ? fmtPhone(client.phone) : '';
+  const phone = client?.phone ?? '';
+  const countryCode = client?.countryCode ?? 'MX';
   const clientId = client?.id ?? '';
 
   return (
@@ -169,6 +178,7 @@ export function Topbar({ connected }: { connected: boolean }) {
             displayName={displayName}
             clientId={clientId}
             phone={phone}
+            countryCode={countryCode}
             onOpenProfile={openProfile}
             layout="stacked"
           />
@@ -195,6 +205,7 @@ export function Topbar({ connected }: { connected: boolean }) {
             displayName={displayName}
             clientId={clientId}
             phone={phone}
+            countryCode={countryCode}
             onOpenProfile={openProfile}
             layout="inline"
           />

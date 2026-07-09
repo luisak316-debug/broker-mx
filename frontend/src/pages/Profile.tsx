@@ -18,6 +18,7 @@ import {
   fmtPhone,
   IDENTITY_DOCUMENT_TYPES,
 } from '../lib/format';
+import { getLatamCountry } from '../data/latamCountries';
 import type { ClientDocument, ClientProfileData } from '../types';
 
 function mergeUploadedDocument(
@@ -57,9 +58,11 @@ function pickIdentityDocs(documents: ClientDocument[]) {
   return { passport, ineAnverso, ineReverso };
 }
 
-function formatAccountEmail(email: string, phone: string): string {
+function formatAccountEmail(email: string, phone: string, countryCode: string): string {
   if (email.includes('@celular.brokermx')) {
-    return phone ? `Cuenta vinculada al celular ${fmtPhone(phone)}` : 'Cuenta vinculada a tu celular';
+    return phone
+      ? `Cuenta vinculada al celular ${fmtPhone(phone, countryCode)}`
+      : 'Cuenta vinculada a tu celular';
   }
   return email;
 }
@@ -197,6 +200,8 @@ export function Profile() {
 
   if (!client) return null;
 
+  const countryCode = client.countryCode ?? 'MX';
+  const country = getLatamCountry(countryCode);
   const { passport, ineAnverso, ineReverso } = pickIdentityDocs(profile?.documents ?? []);
   const hasIne = Boolean(ineAnverso && ineReverso);
   const hasPassport = Boolean(passport);
@@ -242,9 +247,14 @@ export function Profile() {
 
           <Card title="Datos personales">
             <dl className="space-y-3 text-sm">
-              <Row label="Teléfono" value={fmtPhone(profile.phone)} />
-              <Row label="Correo" value={formatAccountEmail(profile.email, profile.phone)} />
-              <Row label="Cliente desde" value={fmtDate(profile.createdAt)} />
+              <Row label="País" value={country.name} />
+              <Row label="Moneda de cuenta" value={client.currency ?? country.currency} />
+              <Row label="Teléfono" value={fmtPhone(profile?.phone ?? client.phone, countryCode)} />
+              <Row
+                label="Correo"
+                value={formatAccountEmail(profile?.email ?? client.email, profile?.phone ?? client.phone, countryCode)}
+              />
+              <Row label="Cliente desde" value={fmtDate(profile?.createdAt ?? '')} />
             </dl>
           </Card>
 

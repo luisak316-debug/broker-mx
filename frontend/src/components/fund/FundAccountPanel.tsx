@@ -6,7 +6,7 @@ import { DepositMethodIcon } from './DepositMethodIcon';
 import { FundPanelDepositSkeleton } from './FundPanelDepositSkeleton';
 import { CopyButton } from '../common/CopyButton';
 import { useClientAuth } from '../../auth/ClientAuthContext';
-import { fmtMxn } from '../../lib/format';
+import { useClientMoney } from '../../lib/clientMoney';
 import {
   readDepositAccountCache,
   writeDepositAccountCache,
@@ -37,6 +37,7 @@ function parseAmount(raw: string): number | null {
 function buildCopyAllText(
   info: DepositAccountInfo,
   method: DepositMethod,
+  formatMoney: (amount: number) => string,
   amountMxn?: number,
 ): string {
   const acc = info.account;
@@ -56,7 +57,7 @@ function buildCopyAllText(
   }
 
   lines.push(`Referencia: ${acc.reference}`);
-  if (amountMxn) lines.push(`Monto: ${fmtMxn(amountMxn)}`);
+  if (amountMxn) lines.push(`Monto: ${formatMoney(amountMxn)}`);
   return lines.join('\n');
 }
 
@@ -67,6 +68,7 @@ type Props = {
 
 export function FundAccountPanel({ showWithdraw = true, embedded = false }: Props) {
   const { client } = useClientAuth();
+  const { format: formatMoney, currency } = useClientMoney();
   const clientId = client?.id;
 
   const cachedInfo = clientId ? readDepositAccountCache(clientId) : null;
@@ -135,7 +137,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
 
   const copyAllValue =
     info && assignedMethod
-      ? buildCopyAllText(info, assignedMethod, parsedAmount ?? undefined)
+      ? buildCopyAllText(info, assignedMethod, formatMoney, parsedAmount ?? undefined)
       : '';
 
   function showToast() {
@@ -273,7 +275,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
     return (
       <div className="fund-panel__step-content">
         <label className="block">
-          <span className="label">¿Cuánto deseas invertir? (MXN)</span>
+          <span className="label">¿Cuánto deseas invertir? ({currency})</span>
           <input
             className="input fund-panel__amount-input"
             inputMode="decimal"
@@ -290,7 +292,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
               className={`fund-panel__chip ${parsedAmount === q ? 'fund-panel__chip--active' : ''}`}
               onClick={() => setAmount(String(q))}
             >
-              {fmtMxn(q)}
+              {formatMoney(q)}
             </button>
           ))}
           {suggestedAmount ? (
@@ -299,7 +301,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
               className="fund-panel__chip fund-panel__chip--suggested"
               onClick={applySuggestedAmount}
             >
-              Sugerido {fmtMxn(suggestedAmount)}
+              Sugerido {formatMoney(suggestedAmount)}
             </button>
           ) : null}
         </div>
@@ -414,7 +416,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
             {parsedAmount != null && (
               <div className="fund-panel__amount-summary">
                 <p>Monto a depositar</p>
-                <strong>{fmtMxn(parsedAmount)}</strong>
+                <strong>{formatMoney(parsedAmount)}</strong>
                 <button type="button" className="text-sm text-brand-300 hover:underline" onClick={() => setStep(1)}>
                   Cambiar
                 </button>
@@ -517,7 +519,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
         </p>
 
         <label className="mt-4 block">
-          <span className="label">Monto a pagar con tarjeta (MXN)</span>
+          <span className="label">Monto a pagar con tarjeta ({currency})</span>
           <input
             className="input fund-panel__amount-input"
             inputMode="decimal"
@@ -535,7 +537,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
               className={`fund-panel__chip ${parsedAmount === q ? 'fund-panel__chip--active' : ''}`}
               onClick={() => setAmount(String(q))}
             >
-              {fmtMxn(q)}
+              {formatMoney(q)}
             </button>
           ))}
         </div>
@@ -570,9 +572,9 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
       <div className="fund-panel__balance">
         <div>
           <p className="fund-panel__balance-label">Saldo disponible</p>
-          <p className="fund-panel__balance-value">{cashMxn != null ? fmtMxn(cashMxn) : '—'}</p>
+          <p className="fund-panel__balance-value">{cashMxn != null ? formatMoney(cashMxn) : '—'}</p>
         </div>
-        <span className="fund-panel__balance-badge">MXN</span>
+        <span className="fund-panel__balance-badge">{currency}</span>
       </div>
 
       {hasAssignment ? (
@@ -643,7 +645,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
               Retira de tu saldo disponible indicando la cuenta bancaria destino.
             </p>
             <label className="block">
-              <span className="label">Monto a retirar (MXN)</span>
+              <span className="label">Monto a retirar ({currency})</span>
               <input
                 className="input"
                 inputMode="decimal"

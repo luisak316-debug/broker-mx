@@ -2,7 +2,13 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
+import { CountryPhoneFields } from '../components/auth/CountryPhoneFields';
 import { PasswordField } from '../components/common/PasswordField';
+import {
+  formatNationalPhone,
+  getLatamCountry,
+  isValidNationalPhone,
+} from '../data/latamCountries';
 import { fireCelebrationConfetti } from '../lib/celebrationConfetti';
 
 interface Errors {
@@ -17,6 +23,7 @@ export function Register() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<'phone' | 'verify'>('phone');
+  const [countryCode, setCountryCode] = useState('MX');
   const [form, setForm] = useState({ fullName: '', phone: '', otpCode: '', password: '' });
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState<string | null>(null);
@@ -32,21 +39,23 @@ export function Register() {
   }, [resendIn]);
 
   function validatePhone(): boolean {
+    const country = getLatamCountry(countryCode);
     const e: Errors = {};
-    if (!/^\d{10}$/.test(form.phone.trim())) {
-      e.phone = 'El teléfono celular debe tener exactamente 10 dígitos.';
+    if (!isValidNationalPhone(country, form.phone.trim())) {
+      e.phone = `Ingresa un celular válido para ${country.name}.`;
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function validateRegister(): boolean {
+    const country = getLatamCountry(countryCode);
     const e: Errors = {};
     if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ' .]{3,}$/.test(form.fullName.trim())) {
       e.fullName = 'Ingresa tu nombre completo (solo letras).';
     }
-    if (!/^\d{10}$/.test(form.phone.trim())) {
-      e.phone = 'El teléfono celular debe tener exactamente 10 dígitos.';
+    if (!isValidNationalPhone(country, form.phone.trim())) {
+      e.phone = `Ingresa un celular válido para ${country.name}.`;
     }
     if (!/^\d{6}$/.test(form.otpCode.trim())) {
       e.otpCode = 'Ingresa el código de 6 dígitos que recibiste por SMS.';
@@ -66,7 +75,7 @@ export function Register() {
     if (!validatePhone()) return;
     setBusy(true);
     try {
-      const res = await api.sendOtp({ phone: form.phone.trim() });
+      const res = await api.sendOtp({ countryCode, phone: form.phone.trim() });
       setStep('verify');
       setResendIn(60);
       setInfo(`Enviamos un código al celular terminado en ${res.maskedPhone}.`);
@@ -83,7 +92,7 @@ export function Register() {
     setServerError(null);
     setBusy(true);
     try {
-      const res = await api.sendOtp({ phone: form.phone.trim() });
+      const res = await api.sendOtp({ countryCode, phone: form.phone.trim() });
       setResendIn(60);
       setInfo(`Nuevo código enviado al celular terminado en ${res.maskedPhone}.`);
       if (res.debugCode) setDebugCode(res.debugCode);
@@ -102,6 +111,7 @@ export function Register() {
     try {
       await register({
         fullName: form.fullName.trim(),
+        countryCode,
         phone: form.phone.trim(),
         otpCode: form.otpCode.trim(),
         password: form.password,
@@ -115,12 +125,14 @@ export function Register() {
     }
   }
 
+  const country = getLatamCountry(countryCode);
+
   return (
     <AuthShell
       title="Crea tu cuenta"
       subtitle={
         step === 'phone'
-          ? 'Regístrate con tu número de celular mexicano (10 dígitos).'
+          ? 'Regístrate con tu celular. Disponible en toda Latinoamérica.'
           : 'Ingresa el código SMS y completa tus datos.'
       }
       footer={
@@ -134,15 +146,13 @@ export function Register() {
     >
       {step === 'phone' ? (
         <form onSubmit={onSendCode} className="space-y-4" noValidate>
-          <Field
-            label="Teléfono celular (10 dígitos)"
-            type="tel"
-            value={form.phone}
-            onChange={(v) => setForm({ ...form, phone: v.replace(/\D/g, '').slice(0, 10) })}
-            error={errors.phone}
-            placeholder="5512345678"
-            autoComplete="tel"
-            hint="Te enviaremos un código de verificación por SMS."
+          <CountryPhoneFields
+            countryCode={countryCode}
+            phone={form.phone}
+            onCountryChange={setCountryCode}
+            onPhoneChange={(v) => setForm({ ...form, phone: v })}
+            phoneError={errors.phone}
+            disabled={busy}
           />
 
           {serverError && (
@@ -156,7 +166,9 @@ export function Register() {
       ) : (
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div className="rounded-lg border border-ink-600 bg-ink-900/60 px-3 py-2 text-sm text-slate-300">
-            Celular: <span className="font-medium text-white">{form.phone}</span>
+            {country.flag} {formatNationalPhone(countryCode, form.phone)}
+            <span className="mx-2 text-slate-600">·</span>
+            <span className="text-slate-400">{country.currency}</span>
             <button
               type="button"
               className="ml-2 text-brand-400 hover:underline"
@@ -256,11 +268,11 @@ export function AuthShell({
             Construye la libertad financiera que tu familia merece.
           </h2>
           <p className="mt-4 max-w-md text-white/80">
-            Acceso a Bolsa, Materias Primas, Forex y Cripto, con asesoría profesional y respaldo legal
-            en México.
+            Acceso a Bolsa, Materias Primas, Forex y Cripto, con asesoría profesional en toda
+            Latinoamérica.
           </p>
         </div>
-        <p className="text-xs text-white/60">Intermediación financiera profesional en México.</p>
+        <p className="text-xs text-white/60">Intermediación financiera profesional.</p>
       </div>
 
       <div className="flex items-center justify-center px-4 py-10">

@@ -2,40 +2,39 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { wakeApi } from '../api/client';
 import { useClientAuth } from '../auth/ClientAuthContext';
+import { CountryPhoneFields } from '../components/auth/CountryPhoneFields';
 import { PasswordField } from '../components/common/PasswordField';
+import { getLatamCountry, isValidNationalPhone } from '../data/latamCountries';
 import { AuthShell } from './Register';
 
 export function LoginClient() {
   const { login } = useClientAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [countryCode, setCountryCode] = useState('MX');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const recoveryPhoneApplied = useRef(false);
+  const recoveryApplied = useRef(false);
 
   useEffect(() => {
     wakeApi();
   }, []);
 
   useEffect(() => {
-    if (recoveryPhoneApplied.current) return;
-    const fromRecovery = (location.state as { phone?: string } | null)?.phone?.trim();
-    if (!fromRecovery || !/^\d{10}$/.test(fromRecovery)) return;
-    recoveryPhoneApplied.current = true;
-    setPhone(fromRecovery);
+    if (recoveryApplied.current) return;
+    const state = location.state as { phone?: string; countryCode?: string } | null;
+    const fromRecovery = state?.phone?.trim();
+    if (!fromRecovery) return;
+    recoveryApplied.current = true;
+    setCountryCode(state?.countryCode?.toUpperCase() ?? 'MX');
+    setPhone(fromRecovery.replace(/\D/g, ''));
     navigate(location.pathname, { replace: true, state: null });
   }, [location.pathname, location.state, navigate]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setPhone((current) => (/^\d{6}$/.test(current) ? '' : current));
-    }, 150);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -46,9 +45,11 @@ export function LoginClient() {
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
     setError(null);
+    setPhoneError(null);
     setStatus(null);
-    if (!/^\d{10}$/.test(phone.trim())) {
-      setError('Ingresa tu celular de 10 dígitos.');
+    const country = getLatamCountry(countryCode);
+    if (!isValidNationalPhone(country, phone.trim())) {
+      setPhoneError(`Ingresa un celular válido para ${country.name}.`);
       return;
     }
     setBusy(true);
@@ -61,7 +62,7 @@ export function LoginClient() {
     }, 12_000);
 
     try {
-      await login({ phone: phone.trim(), password });
+      await login({ countryCode, phone: phone.trim(), password });
       navigate('/app', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.');
@@ -76,31 +77,25 @@ export function LoginClient() {
   return (
     <AuthShell
       title="Inicia sesión"
-      subtitle="Accede con tu número de celular y contraseña."
+      subtitle="Accede con tu país, número de celular y contraseña."
       footer={
         <>
-          ¿Aún no tienes cuenta?{' '}
+          ¿No tienes cuenta?{' '}
           <Link to="/registro" className="text-brand-400 hover:underline">
-            Crear cuenta
+            Regístrate
           </Link>
         </>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-4" noValidate autoComplete="off">
-        <label className="block">
-          <span className="mb-1 block text-sm text-slate-300">Teléfono celular (10 dígitos)</span>
-          <input
-            type="tel"
-            name="brokermx-login-phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="5512345678"
-            autoComplete="username"
-            inputMode="numeric"
-            className="w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-white outline-none focus:border-brand-500"
-            required
-          />
-        </label>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+        <CountryPhoneFields
+          countryCode={countryCode}
+          phone={phone}
+          onCountryChange={setCountryCode}
+          onPhoneChange={setPhone}
+          phoneError={phoneError ?? undefined}
+          disabled={busy}
+        />
         <PasswordField
           label="Contraseña"
           value={password}
@@ -108,20 +103,15 @@ export function LoginClient() {
           placeholder="Tu contraseña"
           autoComplete="current-password"
         />
-
-        <p className="text-right text-sm">
-          <Link to="/recuperar" className="text-brand-400 hover:underline">
+        <div className="text-right">
+          <Link to="/recuperar" className="text-sm text-brand-400 hover:underline">
             ¿Olvidaste tu contraseña?
           </Link>
-        </p>
-
-        {status && (
-          <p className="rounded-lg bg-brand-600/15 px-3 py-2 text-sm text-brand-100">{status}</p>
-        )}
+        </div>
+        {status && <p className="text-sm text-slate-400">{status}</p>}
         {error && <p className="rounded-lg bg-bear/15 px-3 py-2 text-sm text-bear">{error}</p>}
-
         <button type="submit" className="btn-primary w-full py-3" disabled={busy}>
-          {busy ? 'Conectando…' : 'Iniciar sesión'}
+          {busy ? 'Entrando…' : 'Iniciar sesión'}
         </button>
       </form>
     </AuthShell>

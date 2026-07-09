@@ -14,7 +14,7 @@ import type { NameType, ValueType } from 'recharts/types/component/DefaultToolti
 import { api } from '../../api/client';
 import { useClientAuth } from '../../auth/ClientAuthContext';
 import { Card } from '../common/Card';
-import { fmtMxn } from '../../lib/format';
+import { useClientMoney } from '../../lib/clientMoney';
 import { INVESTMENT_READY_EVENT } from '../../lib/investmentScroll';
 import type { AssetClass, PortfolioSummary, Position } from '../../types';
 
@@ -42,12 +42,13 @@ function PremiumChartTooltip({
   payload,
   label,
 }: TooltipProps<ValueType, NameType>) {
+  const { format: formatMoney } = useClientMoney();
   if (!active || !payload?.length) return null;
   const value = Number(payload[0]?.value ?? 0);
   return (
     <div className="investment-panel__tooltip">
       <p className="investment-panel__tooltip-label">{label}</p>
-      <p className="investment-panel__tooltip-value">{fmtMxn(value)}</p>
+      <p className="investment-panel__tooltip-value">{formatMoney(value)}</p>
     </div>
   );
 }
@@ -125,6 +126,7 @@ export function InvestmentGrowthPanel() {
   const areaGradientId = useId().replace(/:/g, '');
 
   const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
+  const { format: formatMoney } = useClientMoney(portfolio?.currency);
   const [history, setHistory] = useState<ChartPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -214,7 +216,7 @@ export function InvestmentGrowthPanel() {
         <div className="investment-panel__stats">
             <div className="investment-panel__stat investment-panel__stat--primary">
               <p className="investment-panel__stat-label">Patrimonio total</p>
-              <p className="investment-panel__stat-value">{loading && !portfolio ? '—' : fmtMxn(total)}</p>
+              <p className="investment-panel__stat-value">{loading && !portfolio ? '—' : formatMoney(total)}</p>
               <p
                 className={`investment-panel__stat-change ${
                   changePct >= 0 ? 'investment-panel__trend--up' : 'investment-panel__trend--down'
@@ -226,13 +228,13 @@ export function InvestmentGrowthPanel() {
             <div className="investment-panel__stat">
               <p className="investment-panel__stat-label">Invertido en mercado</p>
               <p className="investment-panel__stat-value investment-panel__stat-value--sm">
-                {loading && !portfolio ? '—' : fmtMxn(invested)}
+                {loading && !portfolio ? '—' : formatMoney(invested)}
               </p>
             </div>
             <div className="investment-panel__stat">
               <p className="investment-panel__stat-label">Saldo disponible</p>
               <p className="investment-panel__stat-value investment-panel__stat-value--sm">
-                {loading && !portfolio ? '—' : fmtMxn(cash)}
+                {loading && !portfolio ? '—' : formatMoney(cash)}
               </p>
             </div>
             <div className="investment-panel__stat">
@@ -242,7 +244,7 @@ export function InvestmentGrowthPanel() {
                   pnl >= 0 ? 'investment-panel__trend--up' : 'investment-panel__trend--down'
                 }`}
               >
-                {loading && !portfolio ? '—' : `${pnl >= 0 ? '+' : ''}${fmtMxn(pnl)}`}
+                {loading && !portfolio ? '—' : `${pnl >= 0 ? '+' : ''}${formatMoney(pnl)}`}
               </p>
             </div>
           </div>
@@ -362,7 +364,7 @@ export function InvestmentGrowthPanel() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-white">{fmtMxn(seg.exposure)}</p>
+                          <p className="text-sm font-semibold text-white">{formatMoney(seg.exposure)}</p>
                           <p
                             className={`text-xs ${
                               seg.pnl >= 0
@@ -371,7 +373,7 @@ export function InvestmentGrowthPanel() {
                             }`}
                           >
                             {seg.pnl >= 0 ? '+' : ''}
-                            {fmtMxn(seg.pnl)} no realizado
+                            {formatMoney(seg.pnl)} no realizado
                           </p>
                         </div>
                       </div>

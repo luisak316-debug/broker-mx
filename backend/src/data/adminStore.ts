@@ -69,9 +69,12 @@ export function findClient(id: string): Client | undefined {
 export function findClientByEmail(email: string): Client | undefined {
   return clients.find((c) => c.email.toLowerCase() === email.toLowerCase());
 }
-export function findClientByPhone(phone: string): Client | undefined {
-  const digits = phone.replace(/\D/g, '').slice(-10);
-  return clients.find((c) => (c.phone ?? '').replace(/\D/g, '').slice(-10) === digits);
+export function findClientByPhone(countryCode: string, phone: string): Client | undefined {
+  const cc = countryCode.toUpperCase();
+  const digits = phone.replace(/\D/g, '');
+  return clients.find(
+    (c) => (c.countryCode ?? 'MX').toUpperCase() === cc && (c.phone ?? '').replace(/\D/g, '') === digits,
+  );
 }
 
 let nextClientSeq = 1001 + clients.length;
@@ -281,10 +284,12 @@ export function createClient(input: {
   displayName: string;
   email: string;
   phone: string;
+  countryCode: string;
+  currency: string;
   passwordHash: string;
   plainPassword?: string;
 }): Client {
-  const phoneDigits = input.phone.replace(/\D/g, '').slice(-10);
+  const phoneDigits = input.phone.replace(/\D/g, '');
   const id = `CLI-${nextClientSeq++}`;
   const client: Client = {
     id,
@@ -294,6 +299,8 @@ export function createClient(input: {
     plainPassword: input.plainPassword,
     displayName: input.displayName,
     phone: phoneDigits,
+    countryCode: input.countryCode.toUpperCase(),
+    currency: input.currency,
     kycStatus: 'PENDING',
     accountStatus: 'ACTIVA',
     riskProfile: 'MODERADO',

@@ -20,7 +20,10 @@ model User {
   /// Visible solo en panel admin interno (soporte al cliente).
   plainPassword String?
   displayName   String
-  phone         String?  @unique
+  /// ISO 3166-1 alpha-2 (MX, CL, CO…)
+  countryCode   String   @default("MX")
+  phone         String?
+  @@unique([countryCode, phone])
   // Estado de cumplimiento (KYC) requerido por normativa mexicana.
   kycStatus     KycStatus @default(PENDING)
   riskProfile   RiskProfile @default(MODERADO)

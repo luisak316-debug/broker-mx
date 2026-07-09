@@ -44,10 +44,12 @@ export async function getPortfolio(req: Request, res: Response): Promise<void> {
   });
 
   const equityExposureMxn = positions.reduce((acc, p) => acc + p.notionalMxn, 0);
+  const currency = client?.currency ?? 'MXN';
   res.json({
     data: {
       userId,
       cashMxn: portfolio.cashMxn,
+      currency,
       equityExposureMxn: Number(equityExposureMxn.toFixed(2)),
       positions,
       orders: portfolio.orders.slice(0, 50),

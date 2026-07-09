@@ -1,16 +1,20 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { CountryPhoneFields } from '../components/auth/CountryPhoneFields';
 import { PasswordField } from '../components/common/PasswordField';
+import { getLatamCountry, isValidNationalPhone } from '../data/latamCountries';
 import { AuthShell } from './Register';
 
 export function ForgotPassword() {
   const navigate = useNavigate();
   const [step, setStep] = useState<'phone' | 'reset' | 'success'>('phone');
+  const [countryCode, setCountryCode] = useState('MX');
   const [phone, setPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [debugCode, setDebugCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,13 +37,15 @@ export function ForgotPassword() {
     setError(null);
     setInfo(null);
     setDebugCode(null);
-    if (!/^\d{10}$/.test(phone.trim())) {
-      setError('Ingresa tu celular de 10 dígitos.');
+    setPhoneError(null);
+    const country = getLatamCountry(countryCode);
+    if (!isValidNationalPhone(country, phone.trim())) {
+      setPhoneError(`Ingresa un celular válido para ${country.name}.`);
       return;
     }
     setBusy(true);
     try {
-      const res = await api.sendRecoveryOtp({ phone: phone.trim() });
+      const res = await api.sendRecoveryOtp({ countryCode, phone: phone.trim() });
       setStep('reset');
       setResendIn(60);
       setInfo(`Enviamos un código al celular terminado en ${res.maskedPhone}.`);
@@ -56,7 +62,7 @@ export function ForgotPassword() {
     setError(null);
     setBusy(true);
     try {
-      const res = await api.sendRecoveryOtp({ phone: phone.trim() });
+      const res = await api.sendRecoveryOtp({ countryCode, phone: phone.trim() });
       setResendIn(60);
       setInfo(`Nuevo código enviado al celular terminado en ${res.maskedPhone}.`);
       if (res.debugCode) setDebugCode(res.debugCode);
@@ -81,6 +87,7 @@ export function ForgotPassword() {
     setBusy(true);
     try {
       await api.resetPassword({
+        countryCode,
         phone: phone.trim(),
         otpCode: otpCode.trim(),
         password,
@@ -180,7 +187,7 @@ export function ForgotPassword() {
               type="button"
               className="btn-primary w-full py-3 text-base"
               onClick={() =>
-                navigate('/login', { replace: true, state: { phone: phone.trim() } })
+                navigate('/login', { replace: true, state: { phone: phone.trim(), countryCode } })
               }
             >
               Ir a iniciar sesión
@@ -188,18 +195,14 @@ export function ForgotPassword() {
           </div>
         ) : step === 'phone' ? (
           <form onSubmit={onSendCode} className="space-y-4" noValidate>
-            <label className="block">
-              <span className="mb-1 block text-sm text-slate-300">Teléfono celular (10 dígitos)</span>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                placeholder="5512345678"
-                autoComplete="tel"
-                className="w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-white outline-none focus:border-brand-500"
-                required
-              />
-            </label>
+            <CountryPhoneFields
+              countryCode={countryCode}
+              phone={phone}
+              onCountryChange={setCountryCode}
+              onPhoneChange={setPhone}
+              phoneError={phoneError ?? undefined}
+              disabled={busy}
+            />
             {error && <p className="rounded-lg bg-bear/15 px-3 py-2 text-sm text-bear">{error}</p>}
             <button type="submit" className="btn-primary w-full py-3" disabled={busy}>
               {busy ? 'Enviando…' : 'Enviar código SMS'}

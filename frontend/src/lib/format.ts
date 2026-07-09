@@ -1,5 +1,21 @@
-const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+import { getLatamCountry } from '../data/latamCountries';
+
+const formatters = new Map<string, Intl.NumberFormat>();
+
+function currencyFormatter(currency: string, locale: string): Intl.NumberFormat {
+  const key = `${locale}:${currency}`;
+  let fmt = formatters.get(key);
+  if (!fmt) {
+    try {
+      fmt = new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 });
+    } catch {
+      fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+    }
+    formatters.set(key, fmt);
+  }
+  return fmt;
+}
+
 const num = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 4 });
 const pct = new Intl.NumberFormat('es-MX', {
   style: 'percent',
@@ -7,9 +23,14 @@ const pct = new Intl.NumberFormat('es-MX', {
   maximumFractionDigits: 2,
 });
 
-export const fmtMxn = (v: number) => mxn.format(v);
-export const fmtCurrency = (v: number, currency: string) =>
-  currency === 'MXN' ? mxn.format(v) : currency === 'USD' ? usd.format(v) : `${num.format(v)} ${currency}`;
+export const fmtMxn = (v: number) => currencyFormatter('MXN', 'es-MX').format(v);
+
+export const fmtCurrency = (v: number, currency: string, countryCode?: string) => {
+  const cc = countryCode?.toUpperCase();
+  const locale = cc ? getLatamCountry(cc).locale : 'es-MX';
+  return currencyFormatter(currency, locale).format(v);
+};
+
 export const fmtNum = (v: number) => num.format(v);
 export const fmtPct = (v: number) => pct.format(v / 100);
 export const fmtDate = (iso: string) =>
@@ -17,10 +38,11 @@ export const fmtDate = (iso: string) =>
 export const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-export const fmtPhone = (phone?: string) => {
-  const digits = (phone ?? '').replace(/\D/g, '').slice(-10);
-  if (digits.length !== 10) return phone ?? '';
-  return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+export const fmtPhone = (phone?: string, countryCode = 'MX') => {
+  const d = (phone ?? '').replace(/\D/g, '');
+  if (!d) return phone ?? '';
+  const country = getLatamCountry(countryCode);
+  return `${country.dialCode} ${d}`;
 };
 
 export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
@@ -58,4 +80,4 @@ export function clientFirstName(name: string): string {
   const first = name.trim().split(/\s+/).filter(Boolean)[0];
   if (!first) return name;
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
-};
+}

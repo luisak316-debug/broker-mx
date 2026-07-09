@@ -69,6 +69,8 @@ export interface ClientSession {
   id: string;
   email: string;
   phone: string;
+  countryCode: string;
+  currency: string;
   displayName: string;
   city?: string;
   homeAddress?: string;
@@ -143,6 +145,7 @@ export interface DepositAccountInfo {
 export interface PortfolioSummary {
   userId: string;
   cashMxn: number;
+  currency: string;
   equityExposureMxn: number;
   positions: Position[];
   orders: Array<{

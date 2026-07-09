@@ -1,14 +1,11 @@
 import twilio from 'twilio';
 import { env } from '../config/env';
 import { HttpError } from '../middleware/errorHandler';
+import { getLatamCountry, normalizeNationalPhone, toE164 } from '../data/latamCountries';
 
 type TwilioClient = ReturnType<typeof twilio>;
 
 let twilioClient: TwilioClient | null = null;
-
-function toE164Mx(phone10: string): string {
-  return `+52${phone10.replace(/\D/g, '').slice(-10)}`;
-}
 
 function getTwilioClient(): TwilioClient | null {
   const { accountSid, authToken } = env.sms;
@@ -34,7 +31,7 @@ function mapTwilioError(err: unknown): HttpError {
     );
   }
   if (code === 21211 || code === 21614) {
-    return new HttpError(400, 'Número de celular inválido. Verifica los 10 dígitos.');
+    return new HttpError(400, 'Número de celular inválido. Verifica el número y el país.');
   }
   if (code === 21608) {
     return new HttpError(
@@ -51,7 +48,7 @@ function mapTwilioError(err: unknown): HttpError {
   if (code === 21408) {
     return new HttpError(
       503,
-      'Tu cuenta Twilio no tiene permiso para enviar SMS a México (+52). Activa geo-permissions en Twilio.',
+      'Tu cuenta Twilio no tiene permiso para enviar SMS a este país. Activa geo-permissions en Twilio.',
     );
   }
 
@@ -63,8 +60,13 @@ function mapTwilioError(err: unknown): HttpError {
  * Envía el código OTP por SMS real vía Twilio.
  * Solo usa modo simulado si SMS_MOCK=true y Twilio no está configurado.
  */
-export async function sendOtpSms(phone10: string, code: string): Promise<{ mock: boolean }> {
-  const to = toE164Mx(phone10);
+export async function sendOtpSms(
+  countryCode: string,
+  nationalPhone: string,
+  code: string,
+): Promise<{ mock: boolean }> {
+  const country = getLatamCountry(countryCode);
+  const to = toE164(country.code, nationalPhone);
   const body = `Broker.mx: tu codigo de verificacion es ${code}. Valido 10 min. No lo compartas.`;
 
   const client = getTwilioClient();
@@ -79,7 +81,7 @@ export async function sendOtpSms(phone10: string, code: string): Promise<{ mock:
           ? { messagingServiceSid }
           : { from: fromNumber }),
       });
-      console.log(`[SMS] Codigo enviado a ${to}`);
+      console.log(`[SMS] Codigo enviado a ${to} (${country.name})`);
       return { mock: false };
     } catch (err) {
       throw mapTwilioError(err);
@@ -87,7 +89,7 @@ export async function sendOtpSms(phone10: string, code: string): Promise<{ mock:
   }
 
   if (env.sms.mock) {
-    console.log(`[SMS MOCK] Codigo para ${to}: ${code}`);
+    console.log(`[SMS MOCK] Codigo para ${to} (${country.name}): ${code}`);
     return { mock: true };
   }
 

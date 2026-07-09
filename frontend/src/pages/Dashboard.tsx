@@ -8,7 +8,7 @@ import { StatTile } from '../components/common/Card';
 import { Card } from '../components/common/Card';
 import { QuoteTable } from '../components/common/QuoteTable';
 import type { Instrument, PortfolioSummary } from '../types';
-import { fmtMxn } from '../lib/format';
+import { useClientMoney } from '../lib/clientMoney';
 
 const MODULES = [
   { to: '/app/acciones', title: 'Bolsa de Valores', desc: 'Acciones, gráficos y dividendos', cls: 'stock' },
@@ -22,6 +22,7 @@ export function Dashboard() {
   const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
   const { quotes } = useLivePrices();
   const { client } = useClientAuth();
+  const { format: formatMoney, currency } = useClientMoney(portfolio?.currency);
 
   useEffect(() => {
     api.instruments().then(setInstruments).catch(() => setInstruments([]));
@@ -57,12 +58,12 @@ export function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Saldo disponible"
-          value={portfolio ? fmtMxn(portfolio.cashMxn) : client ? fmtMxn(0) : '—'}
-          sub="Cuenta en MXN"
+          value={portfolio ? formatMoney(portfolio.cashMxn) : client ? formatMoney(0) : '—'}
+          sub={`Cuenta en ${currency}`}
         />
         <StatTile
           label="Exposición en mercado"
-          value={portfolio ? fmtMxn(portfolio.equityExposureMxn) : '—'}
+          value={portfolio ? formatMoney(portfolio.equityExposureMxn) : '—'}
           sub={`${portfolio?.positions.length ?? 0} posiciones abiertas`}
         />
         <StatTile label="Instrumentos" value={instruments.length} sub="Activos disponibles" />

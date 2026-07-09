@@ -11,13 +11,18 @@ import { hashPassword, verifyPassword } from '../services/security.service';
 import { issueOtp, verifyOtp, consumeVerifiedOtp } from '../services/otp.service';
 import { sendOtpSms, shouldExposeDebugCode } from '../services/sms.service';
 import { HttpError } from '../middleware/errorHandler';
+import {
+  clientEmailFromPhone,
+  getLatamCountry,
+  isValidNationalPhone,
+  maskPhone,
+  normalizeNationalPhone,
+  otpPhoneKey,
+  toE164,
+} from '../data/latamCountries';
 
 function clientToken(id: string): string {
   return `client.${id}.${Date.now()}`;
-}
-
-function clientEmailFromPhone(phone: string): string {
-  return `+52${phone}@celular.brokermx`;
 }
 
 function clientPayload(client: {
@@ -25,6 +30,8 @@ function clientPayload(client: {
   email: string;
   displayName: string;
   phone?: string;
+  countryCode?: string;
+  currency?: string;
   city?: string;
   homeAddress?: string;
   kycStatus: string;
@@ -34,10 +41,14 @@ function clientPayload(client: {
   if (client.accountStatus !== 'ACTIVA') {
     throw new HttpError(403, 'Tu cuenta está suspendida. Contacta a tu asesor.');
   }
+  const cc = client.countryCode ?? 'MX';
+  const country = getLatamCountry(cc);
   return {
     id: client.id,
     email: client.email,
     phone: client.phone ?? '',
+    countryCode: cc,
+    currency: client.currency ?? country.currency,
     displayName: client.displayName,
     city: client.city ?? '',
     homeAddress: client.homeAddress ?? '',
@@ -46,30 +57,46 @@ function clientPayload(client: {
   };
 }
 
-const phoneSchema = z
+const countryCodeSchema = z
   .string()
   .trim()
-  .regex(/^\d{10}$/, 'El teléfono celular debe tener 10 dígitos.');
+  .toUpperCase()
+  .length(2, 'Selecciona un país válido.');
 
-const sendOtpSchema = z.object({
-  phone: phoneSchema,
+const phoneBodySchema = z.object({
+  countryCode: countryCodeSchema.default('MX'),
+  phone: z.string().trim().min(6, 'Ingresa tu número de celular.'),
 });
 
-export async function sendOtp(req: Request, res: Response): Promise<void> {
-  const { phone } = sendOtpSchema.parse(req.body);
+function parsePhoneInput(body: unknown): { countryCode: string; national: string; otpKey: string } {
+  const { countryCode, phone } = phoneBodySchema.parse(body);
+  const country = getLatamCountry(countryCode);
+  const national = normalizeNationalPhone(phone);
+  if (!isValidNationalPhone(country, national)) {
+    const len = Array.isArray(country.phoneLength)
+      ? `${country.phoneLength[0]}–${country.phoneLength[1]}`
+      : String(country.phoneLength);
+    throw new HttpError(400, `El celular de ${country.name} debe tener ${len} dígitos.`);
+  }
+  return { countryCode: country.code, national, otpKey: otpPhoneKey(country.code, national) };
+}
 
-  if (await findClientByPhone(phone)) {
+export async function sendOtp(req: Request, res: Response): Promise<void> {
+  const { countryCode, national, otpKey } = parsePhoneInput(req.body);
+
+  if (await findClientByPhone(countryCode, national)) {
     throw new HttpError(409, 'Ya existe una cuenta con este número de celular.');
   }
 
-  const { code, expiresInSeconds } = issueOtp(phone);
-  const { mock } = await sendOtpSms(phone, code);
+  const { code, expiresInSeconds } = issueOtp(otpKey);
+  const { mock } = await sendOtpSms(countryCode, national, code);
 
   res.json({
     data: {
       message: 'Código enviado a tu celular.',
       expiresInSeconds,
-      maskedPhone: `***${phone.slice(-4)}`,
+      maskedPhone: maskPhone(national),
+      countryCode,
       ...(mock && shouldExposeDebugCode() ? { debugCode: code } : {}),
     },
   });
@@ -81,7 +108,8 @@ const registerSchema = z.object({
     .trim()
     .min(3, 'Ingresa tu nombre completo.')
     .regex(/^[A-Za-zÁÉÍÓÚáéíóúÑñ' .]+$/, 'El nombre solo puede contener letras.'),
-  phone: phoneSchema,
+  countryCode: countryCodeSchema.default('MX'),
+  phone: z.string().trim().min(6),
   otpCode: z
     .string()
     .trim()
@@ -94,26 +122,34 @@ const registerSchema = z.object({
 });
 
 export async function register(req: Request, res: Response): Promise<void> {
-  const { fullName, phone, otpCode, password } = registerSchema.parse(req.body);
+  const parsed = registerSchema.parse(req.body);
+  const country = getLatamCountry(parsed.countryCode);
+  const national = normalizeNationalPhone(parsed.phone);
+  if (!isValidNationalPhone(country, national)) {
+    throw new HttpError(400, 'Número de celular inválido para el país seleccionado.');
+  }
+  const otpKey = otpPhoneKey(country.code, national);
 
-  if (await findClientByPhone(phone)) {
+  if (await findClientByPhone(country.code, national)) {
     throw new HttpError(409, 'Ya existe una cuenta con este número de celular.');
   }
 
-  verifyOtp(phone, otpCode);
-  consumeVerifiedOtp(phone, otpCode);
+  verifyOtp(otpKey, parsed.otpCode);
+  consumeVerifiedOtp(otpKey, parsed.otpCode);
 
-  const email = clientEmailFromPhone(phone);
+  const email = clientEmailFromPhone(country.code, national);
   if (await findClientByEmail(email)) {
     throw new HttpError(409, 'Ya existe una cuenta con este número de celular.');
   }
 
   const client = await createClient({
-    displayName: fullName,
+    displayName: parsed.fullName,
     email,
-    phone,
-    passwordHash: hashPassword(password),
-    plainPassword: password,
+    phone: national,
+    countryCode: country.code,
+    currency: country.currency,
+    passwordHash: hashPassword(parsed.password),
+    plainPassword: parsed.password,
   });
 
   res.status(201).json({
@@ -126,13 +162,15 @@ export async function register(req: Request, res: Response): Promise<void> {
 }
 
 const loginSchema = z.object({
-  phone: phoneSchema,
+  countryCode: countryCodeSchema.default('MX'),
+  phone: z.string().trim().min(6),
   password: z.string().min(1, 'Ingresa tu contraseña.'),
 });
 
 export async function login(req: Request, res: Response): Promise<void> {
-  const { phone, password } = loginSchema.parse(req.body);
-  const client = await findClientByPhone(phone);
+  const { countryCode, phone, password } = loginSchema.parse(req.body);
+  const national = normalizeNationalPhone(phone);
+  const client = await findClientByPhone(countryCode, national);
   if (!client || !client.passwordHash || !verifyPassword(password, client.passwordHash)) {
     throw new HttpError(401, 'Celular o contraseña incorrectos.');
   }
@@ -146,20 +184,23 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 const verifyOtpOnlySchema = z.object({
-  phone: phoneSchema,
+  countryCode: countryCodeSchema.default('MX'),
+  phone: z.string().trim().min(6),
   otpCode: z.string().trim().regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
 });
 
 export function verifyOtpCode(req: Request, res: Response): void {
-  const { phone, otpCode } = verifyOtpOnlySchema.parse(req.body);
-  verifyOtp(phone, otpCode);
+  const { countryCode, phone, otpCode } = verifyOtpOnlySchema.parse(req.body);
+  const national = normalizeNationalPhone(phone);
+  const otpKey = otpPhoneKey(countryCode, national);
+  verifyOtp(otpKey, otpCode);
   res.json({ data: { valid: true } });
 }
 
 /** OTP para recuperar contraseña (solo si el celular ya está registrado). */
 export async function sendRecoveryOtp(req: Request, res: Response): Promise<void> {
-  const { phone } = sendOtpSchema.parse(req.body);
-  const client = await findClientByPhone(phone);
+  const { countryCode, national, otpKey } = parsePhoneInput(req.body);
+  const client = await findClientByPhone(countryCode, national);
   if (!client) {
     throw new HttpError(404, 'No hay cuenta registrada con este número de celular.');
   }
@@ -167,21 +208,23 @@ export async function sendRecoveryOtp(req: Request, res: Response): Promise<void
     throw new HttpError(403, 'Tu cuenta está suspendida. Contacta a tu asesor.');
   }
 
-  const { code, expiresInSeconds } = issueOtp(phone);
-  const { mock } = await sendOtpSms(phone, code);
+  const { code, expiresInSeconds } = issueOtp(otpKey);
+  const { mock } = await sendOtpSms(countryCode, national, code);
 
   res.json({
     data: {
       message: 'Código enviado a tu celular.',
       expiresInSeconds,
-      maskedPhone: `***${phone.slice(-4)}`,
+      maskedPhone: maskPhone(national),
+      countryCode,
       ...(mock && shouldExposeDebugCode() ? { debugCode: code } : {}),
     },
   });
 }
 
 const resetPasswordSchema = z.object({
-  phone: phoneSchema,
+  countryCode: countryCodeSchema.default('MX'),
+  phone: z.string().trim().min(6),
   otpCode: z
     .string()
     .trim()
@@ -194,14 +237,16 @@ const resetPasswordSchema = z.object({
 });
 
 export async function resetPassword(req: Request, res: Response): Promise<void> {
-  const { phone, otpCode, password } = resetPasswordSchema.parse(req.body);
-  const client = await findClientByPhone(phone);
+  const { countryCode, phone, otpCode, password } = resetPasswordSchema.parse(req.body);
+  const national = normalizeNationalPhone(phone);
+  const otpKey = otpPhoneKey(countryCode, national);
+  const client = await findClientByPhone(countryCode, national);
   if (!client) {
     throw new HttpError(404, 'No hay cuenta registrada con este número de celular.');
   }
 
-  verifyOtp(phone, otpCode);
-  consumeVerifiedOtp(phone, otpCode);
+  verifyOtp(otpKey, otpCode);
+  consumeVerifiedOtp(otpKey, otpCode);
 
   await updateClientPassword(client.id, hashPassword(password), password);
 
@@ -218,3 +263,6 @@ export async function getClientSession(req: Request, res: Response): Promise<voi
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
   res.json({ data: clientPayload(client) });
 }
+
+// Re-export for tests
+export { toE164 };

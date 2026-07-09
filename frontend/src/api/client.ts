@@ -92,25 +92,36 @@ export const api = {
 
   marketNews: () => http<MarketNewsResponse>('/market-news'),
 
-  sendOtp: (payload: { phone: string }) =>
+  sendOtp: (payload: { countryCode: string; phone: string }) =>
     http<import('../types').SendOtpResult>(`/auth/send-otp`, {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  register: (payload: { fullName: string; phone: string; otpCode: string; password: string }) =>
+  register: (payload: {
+    fullName: string;
+    countryCode: string;
+    phone: string;
+    otpCode: string;
+    password: string;
+  }) =>
     http<AuthResult>(`/auth/register`, { method: 'POST', body: JSON.stringify(payload) }),
-  login: (payload: { phone: string; password: string }) =>
+  login: (payload: { countryCode: string; phone: string; password: string }) =>
     http<AuthResult>(`/auth/login`, {
       method: 'POST',
       body: JSON.stringify(payload),
       timeoutMs: 90_000,
     }),
-  sendRecoveryOtp: (payload: { phone: string }) =>
+  sendRecoveryOtp: (payload: { countryCode: string; phone: string }) =>
     http<import('../types').SendOtpResult>(`/auth/recovery/send-otp`, {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  resetPassword: (payload: { phone: string; otpCode: string; password: string }) =>
+  resetPassword: (payload: {
+    countryCode: string;
+    phone: string;
+    otpCode: string;
+    password: string;
+  }) =>
     http<{ message: string }>(`/auth/recovery/reset-password`, {
       method: 'POST',
       body: JSON.stringify(payload),
