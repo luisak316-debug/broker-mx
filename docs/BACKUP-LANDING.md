@@ -1,11 +1,11 @@
-# Respaldo Landing Broker.mx — 8 julio 2026 (leyenda persistente hasta Nuestra firma)
+# Respaldo Landing Broker.mx — 8 julio 2026 (sin hueco Confianza → CTA)
 
-Punto de restauración **aprobado por el usuario** («Perfecto. Save the changes»).
+Punto de restauración **aprobado por el usuario** («Perfect, save the changes»).
 
 - **Producción:** https://brokermx-alpha.vercel.app
-- **Tag git:** `backup/landing-ok-2026-07-08-leyenda-hold`
-- **Carpeta snapshot:** `backups/landing-2026-07-08-leyenda-hold/`
-- **Deploy Vercel:** `dpl_4czqRT847mamDz6EMs1uzN5V91FT` (bundle `index-CKcKK4wm.js`)
+- **Tag git:** `backup/landing-ok-2026-07-08-confianza-cta`
+- **Carpeta snapshot:** `backups/landing-2026-07-08-confianza-cta/`
+- **Deploy Vercel:** `dpl_Hy9FWDEEdJ3NF5T2YcRNGi5rmvPv` (bundle `index-BjI-nHq6.js`)
 
 ---
 
@@ -21,17 +21,19 @@ Punto de restauración **aprobado por el usuario** («Perfecto. Save the changes
 ### Leyenda reveal (aprobado)
 - Texto: «Soporte local. Conexión global.» + regulación CNBV
 - Componente: `CapHeroScrollReveal.tsx`
-- **Scroll nativo** + `useScrollFrame` (requestAnimationFrame) — sin GSAP
-- Aparece al subir la tarjeta vidrio y **permanece en el globo** hasta que `#quienes` («Nuestra firma») entra al viewport
-- Fade-out suave cuando la sección Quiénes Somos cubre la leyenda
+- **Scroll nativo** + `useScrollFrame` — sin GSAP
+- Permanece en el globo hasta `#quienes` («Nuestra firma»)
 - Texto blanco sólido `#ffffff`
 
 ### Narrativa traders (aprobado — después de Salinas)
 - Componente: `LandingTraderScroll.tsx`
-- 3 frases: traders pierde dinero → mercado juega su papel → tus decisiones marcan la diferencia
-- Barras ámbar/blancas se mueven a la **izquierda** al bajar, a la **derecha** al subir
-- `height: 400vh` + `position: sticky` + scroll nativo (sin GSAP pin)
-- Hook compartido: `frontend/src/hooks/useScrollFrame.ts`
+- 3 frases + barras ámbar/blancas, scroll nativo
+
+### Confianza / testimonios (aprobado)
+- Componente: `LandingConfianzaScroll.tsx` → `LandingScrollNarrative` modo `backdrop`
+- **Sin pin GSAP** — altura natural del contenido (elimina ~220vh de hueco negro)
+- Barras decorativas estáticas detrás del carrusel
+- CTA «Comienza a invertir desde hoy» pegado debajo de testimonios
 
 ---
 
@@ -40,7 +42,7 @@ Punto de restauración **aprobado por el usuario** («Perfecto. Save the changes
 1. Menú (header sticky)
 2. Hero: tarjeta scroll + esfera fija + leyenda reveal (`#top`)
 3. Quiénes Somos (`#quienes`) — **Salinas dentro**
-4. **Narrativa traders** (`#narrativa-trading`) — 3 frases + barras
+4. **Narrativa traders** (`#narrativa-trading`)
 5. Qué hacemos / 4 noticias (`#noticias`)
 6. Testimonios (`#testimonios`)
 7. CTA final + Footer
@@ -50,21 +52,23 @@ Punto de restauración **aprobado por el usuario** («Perfecto. Save the changes
 ## Cómo restaurar
 
 ```powershell
-git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/styles/index.css
-git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/pages/Landing.tsx
-git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/components/landing/capital-scroll
-git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/components/landing/LandingTraderScroll.tsx
-git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/hooks/useScrollFrame.ts
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/styles/index.css
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/pages/Landing.tsx
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/capital-scroll
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/LandingScrollNarrative.tsx
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/LandingConfianzaScroll.tsx
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/LandingTraderScroll.tsx
+git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/hooks/useScrollFrame.ts
 
 # o:
-powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-leyenda-hold\RESTORE.ps1
+powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-confianza-cta\RESTORE.ps1
 ```
 
 ---
 
 ## Respaldo anterior
 
-- Tag: `backup/landing-ok-2026-07-08-trader-scroll` (commit `1385872`) — hero + 3 frases traders scroll nativo
+- Tag: `backup/landing-ok-2026-07-08-leyenda-hold` (commit `8eda3c7`) — leyenda persistente hasta Nuestra firma
 
 ---
 
