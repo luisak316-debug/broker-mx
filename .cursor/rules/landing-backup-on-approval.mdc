@@ -55,5 +55,5 @@ git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
 # o: backups\landing-FECHA\RESTORE.ps1
 ```
 
-Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-video-esfera-scroll` (esfera fija + tarjeta scroll bajo header).
-Respaldo anterior: `backup/landing-ok-2026-07-08-video-esfera-overlay`, commit `950f3f7`.
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-video-esfera-scroll-lower` (esfera fija baja 7% + tarjeta scroll).
+Respaldo anterior: `backup/landing-ok-2026-07-08-video-esfera-scroll`, commit `b19b8e4`.
