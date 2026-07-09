@@ -1,74 +1,70 @@
-# Respaldo Landing Broker.mx — 8 julio 2026 (sin hueco Confianza → CTA)
+# Respaldo Landing Broker.mx — 8 julio 2026 (scroll mercados + Confianza reemplaza Qué hacemos)
 
-Punto de restauración **aprobado por el usuario** («Perfect, save the changes»).
+Punto de restauración **aprobado por el usuario** («¡Más que perfecto! ¡Guarda los cambios!»).
 
 - **Producción:** https://brokermx-alpha.vercel.app
-- **Tag git:** `backup/landing-ok-2026-07-08-confianza-cta`
-- **Carpeta snapshot:** `backups/landing-2026-07-08-confianza-cta/`
-- **Deploy Vercel:** `dpl_Hy9FWDEEdJ3NF5T2YcRNGi5rmvPv` (bundle `index-BjI-nHq6.js`)
+- **Tag git:** `backup/landing-ok-2026-07-08-mercados-scroll`
+- **Carpeta snapshot:** `backups/landing-2026-07-08-mercados-scroll/`
+- **Deploy Vercel:** `dpl_5QyxwN5gpokZ45cyHGV6JGBKgPuz` (bundle `index-gKrHvm_P.js`)
 
 ---
 
 ## Hero — implementación aprobada
 
 ### Scroll + esfera
-- Esfera **fija** en stage sticky (`CapitalGlobeVideo`)
-- Solo la **tarjeta vidrio** sube al scroll y pasa bajo el header (z-50)
-- `transform: translateY(7%)` en la esfera
-- Vídeo local: `frontend/public/video-esfera/video-esfera.mp4`
-- Panel hero **240–280vh** para más recorrido de scroll
+- Esfera fija, tarjeta vidrio sube, leyenda CNBV hasta «Nuestra firma»
+- Panel hero 240–280vh
 
-### Leyenda reveal (aprobado)
-- Texto: «Soporte local. Conexión global.» + regulación CNBV
-- Componente: `CapHeroScrollReveal.tsx`
-- **Scroll nativo** + `useScrollFrame` — sin GSAP
-- Permanece en el globo hasta `#quienes` («Nuestra firma»)
-- Texto blanco sólido `#ffffff`
+### Narrativa traders + mercados (aprobado)
+- Componente: `LandingTraderScroll.tsx` — `#mercados`
+- **Fase 1:** 3 frases + barras borrosas (scroll nativo)
+- **Fase 2:** «Qué hacemos» — una categoría por scroll:
+  1. Criptomonedas
+  2. Bolsa de Valores
+  3. Materias Primas
+  4. Divisas (Forex)
+- Cada categoría: imagen, descripción, bullets, botón **Ver simulador** (abre modal)
+- Datos: `landingMarketScroll.ts` + `marketCategories.ts`
+- Altura scroll: ~780vh
 
-### Narrativa traders (aprobado — después de Salinas)
-- Componente: `LandingTraderScroll.tsx`
-- 3 frases + barras ámbar/blancas, scroll nativo
-
-### Confianza / testimonios (aprobado)
-- Componente: `LandingConfianzaScroll.tsx` → `LandingScrollNarrative` modo `backdrop`
-- **Sin pin GSAP** — altura natural del contenido (elimina ~220vh de hueco negro)
-- Barras decorativas estáticas detrás del carrusel
-- CTA «Comienza a invertir desde hoy» pegado debajo de testimonios
+### Confianza (aprobado — reemplaza sección Qué hacemos fija)
+- `LandingConfianzaScroll` + carrusel testimonios **después** del scroll de mercados
+- Sin `MarketNewsSection` en landing (grilla 4 noticias eliminada)
 
 ---
 
 ## Orden de secciones
 
 1. Menú (header sticky)
-2. Hero: tarjeta scroll + esfera fija + leyenda reveal (`#top`)
+2. Hero: tarjeta scroll + esfera + leyenda (`#top`)
 3. Quiénes Somos (`#quienes`) — **Salinas dentro**
-4. **Narrativa traders** (`#narrativa-trading`)
-5. Qué hacemos / 4 noticias (`#noticias`)
-6. Testimonios (`#testimonios`)
-7. CTA final + Footer
+4. **Narrativa + 4 mercados** (`#mercados`) — scroll scrolly
+5. **Confianza / testimonios** (`#testimonios`)
+6. CTA final + Footer
 
 ---
 
 ## Cómo restaurar
 
 ```powershell
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/styles/index.css
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/pages/Landing.tsx
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/capital-scroll
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/LandingScrollNarrative.tsx
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/LandingConfianzaScroll.tsx
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/components/landing/LandingTraderScroll.tsx
-git checkout backup/landing-ok-2026-07-08-confianza-cta -- frontend/src/hooks/useScrollFrame.ts
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/styles/index.css
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/pages/Landing.tsx
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/components/landing/LandingTraderScroll.tsx
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/components/landing/LandingConfianzaScroll.tsx
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/components/landing/LandingScrollNarrative.tsx
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/components/landing/capital-scroll
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/hooks/useScrollFrame.ts
+git checkout backup/landing-ok-2026-07-08-mercados-scroll -- frontend/src/data/landingMarketScroll.ts
 
 # o:
-powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-confianza-cta\RESTORE.ps1
+powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-mercados-scroll\RESTORE.ps1
 ```
 
 ---
 
 ## Respaldo anterior
 
-- Tag: `backup/landing-ok-2026-07-08-leyenda-hold` (commit `8eda3c7`) — leyenda persistente hasta Nuestra firma
+- Tag: `backup/landing-ok-2026-07-08-confianza-cta` (commit `d33be4f`)
 
 ---
 

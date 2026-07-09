@@ -55,5 +55,5 @@ git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
 # o: backups\landing-FECHA\RESTORE.ps1
 ```
 
-Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-confianza-cta` (testimonios sin hueco negro antes del CTA).
-Respaldo anterior: `backup/landing-ok-2026-07-08-leyenda-hold`, commit `8eda3c7`.
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-mercados-scroll` (3 frases + 4 categorías scroll + Confianza reemplaza Qué hacemos).
+Respaldo anterior: `backup/landing-ok-2026-07-08-confianza-cta`, commit `d33be4f`.
