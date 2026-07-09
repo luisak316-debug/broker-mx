@@ -5,6 +5,7 @@ Punto de restauración **aprobado por el usuario** («Perfect, save changes» �
 - **Producción:** https://brokermx-alpha.vercel.app
 - **Tag git:** `backup/landing-ok-2026-07-09-mobile`
 - **Carpeta snapshot:** `backups/landing-2026-07-09-mobile/`
+- **Commit:** `e4bdca2`
 - **Deploy Vercel:** `dpl_C56hg4d88AC6u2GeBHHwRA1uQK5a`
 
 ---
