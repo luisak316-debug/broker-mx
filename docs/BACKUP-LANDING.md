@@ -5,6 +5,8 @@ Punto de restauración **aprobado por el usuario** («Perfect, save changes»).
 - **Producción:** https://brokermx-alpha.vercel.app
 - **Tag git:** `backup/landing-ok-2026-07-09-glass`
 - **Carpeta snapshot:** `backups/landing-2026-07-09-glass/`
+- **Commit:** `004cf81`
+- **Deploy Vercel:** `dpl_XukY6Vg1p3ZJQWfLZ2Mr4oJgpbZA`
 
 ---
 
