@@ -55,5 +55,5 @@ git checkout backup/landing-ok-FECHA -- frontend/src/pages/Landing.tsx
 # o: backups\landing-FECHA\RESTORE.ps1
 ```
 
-Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-trader-scroll` (hero leyenda + 3 frases traders scroll nativo).
-Respaldo anterior: `backup/landing-ok-2026-07-08-leyenda-solid`, commit `409ece6`.
+Último respaldo aprobado: tag `backup/landing-ok-2026-07-08-leyenda-hold` (leyenda persistente en globo hasta Nuestra firma).
+Respaldo anterior: `backup/landing-ok-2026-07-08-trader-scroll`, commit `1385872`.

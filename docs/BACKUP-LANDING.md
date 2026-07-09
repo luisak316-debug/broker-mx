@@ -1,11 +1,11 @@
-# Respaldo Landing Broker.mx — 8 julio 2026 (hero + trader scroll nativo)
+# Respaldo Landing Broker.mx — 8 julio 2026 (leyenda persistente hasta Nuestra firma)
 
-Punto de restauración **aprobado por el usuario** («Perfectísimo. Guarda los cambios»).
+Punto de restauración **aprobado por el usuario** («Perfecto. Save the changes»).
 
 - **Producción:** https://brokermx-alpha.vercel.app
-- **Tag git:** `backup/landing-ok-2026-07-08-trader-scroll`
-- **Carpeta snapshot:** `backups/landing-2026-07-08-trader-scroll/`
-- **Deploy Vercel:** `dpl_kXKE4Uji1qNk5rqP8KY6TM6K54Xx` (bundle `index-DGABHV2k.js`)
+- **Tag git:** `backup/landing-ok-2026-07-08-leyenda-hold`
+- **Carpeta snapshot:** `backups/landing-2026-07-08-leyenda-hold/`
+- **Deploy Vercel:** `dpl_4czqRT847mamDz6EMs1uzN5V91FT` (bundle `index-CKcKK4wm.js`)
 
 ---
 
@@ -16,12 +16,14 @@ Punto de restauración **aprobado por el usuario** («Perfectísimo. Guarda los 
 - Solo la **tarjeta vidrio** sube al scroll y pasa bajo el header (z-50)
 - `transform: translateY(7%)` en la esfera
 - Vídeo local: `frontend/public/video-esfera/video-esfera.mp4`
+- Panel hero **240–280vh** para más recorrido de scroll
 
 ### Leyenda reveal (aprobado)
 - Texto: «Soporte local. Conexión global.» + regulación CNBV
 - Componente: `CapHeroScrollReveal.tsx`
 - **Scroll nativo** + `useScrollFrame` (requestAnimationFrame) — sin GSAP
-- Detrás de la tarjeta vidrio, alineada con el hero
+- Aparece al subir la tarjeta vidrio y **permanece en el globo** hasta que `#quienes` («Nuestra firma») entra al viewport
+- Fade-out suave cuando la sección Quiénes Somos cubre la leyenda
 - Texto blanco sólido `#ffffff`
 
 ### Narrativa traders (aprobado — después de Salinas)
@@ -48,21 +50,21 @@ Punto de restauración **aprobado por el usuario** («Perfectísimo. Guarda los 
 ## Cómo restaurar
 
 ```powershell
-git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/styles/index.css
-git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/pages/Landing.tsx
-git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/components/landing/capital-scroll
-git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/components/landing/LandingTraderScroll.tsx
-git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/hooks/useScrollFrame.ts
+git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/styles/index.css
+git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/pages/Landing.tsx
+git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/components/landing/capital-scroll
+git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/components/landing/LandingTraderScroll.tsx
+git checkout backup/landing-ok-2026-07-08-leyenda-hold -- frontend/src/hooks/useScrollFrame.ts
 
 # o:
-powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-trader-scroll\RESTORE.ps1
+powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-leyenda-hold\RESTORE.ps1
 ```
 
 ---
 
 ## Respaldo anterior
 
-- Tag: `backup/landing-ok-2026-07-08-leyenda-solid` (commit `409ece6`) — leyenda blanco sólido sin narrativa traders
+- Tag: `backup/landing-ok-2026-07-08-trader-scroll` (commit `1385872`) — hero + 3 frases traders scroll nativo
 
 ---
 
