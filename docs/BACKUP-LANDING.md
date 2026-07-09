@@ -1,11 +1,11 @@
-# Respaldo Landing Broker.mx — 8 julio 2026 (leyenda blanco sólido + scroll suave)
+# Respaldo Landing Broker.mx — 8 julio 2026 (hero + trader scroll nativo)
 
-Punto de restauración **aprobado por el usuario** («Perfectissimo, perfecto»).
+Punto de restauración **aprobado por el usuario** («Perfectísimo. Guarda los cambios»).
 
 - **Producción:** https://brokermx-alpha.vercel.app
-- **Tag git:** `backup/landing-ok-2026-07-08-leyenda-solid`
-- **Carpeta snapshot:** `backups/landing-2026-07-08-leyenda-solid/`
-- **Deploy Vercel:** `dpl_51ejdy3dzUfFQQEkjvhbXcsPaVSs` (bundle `index-DZRtxJta.js`)
+- **Tag git:** `backup/landing-ok-2026-07-08-trader-scroll`
+- **Carpeta snapshot:** `backups/landing-2026-07-08-trader-scroll/`
+- **Deploy Vercel:** `dpl_kXKE4Uji1qNk5rqP8KY6TM6K54Xx` (bundle `index-DGABHV2k.js`)
 
 ---
 
@@ -19,16 +19,17 @@ Punto de restauración **aprobado por el usuario** («Perfectissimo, perfecto»)
 
 ### Leyenda reveal (aprobado)
 - Texto: «Soporte local. Conexión global.» + regulación CNBV
-- Componente: `CapHeroScrollReveal.tsx` (GSAP ScrollTrigger)
-- **Detrás de la tarjeta vidrio**, alineada con el hero (`max-w-7xl`, padding shell)
-- Stage fijo (no dentro de `stage-inner`)
-- `data-cap-version="8"` en `LandingCapitalScrolly`
+- Componente: `CapHeroScrollReveal.tsx`
+- **Scroll nativo** + `useScrollFrame` (requestAnimationFrame) — sin GSAP
+- Detrás de la tarjeta vidrio, alineada con el hero
+- Texto blanco sólido `#ffffff`
 
-### Animación leyenda (ajuste aprobado)
-- Texto **blanco sólido** `#ffffff` (título y subtítulo)
-- **Sin fade de opacidad** — evita blanco semitransparente al hacer scroll
-- Entrada/salida con `visibility` + movimiento vertical suave
-- `scrub: 1.35` — scroll más lento, menos parpadeo
+### Narrativa traders (aprobado — después de Salinas)
+- Componente: `LandingTraderScroll.tsx`
+- 3 frases: traders pierde dinero → mercado juega su papel → tus decisiones marcan la diferencia
+- Barras ámbar/blancas se mueven a la **izquierda** al bajar, a la **derecha** al subir
+- `height: 400vh` + `position: sticky` + scroll nativo (sin GSAP pin)
+- Hook compartido: `frontend/src/hooks/useScrollFrame.ts`
 
 ---
 
@@ -37,28 +38,31 @@ Punto de restauración **aprobado por el usuario** («Perfectissimo, perfecto»)
 1. Menú (header sticky)
 2. Hero: tarjeta scroll + esfera fija + leyenda reveal (`#top`)
 3. Quiénes Somos (`#quienes`) — **Salinas dentro**
-4. Qué hacemos / 4 noticias (`#noticias`)
-5. Testimonios (`#testimonios`)
-6. CTA final + Footer
+4. **Narrativa traders** (`#narrativa-trading`) — 3 frases + barras
+5. Qué hacemos / 4 noticias (`#noticias`)
+6. Testimonios (`#testimonios`)
+7. CTA final + Footer
 
 ---
 
 ## Cómo restaurar
 
 ```powershell
-git checkout backup/landing-ok-2026-07-08-leyenda-solid -- frontend/src/styles/index.css
-git checkout backup/landing-ok-2026-07-08-leyenda-solid -- frontend/src/pages/Landing.tsx
-git checkout backup/landing-ok-2026-07-08-leyenda-solid -- frontend/src/components/landing/capital-scroll
+git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/styles/index.css
+git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/pages/Landing.tsx
+git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/components/landing/capital-scroll
+git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/components/landing/LandingTraderScroll.tsx
+git checkout backup/landing-ok-2026-07-08-trader-scroll -- frontend/src/hooks/useScrollFrame.ts
 
 # o:
-powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-leyenda-solid\RESTORE.ps1
+powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-08-trader-scroll\RESTORE.ps1
 ```
 
 ---
 
 ## Respaldo anterior
 
-- Tag: `backup/landing-ok-2026-07-08-leyenda-reveal` (commit `65c756f`) — leyenda con fade opacidad (reemplazado)
+- Tag: `backup/landing-ok-2026-07-08-leyenda-solid` (commit `409ece6`) — leyenda blanco sólido sin narrativa traders
 
 ---
 
