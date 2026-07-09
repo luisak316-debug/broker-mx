@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { GLOBE_VIDEO_SRC } from './globeVideo';
 
-/** Esfera fija en el stage — no se mueve al hacer scroll */
-export function CapitalGlobeVideo() {
+/** Esfera detrás de la tarjeta vidrio — mitad superior bajo el esmerilado */
+export function CapitalGlobeVideoMini() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -19,10 +19,10 @@ export function CapitalGlobeVideo() {
   }, []);
 
   return (
-    <div className="cap-scrolly__globe-anchor" aria-hidden>
+    <div className="cap-hero-globe-slot" aria-hidden>
       <video
         ref={videoRef}
-        className="cap-scrolly__globe-video"
+        className="cap-hero-globe-slot__video"
         aria-hidden
         muted
         playsInline
