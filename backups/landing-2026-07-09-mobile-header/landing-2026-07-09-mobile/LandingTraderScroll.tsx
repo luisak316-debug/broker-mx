@@ -138,8 +138,8 @@ export function LandingTraderScroll({ id = 'mercados', onOpenMarket }: Props) {
       Number.parseFloat(
         getComputedStyle(document.documentElement).getPropertyValue('--landing-header-h'),
       ) || 0;
-    const pinViewport = window.innerHeight - headerH;
-    const scrollable = root.offsetHeight - pinViewport;
+    const vh = window.innerHeight - headerH;
+    const scrollable = root.offsetHeight - vh;
     if (scrollable <= 0) return;
 
     const progress = clamp01(-root.getBoundingClientRect().top / scrollable);

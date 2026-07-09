@@ -30,56 +30,28 @@ export function Landing() {
     const header = document.querySelector<HTMLElement>('.landing-header');
     if (!header) return;
 
-    let lastH = 0;
     const syncHeaderHeight = () => {
-      const h = Math.round(header.offsetHeight);
-      if (h === lastH || h <= 0) return;
-      lastH = h;
-      document.documentElement.style.setProperty('--landing-header-h', `${h}px`);
+      document.documentElement.style.setProperty(
+        '--landing-header-h',
+        `${header.getBoundingClientRect().height}px`,
+      );
     };
 
     syncHeaderHeight();
-
-    let resizeTimer = 0;
-    const onResize = () => {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(syncHeaderHeight, 250);
-    };
-
-    window.addEventListener('orientationchange', syncHeaderHeight);
-    window.addEventListener('resize', onResize);
-
-    const desktopMq = window.matchMedia('(min-width: 768px)');
-    let observer: ResizeObserver | null = null;
-
-    const syncObserver = () => {
-      if (desktopMq.matches) {
-        if (!observer) {
-          observer = new ResizeObserver(onResize);
-          observer.observe(header);
-        }
-      } else {
-        observer?.disconnect();
-        observer = null;
-      }
-    };
-
-    syncObserver();
-    desktopMq.addEventListener('change', syncObserver);
+    const observer = new ResizeObserver(syncHeaderHeight);
+    observer.observe(header);
+    window.addEventListener('resize', syncHeaderHeight);
 
     return () => {
-      window.clearTimeout(resizeTimer);
-      window.removeEventListener('orientationchange', syncHeaderHeight);
-      window.removeEventListener('resize', onResize);
-      desktopMq.removeEventListener('change', syncObserver);
-      observer?.disconnect();
+      observer.disconnect();
+      window.removeEventListener('resize', syncHeaderHeight);
     };
   }, []);
 
   return (
     <div className="landing-page min-h-screen bg-black text-slate-100">
 
-      <header className="landing-header z-50 border-b border-white/10">
+      <header className="landing-header relative z-50 sticky top-0 border-b border-white/10 bg-[#050202]/55 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <a href="#top" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
@@ -115,7 +87,7 @@ export function Landing() {
           </div>
         </div>
         <nav
-          className="landing-header__nav-mobile flex gap-4 border-t border-white/5 px-4 py-2 text-xs text-slate-400 md:hidden"
+          className="flex gap-4 overflow-x-auto border-t border-white/5 px-4 py-2 text-xs text-slate-400 md:hidden"
           aria-label="Secciones"
         >
           <a href="#quienes" className="shrink-0 whitespace-nowrap hover:text-white">

@@ -744,45 +744,6 @@ body {
   --cap-blue-5: #41a6ff;
 }
 
-/* Header — fijo estable en móvil (evita vibración iOS con sticky+blur) */
-.landing-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(5, 2, 2, 0.55);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  backdrop-filter: blur(24px) saturate(1.4);
-}
-
-.landing-header__nav-mobile {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.landing-header__nav-mobile::-webkit-scrollbar {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .landing-header {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    background: #050202;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    padding-top: env(safe-area-inset-top, 0px);
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    contain: layout style;
-  }
-}
-
 .landing-atmosphere {
   position: fixed;
   inset: 0;
@@ -3389,7 +3350,6 @@ body {
   top: 0;
   z-index: 1;
   height: 100vh;
-  height: 100svh;
   width: 100%;
   overflow: hidden;
   pointer-events: none;
@@ -3503,7 +3463,8 @@ body {
 .trader-scroll__pin {
   position: sticky;
   top: var(--landing-header-h, 0);
-  height: calc(100svh - var(--landing-header-h, 0));
+  height: calc(100vh - var(--landing-header-h, 0));
+  height: calc(100dvh - var(--landing-header-h, 0));
   width: 100%;
   overflow: hidden;
   background: #000000;
