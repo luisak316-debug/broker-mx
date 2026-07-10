@@ -29,7 +29,7 @@ export function Stocks() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-white">Bolsa de Valores · Acciones</h1>
+        <h1 className="text-2xl font-bold text-white">Acciones</h1>
         <p className="text-sm text-slate-400">
           Cotizaciones en tiempo real, rendimiento histórico y simulación de compra/venta
           (posiciones largas y cortas).

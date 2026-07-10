@@ -46,7 +46,16 @@ export const CRYPTO: Instrument[] = [
   { symbol: 'XRP', name: 'XRP', assetClass: 'crypto', currency: 'USD', basePrice: 2.35, volatility: 0.05, meta: { exchange: 'Bitso/Binance', pairMxn: 'XRP/MXN' } },
 ];
 
-export const ALL_INSTRUMENTS: Instrument[] = [...STOCKS, ...COMMODITIES, ...FOREX, ...CRYPTO];
+export const INDEXES: Instrument[] = [
+  { symbol: 'SPX', name: 'S&P 500', assetClass: 'index', currency: 'USD', basePrice: 5980.0, volatility: 0.009, meta: { region: 'EE.UU.', exchange: 'CME/CBOE' } },
+  { symbol: 'NDX', name: 'NASDAQ 100', assetClass: 'index', currency: 'USD', basePrice: 21450.0, volatility: 0.012, meta: { region: 'EE.UU.', exchange: 'NASDAQ' } },
+  { symbol: 'DJI', name: 'Dow Jones Industrial', assetClass: 'index', currency: 'USD', basePrice: 44200.0, volatility: 0.008, meta: { region: 'EE.UU.', exchange: 'NYSE' } },
+  { symbol: 'IPC', name: 'IPC México (S&P/BMV IPC)', assetClass: 'index', currency: 'MXN', basePrice: 58200.0, volatility: 0.011, meta: { region: 'México', exchange: 'BMV' } },
+  { symbol: 'DAX', name: 'DAX 40', assetClass: 'index', currency: 'EUR', basePrice: 19850.0, volatility: 0.01, meta: { region: 'Alemania', exchange: 'XETRA' } },
+  { symbol: 'UKX', name: 'FTSE 100', assetClass: 'index', currency: 'GBP', basePrice: 8120.0, volatility: 0.009, meta: { region: 'Reino Unido', exchange: 'LSE' } },
+];
+
+export const ALL_INSTRUMENTS: Instrument[] = [...STOCKS, ...COMMODITIES, ...FOREX, ...INDEXES, ...CRYPTO];
 
 export function findInstrument(symbol: string): Instrument | undefined {
   return ALL_INSTRUMENTS.find((i) => i.symbol.toUpperCase() === symbol.toUpperCase());

@@ -28,9 +28,10 @@ const ASSET_META: Record<
   AssetClass,
   { label: string; color: string; route: string }
 > = {
-  stock: { label: 'Bolsa de Valores', color: '#8BA4C7', route: '/app/acciones' },
-  commodity: { label: 'Materias Primas', color: '#C9A962', route: '/app/commodities' },
   forex: { label: 'Divisas (Forex)', color: '#7A9E8E', route: '/app/forex' },
+  commodity: { label: 'Materias Primas', color: '#C9A962', route: '/app/commodities' },
+  stock: { label: 'Acciones', color: '#8BA4C7', route: '/app/acciones' },
+  index: { label: 'Índices Bursátiles', color: '#6B9EAD', route: '/app/indices' },
   crypto: { label: 'Criptomonedas', color: '#9B8BB8', route: '/app/cripto' },
 };
 
@@ -339,7 +340,8 @@ export function InvestmentGrowthPanel() {
             {segments.length === 0 ? (
               <div className="rounded-xl border border-ink-600 bg-ink-900/50 px-4 py-5 text-sm text-slate-400">
                 Aún no tienes posiciones abiertas. Cuando tu asesor acredite tu depósito y comiences
-                a operar en Bolsa, Materias Primas, Forex o Cripto, verás aquí la distribución y el
+                a operar en Divisas, Materias Primas, Acciones, Índices o Cripto, verás aquí la
+                distribución y el
                 rendimiento por mercado.
                 <div className="mt-4 flex flex-wrap gap-2">
                   {Object.values(ASSET_META).map((m) => (

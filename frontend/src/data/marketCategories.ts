@@ -13,7 +13,9 @@ export interface MarketCategoryInfo {
   accentText: string;
 }
 
-export const INVESTMENT_AMOUNTS_MXN = [5_000, 20_000] as const;
+export const INVESTMENT_AMOUNTS_USD = [1_000, 3_000, 5_000, 20_000] as const;
+/** @deprecated Usar INVESTMENT_AMOUNTS_USD */
+export const INVESTMENT_AMOUNTS_MXN = INVESTMENT_AMOUNTS_USD;
 export const INVESTMENT_HORIZONS_MONTHS = [1, 2, 4] as const;
 
 export const MARKET_CATEGORIES: MarketCategoryInfo[] = [

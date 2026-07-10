@@ -25,6 +25,8 @@ const pct = new Intl.NumberFormat('es-MX', {
 
 export const fmtMxn = (v: number) => currencyFormatter('MXN', 'es-MX').format(v);
 
+export const fmtUsd = (v: number) => currencyFormatter('USD', 'en-US').format(v);
+
 export const fmtCurrency = (v: number, currency: string, countryCode?: string) => {
   const cc = countryCode?.toUpperCase();
   const locale = cc ? getLatamCountry(cc).locale : 'es-MX';

@@ -1,4 +1,4 @@
-export type AssetClass = 'stock' | 'commodity' | 'forex' | 'crypto';
+export type AssetClass = 'stock' | 'commodity' | 'forex' | 'crypto' | 'index';
 
 export interface Instrument {
   symbol: string;
@@ -174,6 +174,7 @@ export interface MarketNewsItem {
   url: string;
   imageUrl?: string;
   publishedAt: string;
+  trend?: 'up' | 'down' | 'neutral';
 }
 
 export interface MarketNewsResponse {

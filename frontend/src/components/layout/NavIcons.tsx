@@ -80,6 +80,21 @@ export function NavIconCrypto({ className = '' }: IconProps) {
   );
 }
 
+export function NavIconIndexes({ className = '' }: IconProps) {
+  return (
+    <svg className={`${base} ${className}`} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M4 14L7.5 10.5L10.5 12.5L16 7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
 export function NavIconFund({ className = '' }: IconProps) {
   return (
     <svg className={`${base} ${className}`} viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -110,6 +125,7 @@ export type NavIconId =
   | 'stocks'
   | 'commodities'
   | 'forex'
+  | 'indexes'
   | 'crypto'
   | 'fund'
   | 'investment';
@@ -119,6 +135,7 @@ const MAP: Record<NavIconId, (props: IconProps) => ReactElement> = {
   stocks: NavIconStocks,
   commodities: NavIconCommodities,
   forex: NavIconForex,
+  indexes: NavIconIndexes,
   crypto: NavIconCrypto,
   fund: NavIconFund,
   investment: NavIconInvestment,

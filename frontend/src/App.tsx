@@ -12,6 +12,7 @@ import { Commodities } from './pages/Commodities';
 import { Forex } from './pages/Forex';
 import { Crypto } from './pages/Crypto';
 import { Fund } from './pages/Fund';
+import { Indexes } from './pages/Indexes';
 import { Profile } from './pages/Profile';
 
 function RequireClient({ children }: { children: ReactNode }) {
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
       { path: 'acciones', element: <Stocks /> },
       { path: 'commodities', element: <Commodities /> },
       { path: 'forex', element: <Forex /> },
+      { path: 'indices', element: <Indexes /> },
       { path: 'cripto', element: <Crypto /> },
       { path: 'fondear', element: <Fund /> },
       { path: 'perfil', element: <Profile /> },

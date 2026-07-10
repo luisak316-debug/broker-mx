@@ -76,9 +76,10 @@ export function NewsCard({ item, featured, onOpenSimulator }: NewsCardProps) {
         <img
           src={image}
           alt=""
-          loading="eager"
+          loading={featured ? 'eager' : 'lazy'}
           decoding="async"
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+          fetchPriority={featured ? 'high' : 'auto'}
+          className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
           onError={(e) => {
             const img = e.currentTarget;
             const fb = FALLBACK_IMAGES[imageKey] ?? FALLBACK_IMAGES.featured;

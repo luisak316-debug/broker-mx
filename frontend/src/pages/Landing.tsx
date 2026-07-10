@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { wakeApi } from '../api/client';
+import { FeaturedDailyNews } from '../components/landing/FeaturedDailyNews';
 import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
-import {
-  NewsCard,
-  SALINAS_FEATURED_NEWS,
-} from '../components/landing/MarketNewsSection';
 import { TestimonialsCarousel } from '../components/landing/TestimonialsCarousel';
 import { LandingSectionHeader } from '../components/landing/LandingSectionHeader';
 import { LandingCapitalScrolly } from '../components/landing/capital-scroll';
@@ -204,17 +201,7 @@ export function Landing() {
                 </p>
               </div>
 
-              <div className="mx-auto mt-12 max-w-3xl px-4">
-                <LandingSectionHeader
-                  className="!px-0 !text-left"
-                  eyebrow="Destacado del día"
-                  meta="Actualizado hoy · México"
-                  description="Titulares que ilustran la visión de inversión que compartimos con quienes confían en nuestra asesoría."
-                />
-                <div className="mt-6">
-                  <NewsCard item={SALINAS_FEATURED_NEWS} featured />
-                </div>
-              </div>
+              <FeaturedDailyNews />
             </section>
           }
         />

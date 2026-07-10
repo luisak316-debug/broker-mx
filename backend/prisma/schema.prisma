@@ -259,6 +259,7 @@ enum AssetClass {
   commodity
   forex
   crypto
+  index
 }
 
 enum OrderSide {

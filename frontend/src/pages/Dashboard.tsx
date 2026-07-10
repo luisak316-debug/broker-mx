@@ -7,15 +7,9 @@ import { useLivePrices } from '../hooks/useLivePrices';
 import { StatTile } from '../components/common/Card';
 import { Card } from '../components/common/Card';
 import { QuoteTable } from '../components/common/QuoteTable';
+import { CLIENT_MARKET_MODULES } from '../data/clientMarketModules';
 import type { Instrument, PortfolioSummary } from '../types';
 import { useClientMoney } from '../lib/clientMoney';
-
-const MODULES = [
-  { to: '/app/acciones', title: 'Bolsa de Valores', desc: 'Acciones, gráficos y dividendos', cls: 'stock' },
-  { to: '/app/commodities', title: 'Materias Primas', desc: 'Metales, energía y agrícolas', cls: 'commodity' },
-  { to: '/app/forex', title: 'Divisas (Forex)', desc: 'Pares contra el peso (MXN)', cls: 'forex' },
-  { to: '/app/cripto', title: 'Criptomonedas', desc: 'Mercado 24/7', cls: 'crypto' },
-];
 
 export function Dashboard() {
   const [instruments, setInstruments] = useState<Instrument[]>([]);
@@ -30,8 +24,9 @@ export function Dashboard() {
     api.portfolio(client.id).then(setPortfolio).catch(() => setPortfolio(null));
   }, [client?.id]);
 
-  const featured = instruments
-    .filter((i) => ['AAPL', 'XAU', 'USD/MXN', 'BTC'].includes(i.symbol));
+  const featured = instruments.filter((i) =>
+    ['USD/MXN', 'XAU', 'AAPL', 'SPX', 'BTC'].includes(i.symbol),
+  );
 
   return (
     <div className="space-y-6">
@@ -40,8 +35,8 @@ export function Dashboard() {
           ¡Bienvenido{client ? `, ${client.displayName}` : ''}!
         </h1>
         <p className="mt-1 text-sm text-slate-300">
-          Tu cuenta está lista. Fondea tu cuenta para comenzar a invertir en las cuatro grandes
-          categorías de mercados.
+          Tu cuenta está lista. Fondea tu cuenta para comenzar a invertir en las cinco categorías
+          de mercados.
         </p>
         <FundCtaLink className="mt-3 inline-flex">
           Fondear mi cuenta
@@ -51,7 +46,7 @@ export function Dashboard() {
       <div>
         <h2 className="text-lg font-semibold text-white">Resumen de Mercados</h2>
         <p className="text-sm text-slate-400">
-          Vista consolidada de las cuatro grandes categorías de inversión.
+          Vista consolidada de las cinco categorías de inversión.
         </p>
       </div>
 
@@ -70,9 +65,13 @@ export function Dashboard() {
         <StatTile label="Operación" value="24/7" sub="Cripto siempre activa" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {MODULES.map((m) => (
-          <Link key={m.to} to={m.to} className="card transition hover:border-brand-500/60 hover:bg-ink-700/60">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {CLIENT_MARKET_MODULES.map((m) => (
+          <Link
+            key={m.to}
+            to={m.to}
+            className={`card card--${m.cls} transition hover:border-brand-500/60 hover:bg-ink-700/60`}
+          >
             <p className="card-title">{m.title}</p>
             <p className="mt-1 text-sm text-slate-400">{m.desc}</p>
             <p className="mt-3 text-sm text-brand-400">Abrir módulo →</p>

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  INVESTMENT_AMOUNTS_MXN,
+  INVESTMENT_AMOUNTS_USD,
   INVESTMENT_HORIZONS_MONTHS,
   type MarketCategoryInfo,
 } from '../../data/marketCategories';
-import { fmtMxn, fmtPct } from '../../lib/format';
+import { fmtPct, fmtUsd } from '../../lib/format';
 import { projectInvestment } from '../../utils/investmentSimulator';
 
 type Props = {
@@ -14,12 +14,12 @@ type Props = {
 };
 
 export function MarketCategoryModal({ market, onClose }: Props) {
-  const [amountMxn, setAmountMxn] = useState<number>(INVESTMENT_AMOUNTS_MXN[0]);
+  const [amountUsd, setAmountUsd] = useState<number>(INVESTMENT_AMOUNTS_USD[0]);
   const [months, setMonths] = useState<number>(INVESTMENT_HORIZONS_MONTHS[0]);
 
   const projection = useMemo(
-    () => projectInvestment(amountMxn, market.annualReturnPct, months),
-    [amountMxn, market.annualReturnPct, months],
+    () => projectInvestment(amountUsd, market.annualReturnPct, months),
+    [amountUsd, market.annualReturnPct, months],
   );
 
   useEffect(() => {
@@ -91,20 +91,20 @@ export function MarketCategoryModal({ market, onClose }: Props) {
             </p>
 
             <div className="mt-4">
-              <p className="text-xs font-medium text-slate-400">Monto a invertir</p>
+              <p className="text-xs font-medium text-slate-400">Monto a invertir (USD)</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {INVESTMENT_AMOUNTS_MXN.map((amount) => (
+                {INVESTMENT_AMOUNTS_USD.map((amount) => (
                   <button
                     key={amount}
                     type="button"
-                    onClick={() => setAmountMxn(amount)}
+                    onClick={() => setAmountUsd(amount)}
                     className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                      amountMxn === amount
+                      amountUsd === amount
                         ? 'border-brand-400 bg-brand-600/20 text-white'
                         : 'border-white/10 bg-ink-800 text-slate-300 hover:border-white/20'
                     }`}
                   >
-                    {fmtMxn(amount)}
+                    {fmtUsd(amount)}
                   </button>
                 ))}
               </div>
@@ -133,11 +133,11 @@ export function MarketCategoryModal({ market, onClose }: Props) {
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-lg bg-ink-800/80 p-3">
                 <p className="text-[11px] text-slate-500">Ganancia estimada</p>
-                <p className="mt-1 text-lg font-bold text-bull">+{fmtMxn(projection.profitMxn)}</p>
+                <p className="mt-1 text-lg font-bold text-bull">+{fmtUsd(projection.profitMxn)}</p>
               </div>
               <div className="rounded-lg bg-ink-800/80 p-3">
                 <p className="text-[11px] text-slate-500">Total proyectado</p>
-                <p className="mt-1 text-lg font-bold text-white">{fmtMxn(projection.totalMxn)}</p>
+                <p className="mt-1 text-lg font-bold text-white">{fmtUsd(projection.totalMxn)}</p>
               </div>
               <div className="rounded-lg bg-ink-800/80 p-3">
                 <p className="text-[11px] text-slate-500">Rendimiento</p>

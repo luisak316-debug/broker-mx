@@ -1,4 +1,4 @@
-export type AssetClass = 'stock' | 'commodity' | 'forex' | 'crypto';
+export type AssetClass = 'stock' | 'commodity' | 'forex' | 'crypto' | 'index';
 
 export type CommodityGroup = 'metals' | 'energy' | 'agricultural';
 
