@@ -50,6 +50,18 @@ class PortfolioService {
     return p;
   }
 
+  getOpenPositionsSummary(userId: string): {
+    count: number;
+    notionalMxn: number;
+  } {
+    const portfolio = this.getOrCreate(userId);
+    const notionalMxn = portfolio.positions.reduce((acc, p) => acc + p.notionalMxn, 0);
+    return {
+      count: portfolio.positions.length,
+      notionalMxn: Number(notionalMxn.toFixed(2)),
+    };
+  }
+
   placeOrder(params: {
     userId: string;
     symbol: string;

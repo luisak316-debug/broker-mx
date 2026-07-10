@@ -45,6 +45,11 @@ adminRouter.post(
   requireRole('ADVISOR', 'COMPLIANCE'),
   asyncHandler(finance.grantBonus),
 );
+adminRouter.post(
+  '/clients/:id/commission',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(finance.chargeCommission),
+);
 
 // Cuenta de depósito bancaria asignada por cliente
 adminRouter.put(

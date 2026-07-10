@@ -16,6 +16,15 @@ import {
   previewBonus,
   type BonusType,
 } from '../lib/bonusTypes';
+import {
+  COMMISSION_TYPE_LABEL,
+  COMMISSION_TYPE_ROWS,
+  commissionFormValid,
+  MANAGEMENT_PERIOD_OPTIONS,
+  previewCommission,
+  type CommissionType,
+  type ManagementPeriod,
+} from '../lib/commissionTypes';
 
 const DEPOSIT_METHOD_LABEL: Record<DepositMethod, string> = {
   TRANSFERENCIA: 'Transferencia bancaria / SPEI',
@@ -55,13 +64,18 @@ export function ClientProfile() {
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositError, setDepositError] = useState<string | null>(null);
 
-  const [confirm, setConfirm] = useState<null | 'balance' | 'funds' | 'bonus'>(null);
+  const [confirm, setConfirm] = useState<null | 'balance' | 'funds' | 'bonus' | 'commission'>(null);
   const [busy, setBusy] = useState(false);
 
   const [bonusType, setBonusType] = useState<BonusType>('DEPOSITO');
   const [bonusAmount, setBonusAmount] = useState('');
   const [bonusPercentage, setBonusPercentage] = useState('');
   const [bonusReason, setBonusReason] = useState('');
+
+  const [commissionType, setCommissionType] = useState<CommissionType>('CUSTODIA');
+  const [commissionPercentage, setCommissionPercentage] = useState('');
+  const [commissionPeriod, setCommissionPeriod] = useState<ManagementPeriod>('TRIMESTRAL');
+  const [commissionReason, setCommissionReason] = useState('');
 
   function load() {
     api.client(id).then((c) => {
@@ -250,6 +264,42 @@ export function ClientProfile() {
   );
   const selectedBonusRow = BONUS_TYPE_ROWS.find((r) => r.type === bonusType)!;
 
+  const commissionPctNum =
+    commissionPercentage.trim() === '' ? NaN : Number(commissionPercentage);
+  const selectedCommissionRow = COMMISSION_TYPE_ROWS.find((r) => r.type === commissionType)!;
+  const commissionPercentageValid =
+    commissionPercentage.trim() !== '' &&
+    !Number.isNaN(commissionPctNum) &&
+    commissionPctNum >= selectedCommissionRow.pctMin &&
+    commissionPctNum <= selectedCommissionRow.pctMax;
+  const commissionPreview = commissionPercentageValid
+    ? previewCommission(
+        commissionType,
+        {
+          cashMxn: client.cashMxn,
+          totalInvestedMxn: client.totalInvestedMxn,
+          openPositionsNotionalMxn: client.openPositionsNotionalMxn ?? 0,
+        },
+        commissionPctNum,
+        commissionPeriod,
+      )
+    : null;
+  const commissionTotal = commissionPreview?.totalMxn ?? 0;
+  const commissionReady = commissionFormValid(
+    commissionType,
+    {
+      cashMxn: client.cashMxn,
+      totalInvestedMxn: client.totalInvestedMxn,
+      openPositionsNotionalMxn: client.openPositionsNotionalMxn ?? 0,
+    },
+    commissionPctNum,
+    commissionPercentageValid,
+    commissionReason,
+    commissionPeriod,
+  );
+  const commissionExceedsBalance =
+    commissionTotal > 0 && commissionTotal > client.cashMxn;
+
   async function submitBonus() {
     setBusy(true);
     try {
@@ -269,6 +319,29 @@ export function ClientProfile() {
       load();
     } catch (e) {
       setFeedback(e instanceof Error ? e.message : 'Error al otorgar el bono.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitCommission() {
+    setBusy(true);
+    try {
+      const result = await api.chargeCommission(id, {
+        commissionType,
+        percentage: commissionPctNum,
+        period: commissionType === 'GESTION_ANUAL' ? commissionPeriod : undefined,
+        reason: commissionReason,
+      });
+      setFeedback(
+        `Comisión «${result.commission.typeLabel}» de ${fmtMxn(result.commission.totalMxn)} cobrada y registrada en auditoría.`,
+      );
+      setCommissionPercentage('');
+      setCommissionReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al cobrar la comisión.');
     } finally {
       setBusy(false);
     }
@@ -887,6 +960,182 @@ export function ClientProfile() {
         )}
       </Card>
 
+      {/* Comisiones */}
+      <Card title="Comisiones" id="comisiones">
+        {canEdit ? (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-400">
+              Cobros estándar del sector: custodia por operaciones abiertas (0,1%–0,4% sobre
+              nocional) y cuota de gestión anual (1%–2,75% sobre patrimonio en cuenta, con
+              prorrateo mensual, trimestral o anual).
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs">
+                <p className="text-slate-500">Posiciones abiertas</p>
+                <p className="mt-1 font-semibold text-white">
+                  {client.openPositionsCount ?? 0}{' '}
+                  <span className="font-normal text-slate-400">
+                    · {fmtMxn(client.openPositionsNotionalMxn ?? 0)} nocional
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs">
+                <p className="text-slate-500">Patrimonio en cuenta (AUM)</p>
+                <p className="mt-1 font-semibold text-white">{fmtMxn(client.aumMxn ?? client.cashMxn + client.totalInvestedMxn)}</p>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs">
+                <p className="text-slate-500">Saldo disponible para cobro</p>
+                <p className="mt-1 font-semibold text-white">{fmtMxn(client.cashMxn)}</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-white/10">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th className="w-10">Elegir</th>
+                    <th>Tipo de comisión</th>
+                    <th>Descripción</th>
+                    <th>Rango / ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMMISSION_TYPE_ROWS.map((row) => (
+                    <tr
+                      key={row.type}
+                      className={
+                        commissionType === row.type
+                          ? 'bg-amber-950/30 ring-1 ring-inset ring-amber-500/25'
+                          : ''
+                      }
+                    >
+                      <td>
+                        <input
+                          type="radio"
+                          name="commissionType"
+                          className="h-4 w-4 accent-amber-500"
+                          checked={commissionType === row.type}
+                          onChange={() => {
+                            setCommissionType(row.type);
+                            setCommissionPercentage('');
+                          }}
+                        />
+                      </td>
+                      <td className="font-medium text-white">{row.label}</td>
+                      <td className="text-slate-300">{row.description}</td>
+                      <td className="text-xs text-slate-400">
+                        {row.pctMin}% – {row.pctMax}%
+                        <br />
+                        {row.example}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-sm text-slate-300">
+              Tipo seleccionado:{' '}
+              <strong className="text-white">{COMMISSION_TYPE_LABEL[commissionType]}</strong>
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="label">
+                  Porcentaje ({selectedCommissionRow.pctMin}% – {selectedCommissionRow.pctMax}%)
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  min={selectedCommissionRow.pctMin}
+                  max={selectedCommissionRow.pctMax}
+                  step={selectedCommissionRow.pctStep}
+                  placeholder={
+                    commissionType === 'CUSTODIA' ? 'Ej. 0.2' : 'Ej. 2'
+                  }
+                  value={commissionPercentage}
+                  onChange={(e) => setCommissionPercentage(e.target.value)}
+                />
+                <p className={`mt-1 text-xs ${commissionPercentageValid ? 'text-slate-500' : 'text-danger'}`}>
+                  {commissionPercentageValid
+                    ? commissionType === 'CUSTODIA'
+                      ? 'Se aplica sobre el valor nocional de las operaciones abiertas.'
+                      : 'Tasa anual sobre saldo + capital invertido.'
+                    : `Indica un porcentaje entre ${selectedCommissionRow.pctMin} y ${selectedCommissionRow.pctMax}.`}
+                </p>
+              </div>
+
+              {commissionType === 'GESTION_ANUAL' && (
+                <div>
+                  <label className="label">Periodo de cobro</label>
+                  <select
+                    className="input"
+                    value={commissionPeriod}
+                    onChange={(e) => setCommissionPeriod(e.target.value as ManagementPeriod)}
+                  >
+                    {MANAGEMENT_PERIOD_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-slate-500">
+                    En cuentas gestionadas es habitual cobrar trimestralmente (1/4 de la tasa anual).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {commissionPreview && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 px-3 py-2 text-sm">
+                <p className="text-slate-300">Vista previa — {COMMISSION_TYPE_LABEL[commissionType]}</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
+                  {commissionPreview.lines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                  <li className="font-semibold text-white">
+                    Total a descontar: {fmtMxn(commissionTotal)}
+                  </li>
+                  <li>
+                    Nuevo saldo: {fmtMxn(client.cashMxn)} →{' '}
+                    {fmtMxn(Math.max(0, client.cashMxn - commissionTotal))}
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {commissionExceedsBalance && (
+              <p className="text-sm text-danger">
+                El monto de la comisión supera el saldo disponible del cliente.
+              </p>
+            )}
+
+            <div>
+              <label className="label">Razón del cobro (obligatoria)</label>
+              <input
+                className="input"
+                placeholder="Ej. Comisión trimestral de gestión — periodo Q2 2026"
+                value={commissionReason}
+                onChange={(e) => setCommissionReason(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="btn-danger"
+              disabled={!commissionReady || commissionExceedsBalance || busy}
+              onClick={() => setConfirm('commission')}
+            >
+              Cobrar comisión
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">
+            Tu rol no tiene permisos para aplicar comisiones a clientes.
+          </p>
+        )}
+      </Card>
+
       {/* Transacciones del cliente */}
       <Card title="Movimientos recientes del cliente">
         <div className="overflow-x-auto">
@@ -977,6 +1226,33 @@ export function ClientProfile() {
           <strong className="text-white">{fmtMxn(client.cashMxn + bonusTotal)}</strong>
         </div>
         Esta acción quedará registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirm === 'commission'}
+        title="¿Confirmar cobro de comisión?"
+        confirmLabel="Sí, cobrar comisión"
+        tone="danger"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitCommission}
+      >
+        Cobrarás comisión «<strong className="text-white">{COMMISSION_TYPE_LABEL[commissionType]}</strong>» de{' '}
+        <strong className="text-white">{fmtMxn(commissionTotal)}</strong> a{' '}
+        <strong className="text-white">{client.displayName}</strong>.
+        <div className="mt-2 rounded-lg bg-ink-900/60 p-2 text-xs">
+          {commissionPreview?.lines.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
+          Total comisión: <strong className="text-white">{fmtMxn(commissionTotal)}</strong>
+          <br />
+          Saldo: {fmtMxn(client.cashMxn)} →{' '}
+          <strong className="text-white">{fmtMxn(client.cashMxn - commissionTotal)}</strong>
+        </div>
+        El importe se descontará del saldo disponible. Quedará registrado en la bitácora de auditoría.
       </ConfirmDialog>
     </div>
   );

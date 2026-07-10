@@ -57,6 +57,9 @@ export interface ClientProfile extends ClientRow {
   documents: ClientDocument[];
   advisorEmail?: string;
   depositAccount?: DepositAccount;
+  openPositionsCount?: number;
+  openPositionsNotionalMxn?: number;
+  aumMxn?: number;
 }
 
 export interface Transaction {

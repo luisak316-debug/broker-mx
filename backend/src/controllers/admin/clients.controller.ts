@@ -12,6 +12,7 @@ import {
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
+import { portfolioService } from '../../services/portfolio.service';
 
 export async function listClientsHandler(req: Request, res: Response): Promise<void> {
   const q = String(req.query.q ?? '').trim();
@@ -51,11 +52,17 @@ export async function getClient(req: Request, res: Response): Promise<void> {
   if (!client) throw new HttpError(404, 'Cliente no encontrado.');
   const advisor = client.advisorId ? await findStaffById(client.advisorId) : undefined;
   const advisorActive = advisor?.active && advisor.role === 'ADVISOR';
+  const portfolioKey = client.internalId ?? client.id;
+  const positions = portfolioService.getOpenPositionsSummary(portfolioKey);
+  const aumMxn = Math.round((client.cashMxn + client.totalInvestedMxn) * 100) / 100;
   res.json({
     data: {
       ...client,
       advisorName: advisorActive ? advisor.displayName : undefined,
       advisorEmail: advisorActive ? advisor.email : undefined,
+      openPositionsCount: positions.count,
+      openPositionsNotionalMxn: positions.notionalMxn,
+      aumMxn,
     },
   });
 }

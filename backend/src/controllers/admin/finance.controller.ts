@@ -6,6 +6,13 @@ import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
 import { fmtMxn } from '../../utils/format';
 import { BONUS_TYPE_LABEL, calculateBonus, type BonusType } from '../../lib/bonusCalc';
+import {
+  calculateCommission,
+  COMMISSION_TYPE_LABEL,
+  type CommissionType,
+  type ManagementPeriod,
+} from '../../lib/commissionCalc';
+import { portfolioService } from '../../services/portfolio.service';
 
 const balanceSchema = z.object({
   cashMxn: z.number().min(0).optional(),
@@ -147,6 +154,87 @@ export async function grantBonus(req: Request, res: Response): Promise<void> {
         percentPartMxn: calc.percentPartMxn,
         baseMxn: calc.baseMxn,
         totalMxn: calc.totalMxn,
+      },
+      audit,
+    },
+  });
+}
+
+const commissionSchema = z.object({
+  commissionType: z.enum(['CUSTODIA', 'GESTION_ANUAL']),
+  percentage: z.number().positive(),
+  period: z.enum(['MENSUAL', 'TRIMESTRAL', 'ANUAL']).optional(),
+  reason: z.string().min(5, 'La razón del cobro es obligatoria (mínimo 5 caracteres).'),
+});
+
+export async function chargeCommission(req: Request, res: Response): Promise<void> {
+  const client = await findClient(req.params.id);
+  if (!client) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const parsed = commissionSchema.parse(req.body);
+  const commissionType = parsed.commissionType as CommissionType;
+  const period = (parsed.period ?? 'TRIMESTRAL') as ManagementPeriod;
+  const portfolioKey = client.internalId ?? client.id;
+  const positions = portfolioService.getOpenPositionsSummary(portfolioKey);
+
+  const calc = calculateCommission(
+    commissionType,
+    {
+      cashMxn: client.cashMxn,
+      totalInvestedMxn: client.totalInvestedMxn,
+      openPositionsNotionalMxn: positions.notionalMxn,
+    },
+    parsed.percentage,
+    commissionType === 'GESTION_ANUAL' ? period : undefined,
+  );
+
+  if (calc.totalMxn <= 0) {
+    throw new HttpError(400, 'La comisión calculada debe ser mayor a cero.');
+  }
+  if (calc.totalMxn > client.cashMxn) {
+    throw new HttpError(
+      400,
+      `Saldo insuficiente para cobrar la comisión (${fmtMxn(calc.totalMxn)}). Saldo disponible: ${fmtMxn(client.cashMxn)}.`,
+    );
+  }
+
+  const before = { cashMxn: client.cashMxn };
+  const nextCash = round2(client.cashMxn - calc.totalMxn);
+  const updated = await updateClientBalances(client.id, { cashMxn: nextCash });
+  if (!updated) throw new HttpError(404, 'Cliente no encontrado.');
+
+  const after = { cashMxn: updated.cashMxn };
+  const typeLabel = COMMISSION_TYPE_LABEL[commissionType];
+
+  const audit = await record({
+    actor: req.staff!,
+    action: 'COMMISSION_CHARGE',
+    targetUserId: client.id,
+    description: `${req.staff!.name} cobró comisión «${typeLabel}» de ${fmtMxn(calc.totalMxn)} a ${client.displayName} (${calc.summary}). Saldo: ${fmtMxn(before.cashMxn)} → ${fmtMxn(after.cashMxn)}. Razón: ${parsed.reason}`,
+    before: {
+      ...before,
+      commissionType,
+      commissionPercentage: calc.percentage,
+      commissionPeriod: calc.period,
+      commissionBaseMxn: calc.baseMxn,
+      commissionTotalMxn: calc.totalMxn,
+      openPositionsCount: positions.count,
+    },
+    after,
+    ip: clientIp(req),
+  });
+
+  res.json({
+    data: {
+      client: updated,
+      commission: {
+        commissionType,
+        typeLabel,
+        percentage: calc.percentage,
+        period: calc.period,
+        baseMxn: calc.baseMxn,
+        totalMxn: calc.totalMxn,
+        openPositionsCount: positions.count,
       },
       audit,
     },

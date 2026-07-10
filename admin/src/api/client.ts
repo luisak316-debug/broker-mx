@@ -101,6 +101,28 @@ export const api = {
       };
     }>(`/clients/${id}/bonus`, { method: 'POST', body: JSON.stringify(payload) }),
 
+  chargeCommission: (
+    id: string,
+    payload: {
+      commissionType: 'CUSTODIA' | 'GESTION_ANUAL';
+      percentage: number;
+      period?: 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
+      reason: string;
+    },
+  ) =>
+    http<{
+      client: ClientProfile;
+      commission: {
+        commissionType: string;
+        typeLabel: string;
+        percentage: number;
+        period?: string;
+        baseMxn: number;
+        totalMxn: number;
+        openPositionsCount: number;
+      };
+    }>(`/clients/${id}/commission`, { method: 'POST', body: JSON.stringify(payload) }),
+
   updateDepositAccount: (id: string, payload: Omit<DepositAccount, 'updatedAt' | 'updatedByName'>) =>
     http<{ depositAccount: DepositAccount }>(`/clients/${id}/deposit-account`, {
       method: 'PUT',
