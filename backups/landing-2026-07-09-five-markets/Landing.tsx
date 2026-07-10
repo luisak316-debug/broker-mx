@@ -1,0 +1,254 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { wakeApi } from '../api/client';
+import { FeaturedDailyNews } from '../components/landing/FeaturedDailyNews';
+import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
+import { TestimonialsCarousel } from '../components/landing/TestimonialsCarousel';
+import { LandingSectionHeader } from '../components/landing/LandingSectionHeader';
+import { LandingCapitalScrolly } from '../components/landing/capital-scroll';
+import { CapitalHeroDecorCards } from '../components/landing/capital-scroll/CapitalHeroDecorCards';
+import { LandingConfianzaScroll } from '../components/landing/LandingConfianzaScroll';
+import { LandingTraderScroll } from '../components/landing/LandingTraderScroll';
+import { GoldenHighlight } from '../components/landing/GoldenHighlight';
+import { CelebrationLink } from '../components/landing/CelebrationLink';
+import { MARKET_CATEGORIES, type MarketCategoryId } from '../data/marketCategories';
+
+export function Landing() {
+  const [activeMarket, setActiveMarket] = useState<MarketCategoryId | null>(null);
+  const selectedMarket = activeMarket
+    ? MARKET_CATEGORIES.find((m) => m.id === activeMarket)
+    : null;
+
+  useEffect(() => {
+    wakeApi();
+  }, []);
+
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('.landing-header');
+    if (!header) return;
+
+    let lastH = 0;
+    const syncHeaderHeight = () => {
+      const h = Math.round(header.offsetHeight);
+      if (h === lastH || h <= 0) return;
+      lastH = h;
+      document.documentElement.style.setProperty('--landing-header-h', `${h}px`);
+    };
+
+    syncHeaderHeight();
+
+    let resizeTimer = 0;
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(syncHeaderHeight, 250);
+    };
+
+    window.addEventListener('orientationchange', syncHeaderHeight);
+    window.addEventListener('resize', onResize);
+
+    const desktopMq = window.matchMedia('(min-width: 768px)');
+    let observer: ResizeObserver | null = null;
+
+    const syncObserver = () => {
+      if (desktopMq.matches) {
+        if (!observer) {
+          observer = new ResizeObserver(onResize);
+          observer.observe(header);
+        }
+      } else {
+        observer?.disconnect();
+        observer = null;
+      }
+    };
+
+    syncObserver();
+    desktopMq.addEventListener('change', syncObserver);
+
+    return () => {
+      window.clearTimeout(resizeTimer);
+      window.removeEventListener('orientationchange', syncHeaderHeight);
+      window.removeEventListener('resize', onResize);
+      desktopMq.removeEventListener('change', syncObserver);
+      observer?.disconnect();
+    };
+  }, []);
+
+  return (
+    <div className="landing-page min-h-screen bg-black text-slate-100">
+
+      <header className="landing-header z-50 border-b border-white/10">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+          <a href="#top" className="flex items-center gap-2">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
+              B
+            </span>
+            <span className="text-lg font-semibold text-white">Broker.mx</span>
+          </a>
+          <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
+            <a href="#quienes" className="hover:text-white">
+              Quiénes Somos
+            </a>
+            <a href="#mercados" className="hover:text-white">
+              Mercados
+            </a>
+            <a href="#mercados" className="hover:text-white">
+              Noticias
+            </a>
+            <a href="#testimonios" className="hover:text-white">
+              Testimonios
+            </a>
+          </nav>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/login"
+              className="btn-landing-glass btn-landing-glass--ghost inline-flex px-2 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+            >
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Iniciar Sesión</span>
+            </Link>
+            <Link to="/registro" className="btn-landing-glass px-2 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
+              Crear Cuenta
+            </Link>
+          </div>
+        </div>
+        <nav
+          className="landing-header__nav-mobile flex gap-4 border-t border-white/5 px-4 py-2 text-xs text-slate-400 md:hidden"
+          aria-label="Secciones"
+        >
+          <a href="#quienes" className="shrink-0 whitespace-nowrap hover:text-white">
+            Quiénes Somos
+          </a>
+          <a href="#mercados" className="shrink-0 whitespace-nowrap hover:text-white">
+            Mercados
+          </a>
+          <a href="#testimonios" className="shrink-0 whitespace-nowrap hover:text-white">
+            Testimonios
+          </a>
+        </nav>
+      </header>
+
+      <main id="top" className="relative">
+        <LandingCapitalScrolly
+          hero={
+            <section className="landing-hero landing-hero--globe relative">
+              <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-5 md:pt-8 lg:pt-10">
+                <div className="cap-hero-shell">
+                  <div className="cap-hero-shell__grid">
+                    <div className="hero-spotlight landing-hero__copy max-w-2xl text-left">
+                      <span className="relative inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-100">
+                        Firma de intermediación profesional · México
+                      </span>
+                      <h1 className="hero-headline relative mt-5 text-[1.75rem] font-extrabold leading-tight text-white sm:text-4xl sm:text-5xl lg:text-[3.25rem]">
+                        No dejes que la inflación devore tu esfuerzo.
+                      </h1>
+                      <p className="relative mt-4 max-w-xl text-lg text-slate-200">
+                        Pon tu dinero a trabajar en los grandes mercados globales y construye la{' '}
+                        <strong className="text-white">libertad financiera</strong> que tu familia
+                        merece hoy.
+                      </p>
+                      <div className="relative mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                        <CelebrationLink
+                          as="link"
+                          to="/registro"
+                          className="btn-landing-glass w-full px-5 py-3 text-base sm:w-auto sm:px-6"
+                        >
+                          <GoldenHighlight variant="sm">Comienza a invertir desde hoy</GoldenHighlight>
+                        </CelebrationLink>
+                        <Link to="/login" className="btn-landing-glass btn-landing-glass--ghost w-full px-5 py-3 text-base sm:w-auto sm:px-6">
+                          Iniciar sesión
+                        </Link>
+                        <a href="#mercados" className="btn-landing-glass btn-landing-glass--ghost w-full px-5 py-3 text-base sm:w-auto sm:px-6">
+                          Ver mercados
+                        </a>
+                      </div>
+                      <div className="hero-trust-line relative mt-8 flex flex-wrap gap-6 text-sm text-slate-300">
+                        <span>✓ Asesor personal asignado</span>
+                        <span>✓ Respaldo legal</span>
+                        <span>✓ Depósitos por SPEI</span>
+                      </div>
+                    </div>
+                    <CapitalHeroDecorCards />
+                  </div>
+                </div>
+              </div>
+            </section>
+          }
+          afterHero={
+            <section
+              id="quienes"
+              className="landing-section-over-globe relative z-10 border-t border-ink-700/20 py-12 sm:py-16 lg:py-20"
+            >
+              <LandingSectionHeader
+                goldenTitle
+                eyebrow="Nuestra firma"
+                title="Quiénes Somos"
+                description={
+                  <>
+                    Somos una firma legal e intermediaria especializada en la{' '}
+                    <strong className="text-slate-200">protección, defensa y crecimiento patrimonial</strong>{' '}
+                    de nuestros clientes. Combinamos asesoría profesional cercana con acceso a los mercados
+                    globales para que tu capital trabaje con estrategia, transparencia y respaldo.
+                  </>
+                }
+              />
+
+              <div className="mx-auto mt-10 max-w-3xl px-4 text-center">
+                <p className="text-base leading-relaxed text-slate-300 sm:text-lg">
+                  A lo largo de nuestra trayectoria hemos asesorado a empresarios, inversionistas y
+                  figuras públicas en estrategias patrimoniales con disciplina y visión de largo plazo,
+                  logrando resultados sólidos que se reflejan hasta el día de hoy.{' '}
+                  <strong className="text-white">Broker.mx: el broker en el que puede confiar.</strong>
+                </p>
+              </div>
+
+              <FeaturedDailyNews />
+            </section>
+          }
+        />
+
+        <LandingTraderScroll id="mercados" onOpenMarket={setActiveMarket} />
+
+        <LandingConfianzaScroll>
+          <LandingSectionHeader
+            className="mb-10"
+            goldenEyebrow
+            eyebrow="Confianza"
+            title="Lo que dicen nuestros clientes"
+            description="Resultados y experiencias reales de inversionistas mexicanos satisfechos."
+          />
+          <div className="mx-auto max-w-7xl px-4">
+            <TestimonialsCarousel />
+          </div>
+        </LandingConfianzaScroll>
+
+        <section className="px-4 py-12 sm:py-16">
+          <div className="landing-glass-emerald mx-auto max-w-4xl px-5 py-10 text-center sm:px-6 sm:py-12">
+            <GoldenHighlight as="h2" variant="lg" className="text-2xl font-bold sm:text-3xl">
+              Tu futuro financiero empieza con una decisión
+            </GoldenHighlight>
+            <p className="mx-auto mt-3 max-w-2xl text-slate-300">
+              Crea tu cuenta en minutos y recibe el acompañamiento de un asesor profesional.
+            </p>
+            <CelebrationLink as="link" to="/registro" className="btn-landing-glass mt-6 px-6 py-3 text-base">
+              <GoldenHighlight variant="sm">Comienza a invertir desde hoy</GoldenHighlight>
+            </CelebrationLink>
+          </div>
+        </section>
+      </main>
+
+      <footer className="relative z-10 border-t border-ink-700/60 py-8 text-center text-xs text-slate-500">
+        <div className="mx-auto max-w-7xl px-4">
+          <p className="mb-2">
+            Broker.mx — intermediación financiera profesional en México. Operamos con transparencia y
+            conforme a la normativa aplicable.
+          </p>
+          <p>© {new Date().getFullYear()} Broker.mx · Todos los derechos reservados.</p>
+        </div>
+      </footer>
+
+      {selectedMarket ? (
+        <MarketCategoryModal market={selectedMarket} onClose={() => setActiveMarket(null)} />
+      ) : null}
+    </div>
+  );
+}
