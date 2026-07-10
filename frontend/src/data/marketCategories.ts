@@ -1,4 +1,4 @@
-export type MarketCategoryId = 'stocks' | 'commodities' | 'forex' | 'crypto' | 'indexes';
+export type MarketCategoryId = 'forex' | 'commodities' | 'stocks' | 'indexes' | 'crypto';
 
 export interface MarketCategoryInfo {
   id: MarketCategoryId;
@@ -18,6 +18,7 @@ export const INVESTMENT_AMOUNTS_USD = [1_000, 3_000, 5_000, 20_000] as const;
 export const INVESTMENT_AMOUNTS_MXN = INVESTMENT_AMOUNTS_USD;
 export const INVESTMENT_HORIZONS_MONTHS = [1, 2, 4] as const;
 
+/** Orden fijo: Divisas → Materias Primas → Acciones → Índices → Cripto */
 export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   {
     id: 'forex',
@@ -56,7 +57,7 @@ export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
     title: 'Acciones',
     shortDesc: 'Emisoras líderes en México y el mundo.',
     overview:
-      'Las acciones te permiten ser dueño parcial de empresas líderes. Es el mercado ideal para hacer crecer tu patrimonio con dividendos, diversificación sectorial y liquidez diaria bajo asesoría profesional.',
+      'Invierte en acciones de empresas sólidas en México y mercados globales. Es el camino clásico para hacer crecer tu patrimonio con dividendos, diversificación sectorial y liquidez diaria bajo asesoría profesional.',
     bullets: [
       'Acceso a emisoras del IPC, EE.UU. y sectores exportadores',
       'Diversificación en industrial, tecnología, consumo y finanzas',
@@ -70,13 +71,13 @@ export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   {
     id: 'indexes',
     title: 'Índices Bursátiles',
-    shortDesc: 'S&P 500, NASDAQ, IPC y mercados globales.',
+    shortDesc: 'S&P 500, NASDAQ, IPC y otros índices globales.',
     overview:
-      'Los índices bursátiles reflejan el pulso de economías enteras. Operar índices te da exposición diversificada a los mercados más líquidos del mundo con una sola decisión de inversión.',
+      'Los índices bursátiles reflejan el pulso de economías enteras. Permiten invertir en la tendencia de mercados como el S&P 500, NASDAQ o el IPC mexicano con una sola exposición diversificada.',
     bullets: [
-      'S&P 500, NASDAQ 100, Dow Jones e IPC México',
-      'Diversificación instantánea en docenas de emisoras',
-      'Referencia clave para estrategias de largo plazo',
+      'S&P 500, NASDAQ 100, Dow Jones, IPC México y más',
+      'Diversificación instantánea en decenas o cientos de emisoras',
+      'Ideal para seguir la tendencia macro con horizonte de mediano plazo',
     ],
     annualReturnPct: 9.0,
     accentBorder: 'border-cyan-500/40',

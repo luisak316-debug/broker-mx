@@ -136,15 +136,15 @@ export function MarketCategoryIcon({ id, className = 'h-10 w-10' }: Props) {
     case 'indexes':
       return (
         <svg viewBox="0 0 48 48" className={className} fill="none" aria-hidden>
-          <rect x="8" y="10" width="32" height="28" rx="2" stroke="#64748b" strokeWidth="1.25" />
+          <rect x="8" y="10" width="32" height="26" rx="2" stroke="#64748b" strokeWidth="1.25" />
           <path
-            d="M12 32L20 24L28 28L36 16"
+            d="M12 30L18 24L24 27L32 16L36 20"
             stroke="#22d3ee"
-            strokeWidth="1.75"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <path d="M12 36H36" stroke="#475569" strokeWidth="1.25" strokeLinecap="round" />
+          <path d="M12 34H36" stroke="#475569" strokeWidth="1" strokeLinecap="round" />
         </svg>
       );
   }

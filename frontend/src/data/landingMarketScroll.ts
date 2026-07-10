@@ -1,6 +1,6 @@
 import type { MarketCategoryId } from './marketCategories';
 
-/** Orden de aparición en el scroll (después de las 3 frases). */
+/** Orden en el scroll landing (después de las 3 frases): 5 categorías. */
 export const MARKET_SCROLL_ORDER: MarketCategoryId[] = [
   'forex',
   'commodities',
