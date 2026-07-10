@@ -1,4 +1,4 @@
-@import '../../../shared/portal-theme.css';
+@import './portal-theme.css';
 
 @tailwind base;
 @tailwind components;
