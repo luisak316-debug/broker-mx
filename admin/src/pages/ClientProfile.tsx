@@ -322,7 +322,7 @@ export function ClientProfile() {
           {can('ADMIN', 'COMPLIANCE') && client.accountStatus !== 'ACTIVA' ? (
             <button
               type="button"
-              className="btn-ghost border border-bull/40 text-xs text-bull"
+              className="btn-ghost border border-amber-500/40 text-xs text-amber-400"
               onClick={async () => {
                 try {
                   await api.updateClientAccess(id, {
@@ -756,7 +756,7 @@ export function ClientProfile() {
               El total se acredita al saldo disponible del cliente.
             </p>
 
-            <div className="overflow-x-auto rounded-lg border border-emerald-500/20">
+            <div className="overflow-x-auto rounded-lg border border-white/10">
               <table className="table-base">
                 <thead>
                   <tr>
@@ -772,7 +772,7 @@ export function ClientProfile() {
                       key={row.type}
                       className={
                         bonusType === row.type
-                          ? 'bg-emerald-950/40 ring-1 ring-inset ring-emerald-500/30'
+                          ? 'bg-amber-950/30 ring-1 ring-inset ring-amber-500/25'
                           : ''
                       }
                     >
@@ -780,21 +780,21 @@ export function ClientProfile() {
                         <input
                           type="radio"
                           name="bonusType"
-                          className="h-4 w-4 accent-emerald-500"
+                          className="h-4 w-4 accent-amber-500"
                           checked={bonusType === row.type}
                           onChange={() => setBonusType(row.type)}
                         />
                       </td>
                       <td className="font-medium text-white">{row.label}</td>
                       <td className="text-slate-300">{row.description}</td>
-                      <td className="text-xs text-emerald-200/70">{row.example}</td>
+                      <td className="text-xs text-slate-400">{row.example}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            <p className="text-sm text-emerald-100/90">
+            <p className="text-sm text-slate-300">
               Tipo seleccionado: <strong className="text-white">{selectedBonusRow.label}</strong>
             </p>
 
@@ -846,8 +846,8 @@ export function ClientProfile() {
             </div>
 
             {bonusPreview && bonusPercentageValid && (
-              <div className="rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-sm">
-                <p className="text-emerald-100/80">Vista previa — {BONUS_TYPE_LABEL[bonusType]}</p>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 px-3 py-2 text-sm">
+                <p className="text-slate-300">Vista previa — {BONUS_TYPE_LABEL[bonusType]}</p>
                 <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
                   {bonusPreview.lines.map((line) => (
                     <li key={line}>{line.includes('$') ? line : `${line}`}</li>

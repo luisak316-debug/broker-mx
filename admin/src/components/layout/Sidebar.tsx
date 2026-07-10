@@ -30,14 +30,14 @@ function NavItems() {
 
 export function Sidebar() {
   return (
-    <aside className="portal-sidebar portal-glass-emerald--subtle">
+    <aside className="portal-sidebar portal-panel">
       <div className="mb-6 flex items-center gap-2 px-2">
-        <span className="portal-brand-mark grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-800 font-bold text-white">
+        <span className="portal-brand-mark grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900 font-bold text-white">
           A
         </span>
         <div>
           <p className="text-sm font-semibold text-white">admin</p>
-          <p className="text-xs text-emerald-200/50">Broker.mx</p>
+          <p className="text-xs text-slate-500">Broker.mx</p>
         </div>
       </div>
       <nav className="flex flex-col gap-1">
@@ -50,7 +50,7 @@ export function Sidebar() {
 export function MobileAdminNav() {
   const { can } = useAuth();
   return (
-    <nav className="portal-mobile-nav portal-glass-emerald--subtle">
+    <nav className="portal-mobile-nav portal-panel">
       {NAV.filter((item) => !item.roles || can(...item.roles)).map((item) => (
         <NavLink
           key={item.to}

@@ -32,11 +32,11 @@ export function Login() {
       <PortalAtmosphere />
       <div className="portal-shell w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-xl font-bold text-white">
+          <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 text-xl font-bold text-white">
             S
           </div>
           <h1 className="portal-title text-xl font-bold">Supervisores</h1>
-          <p className="text-sm text-emerald-200/60">Gestión de asesores y contactos</p>
+          <p className="text-sm text-slate-400">Gestión de asesores y contactos</p>
         </div>
 
         <form onSubmit={submit} className="card space-y-4">
@@ -68,7 +68,7 @@ export function Login() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-emerald-200/45">
+        <p className="mt-4 text-center text-xs text-slate-500">
           Demo: supervisor@brokermx.com · Admin1234
         </p>
       </div>

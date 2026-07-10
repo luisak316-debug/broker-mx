@@ -24,7 +24,7 @@ export default {
           700: '#1a2540',
           600: '#26324f',
         },
-        ok: '#16a34a',
+        ok: '#fbbf24',
         warn: '#d97706',
         danger: '#dc2626',
       },

@@ -9,7 +9,7 @@ export function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="portal-page grid min-h-screen place-items-center text-emerald-200/60">
+      <div className="portal-page grid min-h-screen place-items-center text-slate-500">
         <PortalAtmosphere />
         <span className="portal-shell">Cargando…</span>
       </div>

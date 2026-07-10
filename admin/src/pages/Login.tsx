@@ -33,11 +33,11 @@ export function Login() {
       <PortalAtmosphere />
       <div className="portal-shell w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-xl font-bold text-white">
+          <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 text-xl font-bold text-white">
             A
           </div>
           <h1 className="portal-title text-xl font-bold">admin</h1>
-          <p className="text-sm text-emerald-200/60">Acceso para personal interno</p>
+          <p className="text-sm text-slate-400">Acceso para personal interno</p>
         </div>
 
         <form onSubmit={submit} className="card space-y-4">
@@ -67,7 +67,7 @@ export function Login() {
           </button>
         </form>
 
-        <div className="mt-4 rounded-lg portal-glass-emerald--subtle p-3 text-xs text-emerald-200/60">
+        <div className="mt-4 rounded-lg portal-panel p-3 text-xs text-slate-400">
           <p className="mb-1 font-semibold text-slate-300">Cuentas de demostración (contraseña: Admin1234)</p>
           <ul className="space-y-0.5">
             <li>admin@brokermx.com — Administración</li>
