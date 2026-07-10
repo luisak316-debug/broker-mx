@@ -11,14 +11,14 @@ export function Topbar() {
     .toUpperCase();
 
   return (
-    <header className="flex items-center justify-between border-b border-ink-600/60 bg-ink-900/60 px-4 py-3">
-      <div className="text-sm font-semibold text-white">admin</div>
+    <header className="portal-header portal-glass-emerald--subtle">
+      <div className="portal-title text-sm font-semibold">admin</div>
       <div className="flex items-center gap-3">
         <div className="text-right">
           <p className="text-sm font-semibold text-white">{staff?.displayName}</p>
-          <p className="text-xs text-brand-300">{staff ? ROLE_LABEL[staff.role] : ''}</p>
+          <p className="text-xs text-emerald-200/70">{staff ? ROLE_LABEL[staff.role] : ''}</p>
         </div>
-        <div className="grid h-9 w-9 place-items-center rounded-full bg-ink-600 text-sm font-semibold text-white">
+        <div className="portal-brand-mark grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-emerald-700 to-emerald-900 text-sm font-semibold text-white">
           {initials}
         </div>
         <button className="btn-ghost" onClick={logout}>

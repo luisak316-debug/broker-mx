@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { useAuth } from '../auth/AuthContext';
 import type { CashRequest } from '../types';
 import { fmtDateTime, fmtMxn, clientFirstName } from '../lib/format';
 
-export function CashRequests() {
-  const { can } = useAuth();
-  const canReview = can('ADVISOR', 'COMPLIANCE');
+export function CashRequestsPage() {
   const [rows, setRows] = useState<CashRequest[]>([]);
   const [filter, setFilter] = useState('PENDIENTE');
   const [pending, setPending] = useState<{ req: CashRequest; status: string } | null>(null);
@@ -59,6 +55,7 @@ export function CashRequests() {
             {['PENDIENTE', 'APROBADA', 'RECHAZADA', ''].map((s) => (
               <button
                 key={s || 'all'}
+                type="button"
                 onClick={() => setFilter(s)}
                 className={`rounded-md px-3 py-1 text-xs ${
                   filter === s ? 'bg-brand-600/30 text-brand-100' : 'text-slate-400 hover:bg-ink-700'
@@ -89,15 +86,13 @@ export function CashRequests() {
                 <tr key={r.id}>
                   <td className="text-slate-300">{fmtDateTime(r.createdAt)}</td>
                   <td>
-                    <Link
-                      to={`/clientes/${r.userId}`}
-                      className="truncate text-brand-400 hover:underline"
-                      title={r.clientName}
-                    >
+                    <span className="truncate text-white" title={r.clientName}>
                       {clientFirstName(r.clientName)}
-                    </Link>
+                    </span>
                   </td>
-                  <td><Badge value={r.type} /></td>
+                  <td>
+                    <Badge value={r.type} />
+                  </td>
                   <td className="text-slate-300">{r.method ?? '—'}</td>
                   <td className="max-w-[220px] text-xs text-slate-300">
                     {r.type === 'RETIRO' && r.payoutBank ? (
@@ -116,17 +111,21 @@ export function CashRequests() {
                     )}
                   </td>
                   <td className="text-right font-semibold text-white">{fmtMxn(r.amountMxn)}</td>
-                  <td><Badge value={r.status} /></td>
+                  <td>
+                    <Badge value={r.status} />
+                  </td>
                   <td className="text-right">
-                    {canReview && r.status === 'PENDIENTE' && r.type === 'DEPOSITO' ? (
+                    {r.status === 'PENDIENTE' && r.type === 'DEPOSITO' ? (
                       <div className="flex justify-end gap-1">
                         <button
+                          type="button"
                           className="btn-ok px-2 py-1 text-xs"
                           onClick={() => setPending({ req: r, status: 'APROBADA' })}
                         >
                           Aprobar
                         </button>
                         <button
+                          type="button"
                           className="btn-danger px-2 py-1 text-xs"
                           onClick={() => setPending({ req: r, status: 'RECHAZADA' })}
                         >

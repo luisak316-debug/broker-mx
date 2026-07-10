@@ -1,9 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { PortalAtmosphere } from '../portal/PortalAtmosphere';
 
 const NAV = [
   { to: '/', label: 'Resumen', end: true },
   { to: '/clientes', label: 'Clientes' },
+  { to: '/solicitudes', label: 'Solicitudes de efectivo' },
   { to: '/asesores', label: 'Asesores' },
   { to: '/asignar', label: 'Asignar contactos' },
   { to: '/historial', label: 'Historial' },
@@ -14,69 +16,72 @@ export function SupervisorLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 border-r border-ink-600 bg-ink-900/80 p-4 lg:block">
-        <div className="mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500 font-bold text-white">
-            S
+    <div className="portal-page flex min-h-screen">
+      <PortalAtmosphere />
+      <div className="portal-shell flex min-h-screen min-w-0 flex-1">
+        <aside className="portal-sidebar portal-glass-emerald--subtle">
+          <div className="mb-8">
+            <div className="portal-brand-mark flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-800 font-bold text-white">
+              S
+            </div>
+            <p className="portal-title mt-3 font-semibold">Supervisores</p>
+            <p className="text-xs text-emerald-200/50">Broker.mx</p>
           </div>
-          <p className="mt-3 font-semibold text-white">Supervisores</p>
-          <p className="text-xs text-slate-400">Broker.mx</p>
+          <nav className="space-y-1">
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={'end' in item ? item.end : false}
+                className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+          <header className="portal-header portal-glass-emerald--subtle">
+            <div className="lg:hidden">
+              <p className="portal-title font-semibold">Supervisores</p>
+            </div>
+            <p className="hidden text-sm text-emerald-200/65 lg:block">
+              {staff?.displayName} · {staff?.email}
+            </p>
+            <button
+              type="button"
+              className="btn-ghost text-xs"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+            >
+              Cerrar sesión
+            </button>
+          </header>
+
+          <nav className="portal-mobile-nav portal-glass-emerald--subtle">
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={'end' in item ? item.end : false}
+                className={({ isActive }) =>
+                  `portal-mobile-nav-link ${isActive ? 'portal-mobile-nav-link-active' : 'portal-mobile-nav-link-idle'}`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <main className="flex-1 overflow-x-hidden px-3 py-6 sm:px-4">
+            <div className="mx-auto max-w-6xl">
+              <Outlet />
+            </div>
+          </main>
         </div>
-        <nav className="space-y-1">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={'end' in item ? item.end : false}
-              className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <header className="flex items-center justify-between border-b border-ink-600 bg-ink-900/50 px-4 py-3">
-          <div className="lg:hidden">
-            <p className="font-semibold text-white">Supervisores</p>
-          </div>
-          <p className="hidden text-sm text-slate-400 lg:block">
-            {staff?.displayName} · {staff?.email}
-          </p>
-          <button
-            type="button"
-            className="btn-ghost text-xs"
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-          >
-            Cerrar sesión
-          </button>
-        </header>
-
-        <nav className="flex gap-1 overflow-x-auto border-b border-ink-600 px-2 py-2 lg:hidden">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={'end' in item ? item.end : false}
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-1.5 text-xs ${isActive ? 'bg-brand-600/30 text-brand-100' : 'text-slate-400'}`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <main className="flex-1 overflow-x-hidden px-3 py-6 sm:px-4">
-          <div className="mx-auto max-w-6xl">
-            <Outlet />
-          </div>
-        </main>
       </div>
     </div>
   );

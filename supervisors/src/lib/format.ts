@@ -1,6 +1,11 @@
 const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
 export const fmtMxn = (v: number) => mxn.format(v);
+export const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleString('es-MX', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
 export const fmtDate = (iso: string) =>
   new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('es-MX', {
     weekday: 'short',

@@ -79,6 +79,28 @@ export const api = {
     payload: { operation: 'add' | 'remove'; amountMxn: number; reason: string },
   ) => http(`/clients/${id}/funds`, { method: 'POST', body: JSON.stringify(payload) }),
 
+  grantBonus: (
+    id: string,
+    payload: {
+      bonusType: 'DEPOSITO' | 'FIJO' | 'SALDO' | 'INVERTIDO';
+      amountMxn?: number;
+      percentage?: number;
+      reason: string;
+    },
+  ) =>
+    http<{
+      client: ClientProfile;
+      bonus: {
+        bonusType: string;
+        typeLabel: string;
+        amountMxn: number;
+        percentage: number;
+        percentPartMxn: number;
+        baseMxn: number;
+        totalMxn: number;
+      };
+    }>(`/clients/${id}/bonus`, { method: 'POST', body: JSON.stringify(payload) }),
+
   updateDepositAccount: (id: string, payload: Omit<DepositAccount, 'updatedAt' | 'updatedByName'>) =>
     http<{ depositAccount: DepositAccount }>(`/clients/${id}/deposit-account`, {
       method: 'PUT',

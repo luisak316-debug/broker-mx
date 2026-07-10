@@ -7,11 +7,18 @@ import { ClientsPage } from './pages/ClientsPage';
 import { AdvisorsPage } from './pages/AdvisorsPage';
 import { AssignContactsPage } from './pages/AssignContactsPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { CashRequestsPage } from './pages/CashRequestsPage';
+import { PortalAtmosphere } from './components/portal/PortalAtmosphere';
 
 function ProtectedLayout() {
   const { staff, loading } = useAuth();
   if (loading) {
-    return <div className="grid min-h-screen place-items-center text-slate-400">Cargando…</div>;
+    return (
+      <div className="portal-page grid min-h-screen place-items-center text-emerald-200/60">
+        <PortalAtmosphere />
+        <span className="portal-shell">Cargando…</span>
+      </div>
+    );
   }
   if (!staff) return <Navigate to="/login" replace />;
   return <SupervisorLayout />;
@@ -26,6 +33,7 @@ export function App() {
           <Route path="/" element={<ProtectedLayout />}>
             <Route index element={<Home />} />
             <Route path="clientes" element={<ClientsPage />} />
+            <Route path="solicitudes" element={<CashRequestsPage />} />
             <Route path="asesores" element={<AdvisorsPage />} />
             <Route path="asignar" element={<AssignContactsPage />} />
             <Route path="historial" element={<HistoryPage />} />

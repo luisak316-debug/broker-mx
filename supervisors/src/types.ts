@@ -57,3 +57,20 @@ export interface ContactRow {
   assignedDate: string;
   createdAt: string;
 }
+
+export interface CashRequest {
+  id: string;
+  userId: string;
+  clientName: string;
+  type: 'DEPOSITO' | 'RETIRO';
+  amountMxn: number;
+  method?: string;
+  status: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+  note?: string;
+  payoutBank?: string;
+  payoutOwnerName?: string;
+  payoutConcept?: string;
+  reviewedByName?: string;
+  reviewedAt?: string;
+  createdAt: string;
+}

@@ -4,6 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        emerald: {
+          50: '#ecfdf5',
+          200: '#a7f3d0',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+        },
         brand: {
           50: '#eef6ff',
           100: '#d9eaff',

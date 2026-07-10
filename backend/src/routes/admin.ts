@@ -6,7 +6,6 @@ import * as clientsCtrl from '../controllers/admin/clients.controller';
 import * as finance from '../controllers/admin/finance.controller';
 import * as deposit from '../controllers/admin/depositAccount.controller';
 import * as txns from '../controllers/admin/transactions.controller';
-import * as cash from '../controllers/admin/cashRequests.controller';
 import * as audit from '../controllers/admin/audit.controller';
 import * as metrics from '../controllers/admin/metrics.controller';
 
@@ -41,6 +40,11 @@ adminRouter.post(
   requireRole('ADVISOR', 'COMPLIANCE'),
   asyncHandler(finance.adjustFunds),
 );
+adminRouter.post(
+  '/clients/:id/bonus',
+  requireRole('ADVISOR', 'COMPLIANCE'),
+  asyncHandler(finance.grantBonus),
+);
 
 // Cuenta de depósito bancaria asignada por cliente
 adminRouter.put(
@@ -51,12 +55,6 @@ adminRouter.put(
 
 // Módulo 3: Historial de transacciones y solicitudes de efectivo
 adminRouter.get('/transactions', asyncHandler(txns.listTransactions));
-adminRouter.get('/cash-requests', asyncHandler(cash.listCashRequestsHandler));
-adminRouter.patch(
-  '/cash-requests/:id',
-  requireRole('ADVISOR', 'COMPLIANCE'),
-  asyncHandler(cash.reviewCashRequestHandler),
-);
 
 // Módulo 4: Bitácora de auditoría (solo cumplimiento / admin)
 adminRouter.get('/audit', requireRole('COMPLIANCE'), asyncHandler(audit.listAudit));

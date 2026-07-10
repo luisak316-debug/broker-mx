@@ -6,7 +6,6 @@ import { Dashboard } from './pages/Dashboard';
 import { Clients } from './pages/Clients';
 import { ClientProfile } from './pages/ClientProfile';
 import { Transactions } from './pages/Transactions';
-import { CashRequests } from './pages/CashRequests';
 import { AuditLog } from './pages/AuditLog';
 import type { StaffRole } from './types';
 import type { ReactNode } from 'react';
@@ -28,7 +27,6 @@ export function App() {
             <Route path="clientes" element={<Clients />} />
             <Route path="clientes/:id" element={<ClientProfile />} />
             <Route path="transacciones" element={<Transactions />} />
-            <Route path="solicitudes" element={<CashRequests />} />
             <Route
               path="auditoria"
               element={

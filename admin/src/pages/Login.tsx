@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PasswordField } from '../components/common/PasswordField';
+import { PortalAtmosphere } from '../components/portal/PortalAtmosphere';
 
 export function Login() {
   const { staff, login } = useAuth();
@@ -28,14 +29,15 @@ export function Login() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="portal-page grid min-h-screen place-items-center px-4">
+      <PortalAtmosphere />
+      <div className="portal-shell w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-brand-500 text-xl font-bold text-white">
+          <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-xl font-bold text-white">
             A
           </div>
-          <h1 className="text-xl font-bold text-white">admin</h1>
-          <p className="text-sm text-slate-400">Acceso para personal interno</p>
+          <h1 className="portal-title text-xl font-bold">admin</h1>
+          <p className="text-sm text-emerald-200/60">Acceso para personal interno</p>
         </div>
 
         <form onSubmit={submit} className="card space-y-4">
@@ -65,7 +67,7 @@ export function Login() {
           </button>
         </form>
 
-        <div className="mt-4 rounded-lg border border-ink-600 bg-ink-800/60 p-3 text-xs text-slate-400">
+        <div className="mt-4 rounded-lg portal-glass-emerald--subtle p-3 text-xs text-emerald-200/60">
           <p className="mb-1 font-semibold text-slate-300">Cuentas de demostración (contraseña: Admin1234)</p>
           <ul className="space-y-0.5">
             <li>admin@brokermx.com — Administración</li>

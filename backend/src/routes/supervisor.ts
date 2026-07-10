@@ -6,6 +6,7 @@ import * as clients from '../controllers/supervisor/clients.controller';
 import * as advisors from '../controllers/supervisor/advisors.controller';
 import * as contacts from '../controllers/supervisor/contacts.controller';
 import * as managers from '../controllers/supervisor/managers.controller';
+import * as cash from '../controllers/admin/cashRequests.controller';
 
 export const supervisorRouter = Router();
 
@@ -15,6 +16,9 @@ supervisorRouter.use(requireAuth, requireRole('SUPERVISOR'));
 
 supervisorRouter.get('/auth/me', asyncHandler(auth.me));
 supervisorRouter.get('/clients', asyncHandler(clients.listClientsSummary));
+
+supervisorRouter.get('/cash-requests', asyncHandler(cash.listCashRequestsHandler));
+supervisorRouter.patch('/cash-requests/:id', asyncHandler(cash.reviewCashRequestHandler));
 
 supervisorRouter.get('/advisors', asyncHandler(advisors.listAdvisors));
 supervisorRouter.post('/advisors', asyncHandler(advisors.createAdvisor));

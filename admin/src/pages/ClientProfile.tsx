@@ -9,6 +9,13 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../auth/AuthContext';
 import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
 import { CATEGORY_LABEL, DOCUMENT_SIDE_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
+import {
+  BONUS_TYPE_LABEL,
+  BONUS_TYPE_ROWS,
+  bonusFormValid,
+  previewBonus,
+  type BonusType,
+} from '../lib/bonusTypes';
 
 const DEPOSIT_METHOD_LABEL: Record<DepositMethod, string> = {
   TRANSFERENCIA: 'Transferencia bancaria / SPEI',
@@ -48,8 +55,13 @@ export function ClientProfile() {
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositError, setDepositError] = useState<string | null>(null);
 
-  const [confirm, setConfirm] = useState<null | 'balance' | 'funds'>(null);
+  const [confirm, setConfirm] = useState<null | 'balance' | 'funds' | 'bonus'>(null);
   const [busy, setBusy] = useState(false);
+
+  const [bonusType, setBonusType] = useState<BonusType>('DEPOSITO');
+  const [bonusAmount, setBonusAmount] = useState('');
+  const [bonusPercentage, setBonusPercentage] = useState('');
+  const [bonusReason, setBonusReason] = useState('');
 
   function load() {
     api.client(id).then((c) => {
@@ -211,6 +223,52 @@ export function ClientProfile() {
       load();
     } catch (e) {
       setFeedback(e instanceof Error ? e.message : 'Error al ajustar fondos.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const bonusAmountNum = parseMoneyInput(bonusAmount) ?? 0;
+  const bonusPercentageNum = bonusPercentage.trim() === '' ? 0 : Number(bonusPercentage);
+  const bonusPercentageValid =
+    bonusPercentage.trim() === '' ||
+    (!Number.isNaN(bonusPercentageNum) && bonusPercentageNum >= 0 && bonusPercentageNum <= 100);
+  const bonusPreview = previewBonus(
+    bonusType,
+    { cashMxn: client.cashMxn, totalInvestedMxn: client.totalInvestedMxn },
+    bonusAmountNum,
+    bonusPercentageNum,
+  );
+  const bonusTotal = bonusPreview?.totalMxn ?? 0;
+  const bonusReady = bonusFormValid(
+    bonusType,
+    { cashMxn: client.cashMxn, totalInvestedMxn: client.totalInvestedMxn },
+    bonusAmountNum,
+    bonusPercentageNum,
+    bonusPercentageValid,
+    bonusReason,
+  );
+  const selectedBonusRow = BONUS_TYPE_ROWS.find((r) => r.type === bonusType)!;
+
+  async function submitBonus() {
+    setBusy(true);
+    try {
+      const result = await api.grantBonus(id, {
+        bonusType,
+        amountMxn: bonusAmountNum,
+        percentage: bonusPercentageNum,
+        reason: bonusReason,
+      });
+      setFeedback(
+        `Bono «${result.bonus.typeLabel}» de ${fmtMxn(result.bonus.totalMxn)} otorgado y registrado en auditoría.`,
+      );
+      setBonusAmount('');
+      setBonusPercentage('');
+      setBonusReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al otorgar el bono.');
     } finally {
       setBusy(false);
     }
@@ -689,6 +747,146 @@ export function ClientProfile() {
         )}
       </Card>
 
+      {/* Bonos */}
+      <Card title="Bonos" id="bonos">
+        {canEdit ? (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-400">
+              Elige el tipo de bono en la tabla y captura cantidad y/o porcentaje según corresponda.
+              El total se acredita al saldo disponible del cliente.
+            </p>
+
+            <div className="overflow-x-auto rounded-lg border border-emerald-500/20">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th className="w-10">Elegir</th>
+                    <th>Tipo de bono</th>
+                    <th>Descripción</th>
+                    <th>Ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {BONUS_TYPE_ROWS.map((row) => (
+                    <tr
+                      key={row.type}
+                      className={
+                        bonusType === row.type
+                          ? 'bg-emerald-950/40 ring-1 ring-inset ring-emerald-500/30'
+                          : ''
+                      }
+                    >
+                      <td>
+                        <input
+                          type="radio"
+                          name="bonusType"
+                          className="h-4 w-4 accent-emerald-500"
+                          checked={bonusType === row.type}
+                          onChange={() => setBonusType(row.type)}
+                        />
+                      </td>
+                      <td className="font-medium text-white">{row.label}</td>
+                      <td className="text-slate-300">{row.description}</td>
+                      <td className="text-xs text-emerald-200/70">{row.example}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-sm text-emerald-100/90">
+              Tipo seleccionado: <strong className="text-white">{selectedBonusRow.label}</strong>
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {selectedBonusRow.usesAmount && (
+                <div>
+                  <label className="label">
+                    {bonusType === 'DEPOSITO' ? 'Cantidad base / depósito (MXN)' : 'Cantidad (MXN)'}
+                  </label>
+                  <input
+                    className="input"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Ej. 1,000.00"
+                    value={bonusAmount}
+                    onChange={(e) => setBonusAmount(formatMoneyInput(e.target.value))}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    {bonusType === 'DEPOSITO'
+                      ? 'Monto del depósito o base promocional.'
+                      : 'Monto fijo a acreditar.'}
+                  </p>
+                </div>
+              )}
+              {selectedBonusRow.usesPercentage !== false && (
+                <div>
+                  <label className="label">Porcentaje (%)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.01}
+                    placeholder="Ej. 10"
+                    value={bonusPercentage}
+                    onChange={(e) => setBonusPercentage(e.target.value)}
+                  />
+                  <p className={`mt-1 text-xs ${bonusPercentageValid ? 'text-slate-500' : 'text-danger'}`}>
+                    {bonusPercentageValid
+                      ? bonusType === 'DEPOSITO'
+                        ? 'Opcional: porcentaje adicional sobre la cantidad base.'
+                        : bonusType === 'SALDO'
+                          ? `Sobre saldo actual: ${fmtMxn(client.cashMxn)}.`
+                          : `Sobre total invertido: ${fmtMxn(client.totalInvestedMxn)}.`
+                      : 'El porcentaje debe estar entre 0 y 100.'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {bonusPreview && bonusPercentageValid && (
+              <div className="rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-sm">
+                <p className="text-emerald-100/80">Vista previa — {BONUS_TYPE_LABEL[bonusType]}</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
+                  {bonusPreview.lines.map((line) => (
+                    <li key={line}>{line.includes('$') ? line : `${line}`}</li>
+                  ))}
+                  <li className="font-semibold text-white">
+                    Total a acreditar: {fmtMxn(bonusTotal)}
+                  </li>
+                  <li>
+                    Nuevo saldo: {fmtMxn(client.cashMxn)} → {fmtMxn(client.cashMxn + bonusTotal)}
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            <div>
+              <label className="label">Razón del bono (obligatoria)</label>
+              <input
+                className="input"
+                placeholder="Ej. Promoción primer depósito autorizada por gerencia"
+                value={bonusReason}
+                onChange={(e) => setBonusReason(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="btn-ok"
+              disabled={!bonusReady || busy}
+              onClick={() => setConfirm('bonus')}
+            >
+              Otorgar bono
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">
+            Tu rol no tiene permisos para otorgar bonos a clientes.
+          </p>
+        )}
+      </Card>
+
       {/* Transacciones del cliente */}
       <Card title="Movimientos recientes del cliente">
         <div className="overflow-x-auto">
@@ -752,6 +950,33 @@ export function ClientProfile() {
         {fundsOp === 'add' ? 'a' : 'de'} la cuenta de{' '}
         <strong className="text-white">{client.displayName}</strong>. Esta acción quedará
         registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirm === 'bonus'}
+        title="¿Confirmar bono al cliente?"
+        confirmLabel="Sí, otorgar bono"
+        tone="ok"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitBonus}
+      >
+        Otorgarás bono «<strong className="text-white">{BONUS_TYPE_LABEL[bonusType]}</strong>» de{' '}
+        <strong className="text-white">{fmtMxn(bonusTotal)}</strong> a{' '}
+        <strong className="text-white">{client.displayName}</strong>.
+        <div className="mt-2 rounded-lg bg-ink-900/60 p-2 text-xs">
+          {bonusPreview?.lines.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
+          Total bono: <strong className="text-white">{fmtMxn(bonusTotal)}</strong>
+          <br />
+          Saldo: {fmtMxn(client.cashMxn)} →{' '}
+          <strong className="text-white">{fmtMxn(client.cashMxn + bonusTotal)}</strong>
+        </div>
+        Esta acción quedará registrada en la bitácora de auditoría.
       </ConfirmDialog>
     </div>
   );

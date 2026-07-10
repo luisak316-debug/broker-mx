@@ -1,4 +1,4 @@
-import type { StaffSession } from '../types';
+import type { StaffSession, CashRequest } from '../types';
 import { getApiBase } from '../lib/apiConfig';
 
 const TOKEN_KEY = 'brokermx_supervisor_token';
@@ -130,4 +130,9 @@ export const api = {
     }),
   removeContact: (id: string) =>
     http<{ ok: boolean }>(`/contacts/${id}`, { method: 'DELETE' }),
+
+  cashRequests: (status?: string) =>
+    http<CashRequest[]>(`/cash-requests${status ? `?status=${status}` : ''}`),
+  reviewCashRequest: (id: string, payload: { status: string; note?: string }) =>
+    http(`/cash-requests/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
 };

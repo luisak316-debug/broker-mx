@@ -8,6 +8,7 @@ const ACTION_TONE: Record<string, string> = {
   BALANCE_UPDATE: 'bg-warn/15 text-warn',
   FUNDS_ADD: 'bg-ok/15 text-ok',
   FUNDS_REMOVE: 'bg-danger/15 text-danger',
+  BONUS_GRANT: 'bg-ok/15 text-ok',
   CASH_REQUEST_APROBADA: 'bg-ok/15 text-ok',
   CASH_REQUEST_RECHAZADA: 'bg-danger/15 text-danger',
   DEPOSIT_ACCOUNT_ASSIGN: 'bg-brand-500/15 text-brand-100',

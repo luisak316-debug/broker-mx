@@ -1,3 +1,5 @@
+@import '../../../shared/portal-theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,52 +16,175 @@ body,
 
 body {
   margin: 0;
-  background-color: #0b1120;
+  background-color: var(--portal-midnight, #050202);
   color: #e5e9f0;
   font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-ink-600/60 bg-ink-800/60 p-4 shadow-sm;
+    @apply rounded-xl p-4;
+    border: 1px solid rgba(110, 231, 183, 0.28);
+    background: linear-gradient(
+      145deg,
+      rgba(6, 78, 59, 0.34) 0%,
+      rgba(16, 46, 42, 0.28) 50%,
+      rgba(4, 47, 46, 0.32) 100%
+    );
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 rgba(167, 243, 208, 0.14),
+      0 12px 36px rgba(0, 0, 0, 0.28),
+      0 0 20px rgba(16, 185, 129, 0.08);
   }
   .card-title {
-    @apply text-sm font-semibold text-slate-200;
+    @apply text-sm font-semibold text-emerald-50/90;
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.15);
   }
   .label {
-    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400;
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-emerald-200/60;
   }
   .input {
-    @apply w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-white outline-none focus:border-brand-500;
+    @apply w-full rounded-lg px-3 py-2 text-white outline-none transition;
+    border: 1px solid rgba(110, 231, 183, 0.22);
+    background: linear-gradient(145deg, rgba(6, 78, 59, 0.2) 0%, rgba(4, 47, 46, 0.28) 100%);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgba(167, 243, 208, 0.08);
+  }
+  .input:focus {
+    border-color: rgba(167, 243, 208, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(167, 243, 208, 0.12),
+      0 0 0 2px rgba(16, 185, 129, 0.15),
+      0 0 16px rgba(251, 191, 36, 0.08);
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-500 text-white hover:bg-brand-600;
+    @apply btn text-emerald-50;
+    border: 1px solid rgba(110, 231, 183, 0.36);
+    background: linear-gradient(
+      135deg,
+      rgba(6, 95, 70, 0.55) 0%,
+      rgba(16, 60, 52, 0.48) 55%,
+      rgba(4, 55, 48, 0.52) 100%
+    );
+    -webkit-backdrop-filter: blur(18px) saturate(1.45);
+    backdrop-filter: blur(18px) saturate(1.45);
+    box-shadow:
+      inset 0 1px 0 rgba(167, 243, 208, 0.18),
+      0 6px 20px rgba(0, 0, 0, 0.24),
+      0 0 14px rgba(251, 191, 36, 0.12);
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.28);
+  }
+  .btn-primary:hover:not(:disabled) {
+    border-color: rgba(167, 243, 208, 0.48);
+    box-shadow:
+      inset 0 1px 0 rgba(209, 250, 229, 0.22),
+      0 8px 24px rgba(0, 0, 0, 0.28),
+      0 0 20px rgba(251, 191, 36, 0.18),
+      0 0 24px rgba(16, 185, 129, 0.1);
   }
   .btn-secondary {
-    @apply btn bg-ink-700 text-slate-200 ring-1 ring-ink-600 hover:bg-ink-600;
+    @apply btn text-emerald-100/90;
+    border: 1px solid rgba(110, 231, 183, 0.24);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.32) 0%, rgba(16, 46, 42, 0.24) 100%);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.1);
   }
   .btn-ghost {
-    @apply btn text-slate-300 ring-1 ring-ink-600 hover:bg-ink-700;
+    @apply btn text-emerald-100/90;
+    border: 1px solid rgba(110, 231, 183, 0.22);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.18) 0%, rgba(16, 46, 42, 0.12) 100%);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: rgba(110, 231, 183, 0.34);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.28) 0%, rgba(16, 46, 42, 0.22) 100%);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.08);
+  }
+  .btn-ok {
+    @apply btn text-white;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    background: linear-gradient(135deg, rgba(6, 95, 70, 0.75) 0%, rgba(22, 163, 74, 0.65) 100%);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
   }
   .btn-danger {
-    @apply btn bg-danger/90 text-white hover:bg-danger;
+    @apply btn text-white;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.75) 0%, rgba(220, 38, 38, 0.7) 100%);
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.15);
   }
   .table-base {
     @apply w-full border-collapse text-sm;
   }
   .table-base thead th {
-    @apply border-b border-ink-600 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400;
+    @apply border-b px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-emerald-200/55;
+    border-color: rgba(110, 231, 183, 0.18);
   }
   .table-base tbody td {
-    @apply border-b border-ink-700/60 px-3 py-2 text-slate-200;
+    @apply border-b px-3 py-2 text-slate-200;
+    border-color: rgba(110, 231, 183, 0.08);
+  }
+  .table-base tbody tr:hover {
+    background: linear-gradient(90deg, rgba(6, 78, 59, 0.22) 0%, rgba(16, 46, 42, 0.12) 100%);
+    box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.04);
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.06);
   }
   .nav-link {
-    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-ink-700 hover:text-white;
+    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-emerald-100/75 transition;
+  }
+  .nav-link:hover {
+    @apply text-white;
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.28) 0%, rgba(16, 46, 42, 0.18) 100%);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.06);
   }
   .nav-link-active {
-    @apply bg-brand-600/20 text-brand-100 ring-1 ring-brand-500/40;
+    @apply text-emerald-50;
+    border: 1px solid rgba(110, 231, 183, 0.32);
+    background: linear-gradient(
+      135deg,
+      rgba(6, 78, 59, 0.42) 0%,
+      rgba(16, 46, 42, 0.32) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(167, 243, 208, 0.14),
+      0 0 16px rgba(251, 191, 36, 0.1),
+      0 0 20px rgba(16, 185, 129, 0.08);
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+  }
+  .portal-sidebar {
+    @apply hidden w-56 shrink-0 flex-col p-4 lg:block;
+    border-right: 1px solid rgba(110, 231, 183, 0.18);
+  }
+  .portal-header {
+    @apply flex items-center justify-between px-4 py-3;
+    border-bottom: 1px solid rgba(110, 231, 183, 0.18);
+  }
+  .portal-mobile-nav {
+    @apply flex gap-1 overflow-x-auto px-2 py-2 lg:hidden;
+    border-bottom: 1px solid rgba(110, 231, 183, 0.14);
+  }
+  .portal-mobile-nav-link {
+    @apply whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition;
+  }
+  .portal-mobile-nav-link-active {
+    @apply text-emerald-50;
+    border: 1px solid rgba(110, 231, 183, 0.28);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.38) 0%, rgba(16, 46, 42, 0.28) 100%);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.1);
+  }
+  .portal-mobile-nav-link-idle {
+    @apply text-emerald-200/55 hover:text-emerald-50;
   }
 }
