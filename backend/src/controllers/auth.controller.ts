@@ -119,6 +119,9 @@ const registerSchema = z.object({
     .min(8, 'La contraseña debe tener al menos 8 caracteres.')
     .regex(/[A-Za-z]/, 'La contraseña debe incluir letras.')
     .regex(/\d/, 'La contraseña debe incluir números.'),
+  acceptedTerms: z.literal(true, {
+    errorMap: () => ({ message: 'Debes aceptar los Términos y Condiciones.' }),
+  }),
 });
 
 export async function register(req: Request, res: Response): Promise<void> {

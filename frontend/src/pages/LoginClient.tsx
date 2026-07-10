@@ -5,7 +5,7 @@ import { useClientAuth } from '../auth/ClientAuthContext';
 import { CountryPhoneFields } from '../components/auth/CountryPhoneFields';
 import { PasswordField } from '../components/common/PasswordField';
 import { getLatamCountry, isValidNationalPhone } from '../data/latamCountries';
-import { AuthShell } from './Register';
+import { AuthShell } from '../components/auth/AuthShell';
 
 export function LoginClient() {
   const { login } = useClientAuth();
@@ -81,7 +81,7 @@ export function LoginClient() {
       footer={
         <>
           ¿No tienes cuenta?{' '}
-          <Link to="/registro" className="text-brand-400 hover:underline">
+          <Link to="/registro" className="auth-link">
             Regístrate
           </Link>
         </>
@@ -102,15 +102,16 @@ export function LoginClient() {
           onChange={setPassword}
           placeholder="Tu contraseña"
           autoComplete="current-password"
+          variant="auth"
         />
         <div className="text-right">
-          <Link to="/recuperar" className="text-sm text-brand-400 hover:underline">
+          <Link to="/recuperar" className="auth-link text-sm">
             ¿Olvidaste tu contraseña?
           </Link>
         </div>
         {status && <p className="text-sm text-slate-400">{status}</p>}
         {error && <p className="rounded-lg bg-bear/15 px-3 py-2 text-sm text-bear">{error}</p>}
-        <button type="submit" className="btn-primary w-full py-3" disabled={busy}>
+        <button type="submit" className="auth-btn-primary" disabled={busy}>
           {busy ? 'Entrando…' : 'Iniciar sesión'}
         </button>
       </form>

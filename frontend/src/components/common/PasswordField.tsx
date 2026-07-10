@@ -7,6 +7,7 @@ export function PasswordField({
   error,
   placeholder,
   autoComplete,
+  variant = 'default',
 }: {
   label: string;
   value: string;
@@ -14,12 +15,20 @@ export function PasswordField({
   error?: string;
   placeholder?: string;
   autoComplete?: string;
+  variant?: 'default' | 'auth';
 }) {
   const [visible, setVisible] = useState(false);
+  const inputClass =
+    variant === 'auth'
+      ? `auth-field pr-10 ${error ? 'auth-field--error' : ''}`
+      : `w-full rounded-lg border bg-ink-900 px-3 py-2 pr-10 text-white outline-none transition focus:border-brand-500 ${
+          error ? 'border-bear' : 'border-ink-600'
+        }`;
+  const labelClass = variant === 'auth' ? 'auth-label mb-1 block text-sm' : 'mb-1 block text-sm text-slate-300';
 
   return (
     <label className="block">
-      <span className="mb-1 block text-sm text-slate-300">{label}</span>
+      <span className={labelClass}>{label}</span>
       <div className="relative">
         <input
           type={visible ? 'text' : 'password'}
@@ -27,9 +36,7 @@ export function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className={`w-full rounded-lg border bg-ink-900 px-3 py-2 pr-10 text-white outline-none transition focus:border-brand-500 ${
-            error ? 'border-bear' : 'border-ink-600'
-          }`}
+          className={inputClass}
         />
         <button
           type="button"

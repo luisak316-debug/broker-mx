@@ -28,7 +28,7 @@ export function CountryPhoneFields({
   return (
     <div className="space-y-4">
       <label className="block">
-        <span className="mb-1 block text-sm text-slate-300">País de residencia</span>
+        <span className="auth-label mb-1 block text-sm">País de residencia</span>
         <select
           value={countryCode}
           disabled={disabled}
@@ -36,7 +36,7 @@ export function CountryPhoneFields({
             onCountryChange(e.target.value);
             onPhoneChange('');
           }}
-          className="w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2.5 text-white outline-none transition focus:border-brand-500"
+          className="auth-field"
         >
           {LATAM_COUNTRIES.map((c) => (
             <option key={c.code} value={c.code}>
@@ -44,17 +44,17 @@ export function CountryPhoneFields({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-slate-500">
+        <span className="mt-1 block text-xs text-emerald-200/45">
           Tu cuenta operará en {country.currency} según tu país.
         </span>
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm text-slate-300">
+        <span className="auth-label mb-1 block text-sm">
           Teléfono celular ({phoneLengthHint(country)})
         </span>
         <div className="flex gap-2">
-          <span className="flex shrink-0 items-center rounded-lg border border-ink-600 bg-ink-800 px-3 text-sm text-slate-300">
+          <span className="auth-field flex shrink-0 items-center px-3 py-2.5 text-sm">
             {country.dialCode}
           </span>
           <input
@@ -65,13 +65,11 @@ export function CountryPhoneFields({
             onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, '').slice(0, maxDigits))}
             placeholder={country.phonePlaceholder}
             autoComplete="tel-national"
-            className={`min-w-0 flex-1 rounded-lg border bg-ink-900 px-3 py-2 text-white outline-none transition focus:border-brand-500 ${
-              phoneError ? 'border-bear' : 'border-ink-600'
-            }`}
+            className={`auth-field min-w-0 flex-1 ${phoneError ? 'auth-field--error' : ''}`}
           />
         </div>
         {!phoneError && (
-          <span className="mt-1 block text-xs text-slate-500">
+          <span className="mt-1 block text-xs text-emerald-200/45">
             Te enviaremos un código de verificación por SMS a este número.
           </span>
         )}

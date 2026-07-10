@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { CountryPhoneFields } from '../components/auth/CountryPhoneFields';
 import { PasswordField } from '../components/common/PasswordField';
 import { getLatamCountry, isValidNationalPhone } from '../data/latamCountries';
-import { AuthShell } from './Register';
+import { AuthField, AuthShell } from '../components/auth/AuthShell';
 
 export function ForgotPassword() {
   const navigate = useNavigate();
@@ -131,10 +131,10 @@ export function ForgotPassword() {
         }
         footer={
           step === 'success' ? (
-            <span className="text-slate-500">Tu sesión anterior ya no es válida con la contraseña anterior.</span>
+            <span className="text-emerald-200/55">Tu sesión anterior ya no es válida con la contraseña anterior.</span>
           ) : (
             <>
-              <Link to="/login" className="text-brand-400 hover:underline">
+              <Link to="/login" className="auth-link">
                 Volver a iniciar sesión
               </Link>
             </>
@@ -185,7 +185,7 @@ export function ForgotPassword() {
 
             <button
               type="button"
-              className="btn-primary w-full py-3 text-base"
+              className="auth-btn-primary text-base"
               onClick={() =>
                 navigate('/login', { replace: true, state: { phone: phone.trim(), countryCode } })
               }
@@ -204,46 +204,42 @@ export function ForgotPassword() {
               disabled={busy}
             />
             {error && <p className="rounded-lg bg-bear/15 px-3 py-2 text-sm text-bear">{error}</p>}
-            <button type="submit" className="btn-primary w-full py-3" disabled={busy}>
+            <button type="submit" className="auth-btn-primary" disabled={busy}>
               {busy ? 'Enviando…' : 'Enviar código SMS'}
             </button>
           </form>
         ) : (
           <form onSubmit={onReset} className="space-y-4" noValidate autoComplete="off">
-            <label className="block">
-              <span className="mb-1 block text-sm text-slate-300">Código SMS (6 dígitos)</span>
-              <input
-                type="text"
-                name="one-time-code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
-                className="w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-white outline-none focus:border-brand-500"
-                required
-              />
-            </label>
+            <AuthField
+              label="Código SMS (6 dígitos)"
+              type="text"
+              inputMode="numeric"
+              value={otpCode}
+              onChange={(v) => setOtpCode(v.replace(/\D/g, '').slice(0, 6))}
+              placeholder="123456"
+              autoComplete="one-time-code"
+            />
             <PasswordField
               label="Nueva contraseña"
               value={password}
               onChange={setPassword}
               placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
+              variant="auth"
             />
-            {info && <p className="rounded-lg bg-brand-600/15 px-3 py-2 text-sm text-brand-100">{info}</p>}
+            {info && <p className="auth-info">{info}</p>}
             {debugCode && (
-              <p className="rounded-lg bg-amber-500/15 px-3 py-2 text-sm text-amber-200">
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
                 Modo demo — código: <strong>{debugCode}</strong>
               </p>
             )}
             {error && <p className="rounded-lg bg-bear/15 px-3 py-2 text-sm text-bear">{error}</p>}
-            <button type="submit" className="btn-primary w-full py-3" disabled={busy}>
+            <button type="submit" className="auth-btn-primary" disabled={busy}>
               {busy ? 'Guardando…' : 'Restablecer contraseña'}
             </button>
             <button
               type="button"
-              className="btn-ghost w-full text-sm text-slate-400"
+              className="w-full text-sm text-emerald-200/55 hover:text-emerald-50 disabled:opacity-50"
               disabled={busy || resendIn > 0}
               onClick={onResend}
             >

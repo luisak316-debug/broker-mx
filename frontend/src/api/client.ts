@@ -103,6 +103,7 @@ export const api = {
     phone: string;
     otpCode: string;
     password: string;
+    acceptedTerms: boolean;
   }) =>
     http<AuthResult>(`/auth/register`, { method: 'POST', body: JSON.stringify(payload) }),
   login: (payload: { countryCode: string; phone: string; password: string }) =>

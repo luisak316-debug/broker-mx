@@ -15,6 +15,7 @@ interface ClientAuthState {
     phone: string;
     otpCode: string;
     password: string;
+    acceptedTerms: boolean;
   }) => Promise<void>;
   login: (p: { countryCode: string; phone: string; password: string }) => Promise<void>;
   logout: () => void;
