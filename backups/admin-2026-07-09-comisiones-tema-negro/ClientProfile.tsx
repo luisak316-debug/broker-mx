@@ -1,0 +1,1268 @@
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { api } from '../api/client';
+import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { ClientAvatar } from '../components/ui/ClientAvatar';
+import { IdentityDocumentPreview } from '../components/ui/IdentityDocumentPreview';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { useAuth } from '../auth/AuthContext';
+import type { ClientProfile as Profile, DepositMethod, Transaction } from '../types';
+import { CATEGORY_LABEL, DOCUMENT_SIDE_LABEL, DOCUMENT_TYPE_LABEL, fmtDate, fmtDateTime, fmtMxn, formatMoneyDisplay, formatMoneyInput, IDENTITY_DOCUMENT_TYPES, parseMoneyInput } from '../lib/format';
+import {
+  BONUS_TYPE_LABEL,
+  BONUS_TYPE_ROWS,
+  bonusFormValid,
+  previewBonus,
+  type BonusType,
+} from '../lib/bonusTypes';
+import {
+  COMMISSION_TYPE_LABEL,
+  COMMISSION_TYPE_ROWS,
+  commissionFormValid,
+  MANAGEMENT_PERIOD_OPTIONS,
+  previewCommission,
+  type CommissionType,
+  type ManagementPeriod,
+} from '../lib/commissionTypes';
+
+const DEPOSIT_METHOD_LABEL: Record<DepositMethod, string> = {
+  TRANSFERENCIA: 'Transferencia bancaria / SPEI',
+  TARJETA: 'Tarjeta débito / crédito',
+  VENTANILLA: 'Depósito en ventanilla bancaria',
+  OXXO: 'Depósito en tiendas OXXO',
+};
+
+export function ClientProfile() {
+  const { id = '' } = useParams();
+  const { can } = useAuth();
+  const canEdit = can('ADVISOR', 'COMPLIANCE');
+
+  const [client, setClient] = useState<Profile | null>(null);
+  const [txns, setTxns] = useState<Transaction[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Formularios de edición crítica
+  const [cashMxn, setCashMxn] = useState('');
+  const [invested, setInvested] = useState('');
+  const [balanceReason, setBalanceReason] = useState('');
+  const [fundsOp, setFundsOp] = useState<'add' | 'remove'>('add');
+  const [fundsAmount, setFundsAmount] = useState('');
+  const [fundsReason, setFundsReason] = useState('');
+
+  // Cuenta de depósito bancaria asignada
+  const [depositMethod, setDepositMethod] = useState<DepositMethod>('TRANSFERENCIA');
+  const [deposit, setDeposit] = useState({
+    beneficiary: '',
+    bank: '',
+    accountNumber: '',
+    clabe: '',
+    reference: '',
+  });
+  const [initialInvestment, setInitialInvestment] = useState(''); // opcional
+  const [depositBusy, setDepositBusy] = useState(false);
+  const [depositError, setDepositError] = useState<string | null>(null);
+
+  const [confirm, setConfirm] = useState<null | 'balance' | 'funds' | 'bonus' | 'commission'>(null);
+  const [busy, setBusy] = useState(false);
+
+  const [bonusType, setBonusType] = useState<BonusType>('DEPOSITO');
+  const [bonusAmount, setBonusAmount] = useState('');
+  const [bonusPercentage, setBonusPercentage] = useState('');
+  const [bonusReason, setBonusReason] = useState('');
+
+  const [commissionType, setCommissionType] = useState<CommissionType>('CUSTODIA');
+  const [commissionPercentage, setCommissionPercentage] = useState('');
+  const [commissionPeriod, setCommissionPeriod] = useState<ManagementPeriod>('TRIMESTRAL');
+  const [commissionReason, setCommissionReason] = useState('');
+
+  function load() {
+    api.client(id).then((c) => {
+      setClient(c);
+      setCashMxn(String(c.cashMxn));
+      setInvested(String(c.totalInvestedMxn));
+      setDeposit({
+        beneficiary: c.depositAccount?.beneficiary ?? '',
+        bank: c.depositAccount?.bank ?? '',
+        accountNumber: c.depositAccount?.accountNumber ?? '',
+        clabe: c.depositAccount?.clabe ?? '',
+        reference: c.depositAccount?.reference ?? '',
+      });
+      setDepositMethod(
+        c.depositAccount?.depositMethod ??
+          (c.depositAccount?.clabe ? 'TRANSFERENCIA' : 'VENTANILLA'),
+      );
+      setInitialInvestment(
+        c.depositAccount?.initialInvestmentMxn !== undefined
+          ? formatMoneyDisplay(c.depositAccount.initialInvestmentMxn)
+          : '',
+      );
+    }).catch((e) => setError(e.message));
+    api.transactions({ userId: id }).then(setTxns).catch(() => setTxns([]));
+  }
+
+  const clabeValid = /^\d{18}$/.test(deposit.clabe);
+  const accountValid = /^\d{5,20}$/.test(deposit.accountNumber);
+  const oxxoRefValid = /^[A-Za-z0-9]{8,24}$/.test(deposit.accountNumber);
+  const paymentLinkValid =
+    deposit.accountNumber.trim() === '' || /^https?:\/\/.+/i.test(deposit.accountNumber.trim());
+
+  const depositReady =
+    deposit.beneficiary.trim().length >= 3 &&
+    deposit.bank.trim().length >= 2 &&
+    deposit.reference.trim().length >= 1 &&
+    (depositMethod === 'TRANSFERENCIA'
+      ? clabeValid
+      : depositMethod === 'VENTANILLA'
+        ? accountValid
+        : depositMethod === 'OXXO'
+          ? oxxoRefValid
+          : paymentLinkValid);
+
+  const investmentParsed = parseMoneyInput(initialInvestment);
+  const investmentValid =
+    initialInvestment.trim() === '' || (investmentParsed !== undefined && investmentParsed >= 0);
+
+  async function submitDeposit() {
+    setDepositBusy(true);
+    setDepositError(null);
+    try {
+      const amount = parseMoneyInput(initialInvestment);
+      await api.updateDepositAccount(id, {
+        depositMethod,
+        ...deposit,
+        ...(amount !== undefined ? { initialInvestmentMxn: amount } : {}),
+      });
+      setFeedback('Cuenta de depósito guardada y registrada en la bitácora de auditoría.');
+      load();
+    } catch (e) {
+      setDepositError(e instanceof Error ? e.message : 'Error al guardar la cuenta.');
+    } finally {
+      setDepositBusy(false);
+    }
+  }
+
+  useEffect(load, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    function refreshIdentityDocuments() {
+      api
+        .client(id)
+        .then((c) => {
+          setClient((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  documents: c.documents,
+                  kycStatus: c.kycStatus,
+                }
+              : c,
+          );
+        })
+        .catch(() => undefined);
+    }
+
+    refreshIdentityDocuments();
+    window.addEventListener('focus', refreshIdentityDocuments);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshIdentityDocuments();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    const interval = window.setInterval(refreshIdentityDocuments, 10_000);
+
+    return () => {
+      window.removeEventListener('focus', refreshIdentityDocuments);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(interval);
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (window.location.hash !== '#gestion-fondos') return;
+    const t = setTimeout(() => {
+      document.getElementById('gestion-fondos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [id, client]);
+
+  if (error) return <p className="text-danger">{error}</p>;
+  if (!client) return <p className="text-slate-400">Cargando ficha…</p>;
+
+  const identityDocs = client.documents.filter((d) =>
+    IDENTITY_DOCUMENT_TYPES.includes(d.type as (typeof IDENTITY_DOCUMENT_TYPES)[number]),
+  );
+  const passport = identityDocs.find((d) => d.type === 'PASAPORTE');
+  const ineAnverso = identityDocs.find(
+    (d) => d.type === 'INE' && (!d.side || d.side === 'ANVERSO'),
+  );
+  const ineReverso = identityDocs.find((d) => d.type === 'INE' && d.side === 'REVERSO');
+  const hasIdentity = Boolean(passport || ineAnverso || ineReverso);
+
+  async function submitBalance() {
+    setBusy(true);
+    try {
+      await api.updateBalance(id, {
+        cashMxn: Number(cashMxn),
+        totalInvestedMxn: Number(invested),
+        reason: balanceReason,
+      });
+      setFeedback('Saldo actualizado y registrado en la bitácora de auditoría.');
+      setBalanceReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al actualizar.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitFunds() {
+    setBusy(true);
+    try {
+      await api.adjustFunds(id, {
+        operation: fundsOp,
+        amountMxn: Number(fundsAmount),
+        reason: fundsReason,
+      });
+      setFeedback(
+        `${fundsOp === 'add' ? 'Fondos agregados' : 'Fondos removidos'} y registrados en auditoría.`,
+      );
+      setFundsAmount('');
+      setFundsReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al ajustar fondos.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const bonusAmountNum = parseMoneyInput(bonusAmount) ?? 0;
+  const bonusPercentageNum = bonusPercentage.trim() === '' ? 0 : Number(bonusPercentage);
+  const bonusPercentageValid =
+    bonusPercentage.trim() === '' ||
+    (!Number.isNaN(bonusPercentageNum) && bonusPercentageNum >= 0 && bonusPercentageNum <= 100);
+  const bonusPreview = previewBonus(
+    bonusType,
+    { cashMxn: client.cashMxn, totalInvestedMxn: client.totalInvestedMxn },
+    bonusAmountNum,
+    bonusPercentageNum,
+  );
+  const bonusTotal = bonusPreview?.totalMxn ?? 0;
+  const bonusReady = bonusFormValid(
+    bonusType,
+    { cashMxn: client.cashMxn, totalInvestedMxn: client.totalInvestedMxn },
+    bonusAmountNum,
+    bonusPercentageNum,
+    bonusPercentageValid,
+    bonusReason,
+  );
+  const selectedBonusRow = BONUS_TYPE_ROWS.find((r) => r.type === bonusType)!;
+
+  const commissionPctNum =
+    commissionPercentage.trim() === '' ? NaN : Number(commissionPercentage);
+  const selectedCommissionRow = COMMISSION_TYPE_ROWS.find((r) => r.type === commissionType)!;
+  const commissionPercentageValid =
+    commissionPercentage.trim() !== '' &&
+    !Number.isNaN(commissionPctNum) &&
+    commissionPctNum >= selectedCommissionRow.pctMin &&
+    commissionPctNum <= selectedCommissionRow.pctMax;
+  const commissionPreview = commissionPercentageValid
+    ? previewCommission(
+        commissionType,
+        {
+          cashMxn: client.cashMxn,
+          totalInvestedMxn: client.totalInvestedMxn,
+          openPositionsNotionalMxn: client.openPositionsNotionalMxn ?? 0,
+        },
+        commissionPctNum,
+        commissionPeriod,
+      )
+    : null;
+  const commissionTotal = commissionPreview?.totalMxn ?? 0;
+  const commissionReady = commissionFormValid(
+    commissionType,
+    {
+      cashMxn: client.cashMxn,
+      totalInvestedMxn: client.totalInvestedMxn,
+      openPositionsNotionalMxn: client.openPositionsNotionalMxn ?? 0,
+    },
+    commissionPctNum,
+    commissionPercentageValid,
+    commissionReason,
+    commissionPeriod,
+  );
+  const commissionExceedsBalance =
+    commissionTotal > 0 && commissionTotal > client.cashMxn;
+
+  async function submitBonus() {
+    setBusy(true);
+    try {
+      const result = await api.grantBonus(id, {
+        bonusType,
+        amountMxn: bonusAmountNum,
+        percentage: bonusPercentageNum,
+        reason: bonusReason,
+      });
+      setFeedback(
+        `Bono «${result.bonus.typeLabel}» de ${fmtMxn(result.bonus.totalMxn)} otorgado y registrado en auditoría.`,
+      );
+      setBonusAmount('');
+      setBonusPercentage('');
+      setBonusReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al otorgar el bono.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitCommission() {
+    setBusy(true);
+    try {
+      const result = await api.chargeCommission(id, {
+        commissionType,
+        percentage: commissionPctNum,
+        period: commissionType === 'GESTION_ANUAL' ? commissionPeriod : undefined,
+        reason: commissionReason,
+      });
+      setFeedback(
+        `Comisión «${result.commission.typeLabel}» de ${fmtMxn(result.commission.totalMxn)} cobrada y registrada en auditoría.`,
+      );
+      setCommissionPercentage('');
+      setCommissionReason('');
+      setConfirm(null);
+      load();
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al cobrar la comisión.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          {client && (
+            <ClientAvatar
+              displayName={client.displayName}
+              photoUrl={client.profilePhotoUrl}
+              size="md"
+            />
+          )}
+          <div className="min-w-0">
+            <Link to="/clientes" className="text-sm text-brand-400 hover:underline">
+              ← Volver a clientes
+            </Link>
+            <h1 className="mt-1 truncate text-2xl font-bold text-white">{client.displayName}</h1>
+            <p className="text-sm text-slate-400">
+              {client.id} · {client.email}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge value={client.accountStatus} />
+          <Badge value={client.kycStatus} />
+          {can('ADMIN', 'COMPLIANCE') && client.accountStatus === 'ACTIVA' ? (
+            <button
+              type="button"
+              className="btn-ghost border border-danger/40 text-xs text-danger"
+              onClick={async () => {
+                if (!window.confirm('¿Revocar acceso de este cliente?')) return;
+                try {
+                  await api.updateClientAccess(id, {
+                    accountStatus: 'BLOQUEADA',
+                    reason: 'Acceso revocado manualmente desde administración.',
+                  });
+                  setFeedback('Acceso revocado. El cliente ya no podrá iniciar sesión.');
+                  load();
+                } catch (e) {
+                  setFeedback(e instanceof Error ? e.message : 'Error al revocar acceso.');
+                }
+              }}
+            >
+              Revocar acceso
+            </button>
+          ) : null}
+          {can('ADMIN', 'COMPLIANCE') && client.accountStatus !== 'ACTIVA' ? (
+            <button
+              type="button"
+              className="btn-ghost border border-amber-500/40 text-xs text-amber-400"
+              onClick={async () => {
+                try {
+                  await api.updateClientAccess(id, {
+                    accountStatus: 'ACTIVA',
+                    reason: 'Acceso restaurado desde administración.',
+                  });
+                  setFeedback('Acceso restaurado.');
+                  load();
+                } catch (e) {
+                  setFeedback(e instanceof Error ? e.message : 'Error al restaurar acceso.');
+                }
+              }}
+            >
+              Restaurar acceso
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {feedback && (
+        <div className="rounded-lg border border-brand-500/40 bg-brand-600/15 px-3 py-2 text-sm text-brand-100">
+          {feedback}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Información personal */}
+        <Card title="Información personal">
+          <dl className="space-y-2 text-sm">
+            <Row label="Teléfono" value={client.phone} />
+            <Row label="Contraseña (registro)" value={client.plainPassword} />
+            <Row label="CURP" value={client.curp} />
+            <Row label="RFC" value={client.rfc} />
+            <Row label="Perfil de riesgo" value={client.riskProfile} />
+            <Row label="Fecha de registro" value={fmtDate(client.createdAt)} />
+            <Row
+              label="Última solicitud de retiro"
+              value={
+                client.lastWithdrawalRequestAt
+                  ? fmtDateTime(client.lastWithdrawalRequestAt)
+                  : 'Sin solicitudes'
+              }
+            />
+            <Row label="Asesor asignado" value={client.advisorName} />
+            <Row label="Correo del asesor" value={client.advisorEmail} />
+          </dl>
+        </Card>
+
+        {/* Documentos de identidad (solo lectura — subidos por el cliente) */}
+        <Card title="Documentos de identidad">
+          <p className="mb-3 text-xs text-slate-400">
+            Vista del archivo que subió el cliente. Se actualiza automáticamente.
+          </p>
+          {hasIdentity ? (
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {ineAnverso && (
+                <IdentityDocumentPreview
+                  key={ineAnverso.id}
+                  doc={ineAnverso}
+                  label={`${DOCUMENT_TYPE_LABEL.INE} — ${DOCUMENT_SIDE_LABEL.ANVERSO}`}
+                />
+              )}
+              {ineReverso && (
+                <IdentityDocumentPreview
+                  key={ineReverso.id}
+                  doc={ineReverso}
+                  label={`${DOCUMENT_TYPE_LABEL.INE} — ${DOCUMENT_SIDE_LABEL.REVERSO}`}
+                />
+              )}
+              {passport && (
+                <IdentityDocumentPreview
+                  key={passport.id}
+                  doc={passport}
+                  label={DOCUMENT_TYPE_LABEL.PASAPORTE}
+                />
+              )}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-400">
+              El cliente aún no ha subido identificación oficial.
+            </p>
+          )}
+        </Card>
+
+        {/* Resumen financiero */}
+        <Card title="Resumen financiero">
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs uppercase text-slate-400">Saldo disponible</p>
+              <p className="text-2xl font-bold text-white">{fmtMxn(client.cashMxn)}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-slate-400">Total invertido</p>
+              <p className="text-xl font-semibold text-ok">{fmtMxn(client.totalInvestedMxn)}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Edición crítica */}
+      {canEdit ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card title="Editar saldo / total invertido (modo crítico)">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Saldo disponible (MXN)</label>
+                  <input className="input" type="number" value={cashMxn} onChange={(e) => setCashMxn(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label">Total invertido (MXN)</label>
+                  <input className="input" type="number" value={invested} onChange={(e) => setInvested(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label">Razón del ajuste (obligatoria)</label>
+                <input
+                  className="input"
+                  placeholder="Ej. Corrección por depósito conciliado #SPEI-2231"
+                  value={balanceReason}
+                  onChange={(e) => setBalanceReason(e.target.value)}
+                />
+              </div>
+              <button
+                className="btn-primary"
+                disabled={balanceReason.trim().length < 5}
+                onClick={() => setConfirm('balance')}
+              >
+                Guardar cambios
+              </button>
+            </div>
+          </Card>
+
+          <Card title="Agregar / remover fondos manualmente" id="gestion-fondos">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Operación</label>
+                  <select className="input" value={fundsOp} onChange={(e) => setFundsOp(e.target.value as 'add' | 'remove')}>
+                    <option value="add">Agregar fondos</option>
+                    <option value="remove">Remover fondos</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Monto (MXN)</label>
+                  <input className="input" type="number" value={fundsAmount} onChange={(e) => setFundsAmount(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label">Razón del ajuste (obligatoria)</label>
+                <input
+                  className="input"
+                  placeholder="Ej. Bono de bienvenida autorizado por gerencia"
+                  value={fundsReason}
+                  onChange={(e) => setFundsReason(e.target.value)}
+                />
+              </div>
+              <button
+                className={fundsOp === 'add' ? 'btn-ok' : 'btn-danger'}
+                disabled={fundsReason.trim().length < 5 || Number(fundsAmount) <= 0}
+                onClick={() => setConfirm('funds')}
+              >
+                {fundsOp === 'add' ? 'Agregar fondos' : 'Remover fondos'}
+              </button>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <Card title="Edición de saldos">
+          <p className="text-sm text-slate-400">
+            Tu rol no tiene permisos para modificar saldos. Esta sección es de solo lectura.
+          </p>
+        </Card>
+      )}
+
+      {/* Cuenta de Depósito Asignada */}
+      <Card
+        title="Cuenta de Depósito Asignada"
+        action={
+          client.depositAccount?.updatedAt ? (
+            <span className="text-xs text-slate-500">
+              Última actualización: {fmtDate(client.depositAccount.updatedAt)}
+              {client.depositAccount.updatedByName ? ` · ${client.depositAccount.updatedByName}` : ''}
+            </span>
+          ) : (
+            <span className="text-xs text-warn">Sin cuenta asignada</span>
+          )
+        }
+      >
+        {canEdit ? (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-400">
+              Indica cómo debe fondear el cliente. Estos datos se muestran en tiempo real en
+              &quot;Fondear Cuenta / Invertir&quot;.
+            </p>
+            <div>
+              <label className="label">Forma de depósito del cliente</label>
+              <select
+                className="input"
+                value={depositMethod}
+                onChange={(e) => setDepositMethod(e.target.value as DepositMethod)}
+              >
+                <option value="TRANSFERENCIA">
+                  Transferencia bancaria / SPEI (requiere CLABE interbancaria)
+                </option>
+                <option value="TARJETA">
+                  Tarjeta débito / crédito (enlace de pago seguro)
+                </option>
+                <option value="VENTANILLA">
+                  Depósito en ventanilla bancaria (requiere número de cuenta)
+                </option>
+                <option value="OXXO">
+                  Depósito en tiendas OXXO (requiere referencia OXXO)
+                </option>
+              </select>
+              <p className="mt-1 text-xs text-slate-500">
+                {depositMethod === 'TRANSFERENCIA'
+                  ? 'El cliente verá la CLABE para transferencia interbancaria o SPEI desde su banca en línea o app.'
+                  : depositMethod === 'TARJETA'
+                    ? 'El cliente verá la opción de pago con tarjeta y podrá solicitar un enlace seguro de pago.'
+                    : depositMethod === 'VENTANILLA'
+                      ? 'El cliente verá el número de cuenta para depositar en sucursal bancaria en México.'
+                      : 'El cliente verá la referencia para pagar en cualquier tienda OXXO del país.'}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="label">Razón social / Beneficiario</label>
+                <input
+                  className="input"
+                  placeholder="Ej. Inversionistas S.A. de C.V."
+                  value={deposit.beneficiary}
+                  onChange={(e) => setDeposit({ ...deposit, beneficiary: e.target.value })}
+                />
+              </div>
+              {depositMethod === 'VENTANILLA' ? (
+                <div>
+                  <label className="label">Número de cuenta (ventanilla)</label>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    placeholder="Solo dígitos — para depósito en sucursal"
+                    value={deposit.accountNumber}
+                    onChange={(e) =>
+                      setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
+                    }
+                  />
+                  {deposit.accountNumber && !accountValid && (
+                    <p className="mt-1 text-xs text-danger">
+                      El número de cuenta debe tener entre 5 y 20 dígitos.
+                    </p>
+                  )}
+                </div>
+              ) : depositMethod === 'OXXO' ? (
+                <div>
+                  <label className="label">Número de referencia OXXO</label>
+                  <input
+                    className="input"
+                    placeholder="Referencia o convenio para pago en OXXO"
+                    value={deposit.accountNumber}
+                    onChange={(e) =>
+                      setDeposit({
+                        ...deposit,
+                        accountNumber: e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 24),
+                      })
+                    }
+                  />
+                  {deposit.accountNumber && !oxxoRefValid && (
+                    <p className="mt-1 text-xs text-danger">
+                      La referencia OXXO debe tener entre 8 y 24 caracteres alfanuméricos.
+                    </p>
+                  )}
+                </div>
+              ) : depositMethod === 'TARJETA' ? (
+                <div>
+                  <label className="label">Enlace de pago seguro (opcional)</label>
+                  <input
+                    className="input"
+                    type="url"
+                    placeholder="https://… (pasarela PCI)"
+                    value={deposit.accountNumber}
+                    onChange={(e) => setDeposit({ ...deposit, accountNumber: e.target.value.trim() })}
+                  />
+                  {deposit.accountNumber && !paymentLinkValid && (
+                    <p className="mt-1 text-xs text-danger">Ingresa una URL válida que comience con http:// o https://</p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="label">CLABE interbancaria (18 dígitos)</label>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    maxLength={18}
+                    placeholder="Para transferencia bancaria o SPEI"
+                    value={deposit.clabe}
+                    onChange={(e) => setDeposit({ ...deposit, clabe: e.target.value.replace(/\D/g, '') })}
+                  />
+                  <p className={`mt-1 text-xs ${deposit.clabe && !clabeValid ? 'text-danger' : 'text-slate-500'}`}>
+                    {deposit.clabe.length}/18 dígitos
+                  </p>
+                </div>
+              )}
+              {depositMethod === 'TRANSFERENCIA' && (
+                <div>
+                  <label className="label">Número de cuenta (opcional)</label>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    placeholder="Opcional — referencia adicional"
+                    value={deposit.accountNumber}
+                    onChange={(e) =>
+                      setDeposit({ ...deposit, accountNumber: e.target.value.replace(/\D/g, '') })
+                    }
+                  />
+                </div>
+              )}
+              {depositMethod === 'TARJETA' ? (
+                <div>
+                  <label className="label">Pasarela / procesador de pago</label>
+                  <input
+                    className="input"
+                    placeholder="Ej. Conekta, OpenPay, Stripe"
+                    value={deposit.bank}
+                    onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
+                  />
+                </div>
+              ) : depositMethod === 'OXXO' ? (
+                <div>
+                  <label className="label">Red de pago</label>
+                  <input
+                    className="input"
+                    placeholder="Ej. OXXO"
+                    value={deposit.bank}
+                    onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="label">Banco receptor</label>
+                  <input
+                    className="input"
+                    placeholder="Ej. BBVA, Banamex, Santander"
+                    value={deposit.bank}
+                    onChange={(e) => setDeposit({ ...deposit, bank: e.target.value })}
+                  />
+                </div>
+              )}
+              <div>
+                <label className="label">Referencia única de pago</label>
+                <input
+                  className="input"
+                  placeholder="Ej. INV-1001"
+                  value={deposit.reference}
+                  onChange={(e) => setDeposit({ ...deposit, reference: e.target.value })}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label">Monto inicial de inversión (MXN) · opcional</label>
+                <input
+                  className="input"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Déjalo vacío si no aplica. Ej. 10,000 o 5,000.50"
+                  value={initialInvestment}
+                  onChange={(e) => setInitialInvestment(formatMoneyInput(e.target.value))}
+                />
+                <p className={`mt-1 text-xs ${investmentValid ? 'text-slate-500' : 'text-danger'}`}>
+                  {investmentValid
+                    ? 'Si capturas un monto, el cliente lo verá en su pantalla "Fondear Cuenta".'
+                    : 'El monto no puede ser negativo.'}
+                </p>
+              </div>
+            </div>
+            {depositError && (
+              <p className="rounded-lg bg-danger/15 px-3 py-2 text-sm text-danger">{depositError}</p>
+            )}
+            <button
+              className="btn-primary"
+              disabled={!depositReady || !investmentValid || depositBusy}
+              onClick={submitDeposit}
+            >
+              {depositBusy ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+        ) : client.depositAccount ? (
+          <dl className="space-y-2 text-sm">
+            <Row
+              label="Forma de depósito"
+              value={DEPOSIT_METHOD_LABEL[client.depositAccount.depositMethod]}
+            />
+            <Row label="Beneficiario" value={client.depositAccount.beneficiary} />
+            <Row label="Banco / procesador" value={client.depositAccount.bank} />
+            {client.depositAccount.depositMethod === 'VENTANILLA' ? (
+              <Row label="Número de cuenta (ventanilla)" value={client.depositAccount.accountNumber} />
+            ) : client.depositAccount.depositMethod === 'OXXO' ? (
+              <Row label="Referencia OXXO" value={client.depositAccount.accountNumber} />
+            ) : client.depositAccount.depositMethod === 'TARJETA' ? (
+              client.depositAccount.accountNumber ? (
+                <Row label="Enlace de pago" value={client.depositAccount.accountNumber} />
+              ) : null
+            ) : (
+              <>
+                <Row label="CLABE interbancaria" value={client.depositAccount.clabe} />
+                {client.depositAccount.accountNumber ? (
+                  <Row label="Número de cuenta (opcional)" value={client.depositAccount.accountNumber} />
+                ) : null}
+              </>
+            )}
+            <Row label="Referencia" value={client.depositAccount.reference} />
+            <Row
+              label="Monto inicial de inversión"
+              value={
+                client.depositAccount.initialInvestmentMxn !== undefined
+                  ? fmtMxn(client.depositAccount.initialInvestmentMxn)
+                  : undefined
+              }
+            />
+          </dl>
+        ) : (
+          <p className="text-sm text-slate-400">Tu rol no tiene permisos para asignar cuentas de depósito.</p>
+        )}
+      </Card>
+
+      {/* Bonos */}
+      <Card title="Bonos" id="bonos">
+        {canEdit ? (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-400">
+              Elige el tipo de bono en la tabla y captura cantidad y/o porcentaje según corresponda.
+              El total se acredita al saldo disponible del cliente.
+            </p>
+
+            <div className="overflow-x-auto rounded-lg border border-white/10">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th className="w-10">Elegir</th>
+                    <th>Tipo de bono</th>
+                    <th>Descripción</th>
+                    <th>Ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {BONUS_TYPE_ROWS.map((row) => (
+                    <tr
+                      key={row.type}
+                      className={
+                        bonusType === row.type
+                          ? 'bg-amber-950/30 ring-1 ring-inset ring-amber-500/25'
+                          : ''
+                      }
+                    >
+                      <td>
+                        <input
+                          type="radio"
+                          name="bonusType"
+                          className="h-4 w-4 accent-amber-500"
+                          checked={bonusType === row.type}
+                          onChange={() => setBonusType(row.type)}
+                        />
+                      </td>
+                      <td className="font-medium text-white">{row.label}</td>
+                      <td className="text-slate-300">{row.description}</td>
+                      <td className="text-xs text-slate-400">{row.example}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-sm text-slate-300">
+              Tipo seleccionado: <strong className="text-white">{selectedBonusRow.label}</strong>
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {selectedBonusRow.usesAmount && (
+                <div>
+                  <label className="label">
+                    {bonusType === 'DEPOSITO' ? 'Cantidad base / depósito (MXN)' : 'Cantidad (MXN)'}
+                  </label>
+                  <input
+                    className="input"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Ej. 1,000.00"
+                    value={bonusAmount}
+                    onChange={(e) => setBonusAmount(formatMoneyInput(e.target.value))}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    {bonusType === 'DEPOSITO'
+                      ? 'Monto del depósito o base promocional.'
+                      : 'Monto fijo a acreditar.'}
+                  </p>
+                </div>
+              )}
+              {selectedBonusRow.usesPercentage !== false && (
+                <div>
+                  <label className="label">Porcentaje (%)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.01}
+                    placeholder="Ej. 10"
+                    value={bonusPercentage}
+                    onChange={(e) => setBonusPercentage(e.target.value)}
+                  />
+                  <p className={`mt-1 text-xs ${bonusPercentageValid ? 'text-slate-500' : 'text-danger'}`}>
+                    {bonusPercentageValid
+                      ? bonusType === 'DEPOSITO'
+                        ? 'Opcional: porcentaje adicional sobre la cantidad base.'
+                        : bonusType === 'SALDO'
+                          ? `Sobre saldo actual: ${fmtMxn(client.cashMxn)}.`
+                          : `Sobre total invertido: ${fmtMxn(client.totalInvestedMxn)}.`
+                      : 'El porcentaje debe estar entre 0 y 100.'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {bonusPreview && bonusPercentageValid && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 px-3 py-2 text-sm">
+                <p className="text-slate-300">Vista previa — {BONUS_TYPE_LABEL[bonusType]}</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
+                  {bonusPreview.lines.map((line) => (
+                    <li key={line}>{line.includes('$') ? line : `${line}`}</li>
+                  ))}
+                  <li className="font-semibold text-white">
+                    Total a acreditar: {fmtMxn(bonusTotal)}
+                  </li>
+                  <li>
+                    Nuevo saldo: {fmtMxn(client.cashMxn)} → {fmtMxn(client.cashMxn + bonusTotal)}
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            <div>
+              <label className="label">Razón del bono (obligatoria)</label>
+              <input
+                className="input"
+                placeholder="Ej. Promoción primer depósito autorizada por gerencia"
+                value={bonusReason}
+                onChange={(e) => setBonusReason(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="btn-ok"
+              disabled={!bonusReady || busy}
+              onClick={() => setConfirm('bonus')}
+            >
+              Otorgar bono
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">
+            Tu rol no tiene permisos para otorgar bonos a clientes.
+          </p>
+        )}
+      </Card>
+
+      {/* Comisiones */}
+      <Card title="Comisiones" id="comisiones">
+        {canEdit ? (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-400">
+              Cobros estándar del sector: custodia por operaciones abiertas (0,1%–0,4% sobre
+              nocional) y cuota de gestión anual (1%–2,75% sobre patrimonio en cuenta, con
+              prorrateo mensual, trimestral o anual).
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs">
+                <p className="text-slate-500">Posiciones abiertas</p>
+                <p className="mt-1 font-semibold text-white">
+                  {client.openPositionsCount ?? 0}{' '}
+                  <span className="font-normal text-slate-400">
+                    · {fmtMxn(client.openPositionsNotionalMxn ?? 0)} nocional
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs">
+                <p className="text-slate-500">Patrimonio en cuenta (AUM)</p>
+                <p className="mt-1 font-semibold text-white">{fmtMxn(client.aumMxn ?? client.cashMxn + client.totalInvestedMxn)}</p>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs">
+                <p className="text-slate-500">Saldo disponible para cobro</p>
+                <p className="mt-1 font-semibold text-white">{fmtMxn(client.cashMxn)}</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-white/10">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th className="w-10">Elegir</th>
+                    <th>Tipo de comisión</th>
+                    <th>Descripción</th>
+                    <th>Rango / ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMMISSION_TYPE_ROWS.map((row) => (
+                    <tr
+                      key={row.type}
+                      className={
+                        commissionType === row.type
+                          ? 'bg-amber-950/30 ring-1 ring-inset ring-amber-500/25'
+                          : ''
+                      }
+                    >
+                      <td>
+                        <input
+                          type="radio"
+                          name="commissionType"
+                          className="h-4 w-4 accent-amber-500"
+                          checked={commissionType === row.type}
+                          onChange={() => {
+                            setCommissionType(row.type);
+                            setCommissionPercentage('');
+                          }}
+                        />
+                      </td>
+                      <td className="font-medium text-white">{row.label}</td>
+                      <td className="text-slate-300">{row.description}</td>
+                      <td className="text-xs text-slate-400">
+                        {row.pctMin}% – {row.pctMax}%
+                        <br />
+                        {row.example}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-sm text-slate-300">
+              Tipo seleccionado:{' '}
+              <strong className="text-white">{COMMISSION_TYPE_LABEL[commissionType]}</strong>
+            </p>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="label">
+                  Porcentaje ({selectedCommissionRow.pctMin}% – {selectedCommissionRow.pctMax}%)
+                </label>
+                <input
+                  className="input"
+                  type="number"
+                  min={selectedCommissionRow.pctMin}
+                  max={selectedCommissionRow.pctMax}
+                  step={selectedCommissionRow.pctStep}
+                  placeholder={
+                    commissionType === 'CUSTODIA' ? 'Ej. 0.2' : 'Ej. 2'
+                  }
+                  value={commissionPercentage}
+                  onChange={(e) => setCommissionPercentage(e.target.value)}
+                />
+                <p className={`mt-1 text-xs ${commissionPercentageValid ? 'text-slate-500' : 'text-danger'}`}>
+                  {commissionPercentageValid
+                    ? commissionType === 'CUSTODIA'
+                      ? 'Se aplica sobre el valor nocional de las operaciones abiertas.'
+                      : 'Tasa anual sobre saldo + capital invertido.'
+                    : `Indica un porcentaje entre ${selectedCommissionRow.pctMin} y ${selectedCommissionRow.pctMax}.`}
+                </p>
+              </div>
+
+              {commissionType === 'GESTION_ANUAL' && (
+                <div>
+                  <label className="label">Periodo de cobro</label>
+                  <select
+                    className="input"
+                    value={commissionPeriod}
+                    onChange={(e) => setCommissionPeriod(e.target.value as ManagementPeriod)}
+                  >
+                    {MANAGEMENT_PERIOD_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-slate-500">
+                    En cuentas gestionadas es habitual cobrar trimestralmente (1/4 de la tasa anual).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {commissionPreview && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 px-3 py-2 text-sm">
+                <p className="text-slate-300">Vista previa — {COMMISSION_TYPE_LABEL[commissionType]}</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-slate-300">
+                  {commissionPreview.lines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                  <li className="font-semibold text-white">
+                    Total a descontar: {fmtMxn(commissionTotal)}
+                  </li>
+                  <li>
+                    Nuevo saldo: {fmtMxn(client.cashMxn)} →{' '}
+                    {fmtMxn(Math.max(0, client.cashMxn - commissionTotal))}
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {commissionExceedsBalance && (
+              <p className="text-sm text-danger">
+                El monto de la comisión supera el saldo disponible del cliente.
+              </p>
+            )}
+
+            <div>
+              <label className="label">Razón del cobro (obligatoria)</label>
+              <input
+                className="input"
+                placeholder="Ej. Comisión trimestral de gestión — periodo Q2 2026"
+                value={commissionReason}
+                onChange={(e) => setCommissionReason(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="btn-danger"
+              disabled={!commissionReady || commissionExceedsBalance || busy}
+              onClick={() => setConfirm('commission')}
+            >
+              Cobrar comisión
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">
+            Tu rol no tiene permisos para aplicar comisiones a clientes.
+          </p>
+        )}
+      </Card>
+
+      {/* Transacciones del cliente */}
+      <Card title="Movimientos recientes del cliente">
+        <div className="overflow-x-auto">
+          <table className="table-base">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Categoría</th>
+                <th>Símbolo</th>
+                <th>Operación</th>
+                <th className="text-right">Monto (MXN)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txns.slice(0, 15).map((t) => (
+                <tr key={t.id}>
+                  <td className="text-slate-300">{fmtDate(t.createdAt)}</td>
+                  <td className="text-slate-300">{CATEGORY_LABEL[t.category]}</td>
+                  <td className="font-medium text-white">{t.symbol}</td>
+                  <td className="text-slate-300">
+                    {t.side === 'buy' ? 'Compra' : 'Venta'} · {t.direction === 'long' ? 'Largo' : 'Corto'}
+                  </td>
+                  <td className="text-right text-slate-200">{fmtMxn(t.amountMxn)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <ConfirmDialog
+        open={confirm === 'balance'}
+        title="¿Confirmar cambio de saldo?"
+        confirmLabel="Sí, guardar cambios"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitBalance}
+      >
+        ¿Estás seguro de que deseas cambiar los datos financieros de{' '}
+        <strong className="text-white">{client.displayName}</strong>?
+        <div className="mt-2 rounded-lg bg-ink-900/60 p-2 text-xs">
+          Saldo: {fmtMxn(client.cashMxn)} → <strong className="text-white">{fmtMxn(Number(cashMxn))}</strong>
+          <br />
+          Invertido: {fmtMxn(client.totalInvestedMxn)} →{' '}
+          <strong className="text-white">{fmtMxn(Number(invested))}</strong>
+        </div>
+        Esta acción quedará registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirm === 'funds'}
+        title={fundsOp === 'add' ? '¿Confirmar ingreso de fondos?' : '¿Confirmar retiro de fondos?'}
+        confirmLabel="Sí, continuar"
+        tone={fundsOp === 'add' ? 'ok' : 'danger'}
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitFunds}
+      >
+        Vas a {fundsOp === 'add' ? 'agregar' : 'remover'}{' '}
+        <strong className="text-white">{fmtMxn(Number(fundsAmount) || 0)}</strong>{' '}
+        {fundsOp === 'add' ? 'a' : 'de'} la cuenta de{' '}
+        <strong className="text-white">{client.displayName}</strong>. Esta acción quedará
+        registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirm === 'bonus'}
+        title="¿Confirmar bono al cliente?"
+        confirmLabel="Sí, otorgar bono"
+        tone="ok"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitBonus}
+      >
+        Otorgarás bono «<strong className="text-white">{BONUS_TYPE_LABEL[bonusType]}</strong>» de{' '}
+        <strong className="text-white">{fmtMxn(bonusTotal)}</strong> a{' '}
+        <strong className="text-white">{client.displayName}</strong>.
+        <div className="mt-2 rounded-lg bg-ink-900/60 p-2 text-xs">
+          {bonusPreview?.lines.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
+          Total bono: <strong className="text-white">{fmtMxn(bonusTotal)}</strong>
+          <br />
+          Saldo: {fmtMxn(client.cashMxn)} →{' '}
+          <strong className="text-white">{fmtMxn(client.cashMxn + bonusTotal)}</strong>
+        </div>
+        Esta acción quedará registrada en la bitácora de auditoría.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirm === 'commission'}
+        title="¿Confirmar cobro de comisión?"
+        confirmLabel="Sí, cobrar comisión"
+        tone="danger"
+        busy={busy}
+        onCancel={() => setConfirm(null)}
+        onConfirm={submitCommission}
+      >
+        Cobrarás comisión «<strong className="text-white">{COMMISSION_TYPE_LABEL[commissionType]}</strong>» de{' '}
+        <strong className="text-white">{fmtMxn(commissionTotal)}</strong> a{' '}
+        <strong className="text-white">{client.displayName}</strong>.
+        <div className="mt-2 rounded-lg bg-ink-900/60 p-2 text-xs">
+          {commissionPreview?.lines.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
+          Total comisión: <strong className="text-white">{fmtMxn(commissionTotal)}</strong>
+          <br />
+          Saldo: {fmtMxn(client.cashMxn)} →{' '}
+          <strong className="text-white">{fmtMxn(client.cashMxn - commissionTotal)}</strong>
+        </div>
+        El importe se descontará del saldo disponible. Quedará registrado en la bitácora de auditoría.
+      </ConfirmDialog>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <dt className="text-slate-400">{label}</dt>
+      <dd className="text-right text-slate-200">{value ?? '—'}</dd>
+    </div>
+  );
+}

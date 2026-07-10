@@ -1,51 +1,51 @@
 # Respaldo Admin + Supervisores Broker.mx — 9 julio 2026
 
-Punto de restauración **aprobado por el usuario** («Perfect, save changes»).
+Punto de restauración **aprobado por el usuario** («Perfect. Save everything.»).
 
 - **Admin producción:** https://brokermxadmin-khaki.vercel.app
 - **Supervisores producción:** https://brokermxsupervisors.vercel.app
 - **API:** https://broker-mx-api.onrender.com
-- **Tag git:** `backup/admin-ok-2026-07-09-portal-bonos`
-- **Carpeta snapshot:** `backups/admin-2026-07-09-portal-bonos/`
-- **Commit:** `e9b2b73`
-- **Deploy admin Vercel:** `dpl_Hd5oKTk9YT8cWqvnAScnkKEmajHW`
-- **Deploy supervisores Vercel:** `dpl_H4emBddTQieGWQhbwZphi3UXoTMb`
+- **Tag git:** `backup/admin-ok-2026-07-09-comisiones-tema-negro`
+- **Carpeta snapshot:** `backups/admin-2026-07-09-comisiones-tema-negro/`
+- **Commit:** `26d8b1d`
+- **Deploy admin Vercel:** `dpl_DHaFYCHuf5GrrWriksEt3usvtm1P`
+- **Deploy supervisores Vercel:** (tema negro, commit `93ab648`)
 
 ---
 
 ## Cambios aprobados (esta versión)
 
-### Tema portal (admin + supervisores)
-- Vidrio esmeralda, brillos dorados, fondo atmosférico
-- CSS: `portal-theme.css` en cada app
+### Tema negro profesional (admin + supervisores)
+- Fondo negro sólido, sin verde «hacker»
+- Paneles oscuros; esmerilado mínimo solo en header
+- Acentos dorados / ámbar en botones y navegación activa
 
-### Solicitudes de efectivo → supervisores
-- Removido de admin; disponible en `/solicitudes` (supervisores)
-- API: `GET/PATCH /api/supervisor/cash-requests`
+### Comisiones en ficha cliente (admin)
+- **Custodia / mantenimiento:** 0,1% – 0,4% sobre nocional de operaciones abiertas
+- **Gestión anual:** 1% – 2,75% sobre patrimonio (saldo + invertido), prorrateo mensual / trimestral / anual
+- API: `POST /api/admin/clients/:id/commission`
+- Auditoría: `COMMISSION_CHARGE`
+- Descuento automático del saldo disponible
 
-### Bonos en ficha cliente (admin)
-- Apartado **Bonos** debajo de cuenta de depósito
-- 4 tipos: depósito, fijo, % saldo, % invertido
-- API: `POST /api/admin/clients/:id/bonus`
-- Auditoría: `BONUS_GRANT`
+### Heredado de respaldo anterior
+- Bonos (4 tipos), solicitudes de efectivo en supervisores, tema portal base
 
 ---
 
 ## Cómo restaurar
 
 ```powershell
-git checkout backup/admin-ok-2026-07-09-portal-bonos -- admin supervisors backend/src/controllers/admin/finance.controller.ts backend/src/lib/bonusCalc.ts backend/src/routes/admin.ts backend/src/routes/supervisor.ts shared
+git checkout backup/admin-ok-2026-07-09-comisiones-tema-negro -- admin supervisors backend/src/controllers/admin backend/src/lib/bonusCalc.ts backend/src/lib/commissionCalc.ts backend/src/routes/admin.ts backend/src/services/portfolio.service.ts docs/BACKUP-ADMIN.md
 
 # o:
-powershell -ExecutionPolicy Bypass -File backups\admin-2026-07-09-portal-bonos\RESTORE.ps1
+powershell -ExecutionPolicy Bypass -File backups\admin-2026-07-09-comisiones-tema-negro\RESTORE.ps1
 ```
 
 ---
 
 ## Respaldo anterior
 
-- Landing: `backup/landing-ok-2026-07-09-five-markets` (commit `c0e5c05`)
-- LATAM: `backup/latam-ok-2026-07-09`
+- Tag: `backup/admin-ok-2026-07-09-portal-bonos` (commit `e9b2b73`)
 
 ---
 

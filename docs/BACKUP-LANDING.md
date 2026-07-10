@@ -1,63 +1,50 @@
-# Respaldo Landing Broker.mx — 9 julio 2026 (5 mercados + Investing + USD)
+# Respaldo Landing Broker.mx — 9 julio 2026 (registro portal + términos)
 
-Punto de restauración **aprobado por el usuario** («Ok, perfect. Now save the changes»).
+Punto de restauración **aprobado por el usuario** («Perfect. Save everything.»).
 
 - **Producción:** https://brokermx-alpha.vercel.app
-- **Tag git:** `backup/landing-ok-2026-07-09-five-markets`
-- **Carpeta snapshot:** `backups/landing-2026-07-09-five-markets/`
-- **Commit:** `18f21b4`
-- **Deploy Vercel:** `dpl_E2xyFjV5ix2u2tcAryPdHYvv3Ud5`
+- **Registro:** https://brokermx-alpha.vercel.app/registro
+- **Tag git:** `backup/landing-ok-2026-07-09-registro-portal`
+- **Carpeta snapshot:** `backups/landing-2026-07-09-registro-portal/`
+- **Commit:** `26d8b1d`
+- **Deploy Vercel:** `dpl_37DNCro5uoszFDdJJ92LGFETziix`
 
 ---
 
 ## Cambios aprobados (esta versión)
 
-### 5 categorías de inversión en landing
-Orden fijo tras las 3 frases del scroll:
-1. Divisas (Forex)
-2. Materias Primas
-3. Acciones
-4. **Índices Bursátiles** (nueva)
-5. Criptomonedas
+### Registro / login / recuperar — tema portal
+- Fondo negro, vidrio esmeralda, acentos dorados
+- `AuthShell`, `PortalAtmosphere`, `TermsAcceptance`
+- Checkbox obligatorio de Términos y Condiciones
+- Backend valida `acceptedTerms: true` en registro
 
-### Destacado del día — Investing.com
-- Sincronización con titulares de Investing.com (cache 24 h)
-- Salinas Pliego en rotación + imágenes HD 800×533
-- Rotación cada 2 minutos
-
-### Simuladores en USD
-- Montos: **$1,000 · $3,000 · $5,000 · $20,000 USD** (4 categorías landing)
-
-### Heredado
-- Header móvil estable, vidrio esmerilada, responsive, esfera Capital
+### Heredado (5 mercados + Investing + USD)
+- 5 categorías en scrolly, titulares Investing.com, simuladores USD
+- Salinas Pliego dentro de `#quienes`, estructura landing intacta
 
 ---
 
-## Orden de secciones
+## Orden de secciones (sin cambios)
 
-1. Menú (header fijo móvil)
-2. Hero: esfera + leyenda CNBV (`#top`)
-3. Quiénes Somos (`#quienes`) — **Salinas + Destacado Investing**
-4. Narrativa + **5 mercados** (`#mercados`)
-5. Confianza / testimonios (`#testimonios`)
-6. CTA final + Footer
+1. Menú · 2. Hero · 3. Quiénes Somos · 4. Mercados · 5. Testimonios · 6. CTA + Footer
 
 ---
 
 ## Cómo restaurar
 
 ```powershell
-git checkout backup/landing-ok-2026-07-09-five-markets -- frontend/src/pages/Landing.tsx frontend/src/styles/index.css frontend/src/components/landing frontend/src/data/marketCategories.ts frontend/src/data/landingMarketScroll.ts frontend/src/data/landingInstruments.ts frontend/src/hooks/useDailyMarketNews.ts frontend/src/lib/format.ts
+git checkout backup/landing-ok-2026-07-09-registro-portal -- frontend/src/pages/Register.tsx frontend/src/pages/LoginClient.tsx frontend/src/pages/ForgotPassword.tsx frontend/src/components/auth frontend/src/data/termsContent.ts frontend/src/styles/portal-theme.css frontend/src/styles/index.css frontend/src/api/client.ts frontend/src/auth/ClientAuthContext.tsx frontend/src/components/common/PasswordField.tsx backend/src/controllers/auth.controller.ts
 
 # o:
-powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-09-five-markets\RESTORE.ps1
+powershell -ExecutionPolicy Bypass -File backups\landing-2026-07-09-registro-portal\RESTORE.ps1
 ```
 
 ---
 
 ## Respaldo anterior
 
-- Tag: `backup/landing-ok-2026-07-09-mobile-header` (commit `9c0b315`)
+- Tag: `backup/landing-ok-2026-07-09-five-markets` (commit `c0e5c05`)
 
 ---
 
