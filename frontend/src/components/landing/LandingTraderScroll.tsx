@@ -108,7 +108,7 @@ type Props = {
   onOpenMarket: (id: MarketCategoryId) => void;
 };
 
-/** Scrolly: 3 frases → 4 categorías con imagen, descripción y simulador */
+/** Scrolly: 3 frases → 5 categorías con imagen, descripción y simulador */
 export function LandingTraderScroll({ id = 'mercados', onOpenMarket }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const linesRef = useRef<HTMLElement[]>([]);
@@ -173,7 +173,7 @@ export function LandingTraderScroll({ id = 'mercados', onOpenMarket }: Props) {
           className="trader-scroll__markets-head"
         >
           <p className="trader-scroll__markets-eyebrow">Qué hacemos</p>
-          <h2 className="trader-scroll__markets-title">Acceso a las 4 grandes categorías de mercados</h2>
+          <h2 className="trader-scroll__markets-title">Acceso a las 5 grandes categorías de mercados</h2>
           <p className="trader-scroll__markets-desc">
             Conoce cada mercado y proyecta tu inversión con el simulador, sin compromiso.
           </p>

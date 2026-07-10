@@ -1,4 +1,4 @@
-export type MarketCategoryId = 'stocks' | 'commodities' | 'forex' | 'crypto';
+export type MarketCategoryId = 'stocks' | 'commodities' | 'forex' | 'crypto' | 'indexes';
 
 export interface MarketCategoryInfo {
   id: MarketCategoryId;
@@ -20,20 +20,20 @@ export const INVESTMENT_HORIZONS_MONTHS = [1, 2, 4] as const;
 
 export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
   {
-    id: 'stocks',
-    title: 'Bolsa de Valores',
-    shortDesc: 'Acciones de las empresas más grandes del mundo.',
+    id: 'forex',
+    title: 'Divisas (Forex)',
+    shortDesc: 'Pares internacionales y tipos de cambio.',
     overview:
-      'La bolsa te permite ser dueño parcial de empresas líderes en México y el mundo. Es el mercado ideal para hacer crecer tu patrimonio con dividendos, diversificación sectorial y liquidez diaria bajo asesoría profesional.',
+      'El mercado de divisas mueve billones diarios y permite aprovechar movimientos del dólar, euro y otras monedas. Es clave para cobertura cambiaria y oportunidades tácticas con gestión de riesgo.',
     bullets: [
-      'Acceso a emisoras del IPC, EE.UU. y sectores exportadores',
-      'Diversificación en industrial, tecnología, consumo y finanzas',
-      'Horizonte recomendado: mediano y largo plazo',
+      'Operación en USD/MXN y pares internacionales relevantes',
+      'Estrategias de cobertura para importadores, ahorradores e inversionistas',
+      'Alta liquidez en ventanas operativas globales',
     ],
-    annualReturnPct: 10.5,
-    accentBorder: 'border-sky-500/40',
-    accentBg: 'bg-sky-600/15',
-    accentText: 'text-sky-300',
+    annualReturnPct: 6.0,
+    accentBorder: 'border-emerald-500/40',
+    accentBg: 'bg-emerald-600/15',
+    accentText: 'text-emerald-300',
   },
   {
     id: 'commodities',
@@ -52,20 +52,36 @@ export const MARKET_CATEGORIES: MarketCategoryInfo[] = [
     accentText: 'text-yellow-300',
   },
   {
-    id: 'forex',
-    title: 'Divisas (Forex)',
-    shortDesc: 'Pares internacionales frente al peso mexicano.',
+    id: 'stocks',
+    title: 'Acciones',
+    shortDesc: 'Emisoras líderes en México y el mundo.',
     overview:
-      'El mercado de divisas mueve billones diarios y permite aprovechar movimientos del dólar, euro y otras monedas frente al peso. Es clave para cobertura cambiaria y oportunidades tácticas con gestión de riesgo.',
+      'Las acciones te permiten ser dueño parcial de empresas líderes. Es el mercado ideal para hacer crecer tu patrimonio con dividendos, diversificación sectorial y liquidez diaria bajo asesoría profesional.',
     bullets: [
-      'Operación en USD/MXN y pares internacionales relevantes',
-      'Estrategias de cobertura para importadores, ahorradores e inversionistas',
-      'Alta liquidez en ventanas operativas globales',
+      'Acceso a emisoras del IPC, EE.UU. y sectores exportadores',
+      'Diversificación en industrial, tecnología, consumo y finanzas',
+      'Horizonte recomendado: mediano y largo plazo',
     ],
-    annualReturnPct: 6.0,
-    accentBorder: 'border-emerald-500/40',
-    accentBg: 'bg-emerald-600/15',
-    accentText: 'text-emerald-300',
+    annualReturnPct: 10.5,
+    accentBorder: 'border-sky-500/40',
+    accentBg: 'bg-sky-600/15',
+    accentText: 'text-sky-300',
+  },
+  {
+    id: 'indexes',
+    title: 'Índices Bursátiles',
+    shortDesc: 'S&P 500, NASDAQ, IPC y mercados globales.',
+    overview:
+      'Los índices bursátiles reflejan el pulso de economías enteras. Operar índices te da exposición diversificada a los mercados más líquidos del mundo con una sola decisión de inversión.',
+    bullets: [
+      'S&P 500, NASDAQ 100, Dow Jones e IPC México',
+      'Diversificación instantánea en docenas de emisoras',
+      'Referencia clave para estrategias de largo plazo',
+    ],
+    annualReturnPct: 9.0,
+    accentBorder: 'border-cyan-500/40',
+    accentBg: 'bg-cyan-600/15',
+    accentText: 'text-cyan-300',
   },
   {
     id: 'crypto',

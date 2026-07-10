@@ -18,7 +18,7 @@ export function LandingMarketsShowcase({ onOpenMarket }: Props) {
         <div className="cap-section__inner">
           <p className="cap-eyebrow">México · Plataforma de inversión</p>
           <h2 className="cap-display cap-display--split">
-            <span>4 grandes mercados.</span>
+            <span>5 grandes mercados.</span>
             <span className="cap-display__accent">Un único entorno para tus decisiones.</span>
           </h2>
           <p className="cap-lead">

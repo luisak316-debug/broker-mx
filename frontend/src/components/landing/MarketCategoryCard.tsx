@@ -17,6 +17,10 @@ const CARD_THEME: Record<
     ring: 'hover:border-emerald-500/30',
     label: 'group-hover:text-emerald-300/90',
   },
+  indexes: {
+    ring: 'hover:border-cyan-500/30',
+    label: 'group-hover:text-cyan-300/90',
+  },
   crypto: {
     ring: 'hover:border-orange-500/30',
     label: 'group-hover:text-orange-300/90',

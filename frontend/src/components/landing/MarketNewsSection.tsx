@@ -157,7 +157,7 @@ export function MarketNewsSection({ onOpenMarket }: Props) {
     <section id="noticias" className="border-t border-ink-700/60 bg-ink-900/40 py-20">
       <LandingSectionHeader
         eyebrow="Qué hacemos"
-        title="Acceso a las 4 grandes categorías de mercados"
+        title="Acceso a las 5 grandes categorías de mercados"
         description="Conoce cada mercado a través de titulares actuales y proyecta tu inversión con el simulador, sin compromiso."
       />
 
