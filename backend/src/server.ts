@@ -22,7 +22,7 @@ async function main(): Promise<void> {
 
   server.listen(env.port, () => {
     /* eslint-disable no-console */
-    console.log(`\n  broker.mx API`);
+    console.log(`\n  INVERMAX LATAM API`);
     console.log(`  ➜ REST:      http://localhost:${env.port}/api`);
     console.log(`  ➜ WebSocket: ws://localhost:${env.port}/ws/prices`);
     console.log(`  ➜ Moneda base: ${env.baseCurrency}`);

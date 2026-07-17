@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { ALL_INSTRUMENTS } from '../src/data/instruments';
 import { hashPassword } from '../src/services/security.service';
+import { STAFF_EMAILS } from '../src/config/brand';
 
 const prisma = new PrismaClient();
 
@@ -22,30 +23,30 @@ async function main() {
 
   const demoHash = hashPassword('Admin1234');
   const adminStaff = await prisma.staff.upsert({
-    where: { email: 'admin@brokermx.com' },
+    where: { email: STAFF_EMAILS.admin },
     update: {},
     create: {
-      email: 'admin@brokermx.com',
+      email: STAFF_EMAILS.admin,
       passwordHash: demoHash,
       displayName: 'Administración',
       role: 'ADMIN',
     },
   });
   await prisma.staff.upsert({
-    where: { email: 'laura.cumplimiento@brokermx.com' },
+    where: { email: STAFF_EMAILS.compliance },
     update: {},
     create: {
-      email: 'laura.cumplimiento@brokermx.com',
+      email: STAFF_EMAILS.compliance,
       passwordHash: demoHash,
       displayName: 'Laura Cumplimiento',
       role: 'COMPLIANCE',
     },
   });
   await prisma.staff.upsert({
-    where: { email: 'soporte@brokermx.com' },
+    where: { email: STAFF_EMAILS.support },
     update: {},
     create: {
-      email: 'soporte@brokermx.com',
+      email: STAFF_EMAILS.support,
       passwordHash: demoHash,
       displayName: 'Carlos Soporte',
       role: 'SUPPORT',

@@ -1,4 +1,4 @@
-# Broker MX — Dashboard Financiero Unificado
+# INVERMAX LATAM — Dashboard Financiero Unificado
 
 Plataforma de **corretaje profesional en modo simulación** para el mercado mexicano, que
 consolida las cuatro grandes categorías de inversión en una sola interfaz limpia y
@@ -58,10 +58,10 @@ App **separada** (puerto **5174**) para el personal interno, con autenticación 
 
 | Correo | Rol | Permisos |
 |--------|-----|----------|
-| `admin@brokermx.com` | ADMIN | Acceso total |
-| `juan.perez@brokermx.com` | ADVISOR | Gestiona clientes, edita saldos, revisa solicitudes |
-| `laura.cumplimiento@brokermx.com` | COMPLIANCE | Lo anterior + bitácora de auditoría |
-| `soporte@brokermx.com` | SUPPORT | Solo lectura |
+| `admin@invermaxlatam.com` | ADMIN | Acceso total |
+| `juan.perez@invermaxlatam.com` | ADVISOR | Gestiona clientes, edita saldos, revisa solicitudes |
+| `laura.cumplimiento@invermaxlatam.com` | COMPLIANCE | Lo anterior + bitácora de auditoría |
+| `soporte@invermaxlatam.com` | SUPPORT | Solo lectura |
 
 **Seguridad:** contraseñas con hash **scrypt** + salt; sesiones con **token firmado HMAC-SHA256**
 (expiración 8 h); middleware `requireAuth` + `requireRole`; comparaciones en tiempo constante.
@@ -158,7 +158,7 @@ npm run dev
 ```
 
 - App de clientes (Landing): http://localhost:5173
-- Backoffice / Admin: http://localhost:5174  (login: `admin@brokermx.com` / `Admin1234`)
+- Backoffice / Admin: http://localhost:5174  (login: `admin@invermaxlatam.com` / `Admin1234`)
 - API REST: http://localhost:4000/api
 - WebSocket: ws://localhost:4000/ws/prices
 

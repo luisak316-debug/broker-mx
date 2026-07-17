@@ -3,11 +3,12 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PasswordField } from '../components/common/PasswordField';
 import { PortalAtmosphere } from '../components/portal/PortalAtmosphere';
+import { BRAND_NAME, STAFF_EMAILS } from '../data/brand';
 
 export function Login() {
   const { staff, login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@brokermx.com');
+  const [email, setEmail] = useState<string>(STAFF_EMAILS.admin);
   const [password, setPassword] = useState('Admin1234');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -34,10 +35,10 @@ export function Login() {
       <div className="portal-shell w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 text-xl font-bold text-white">
-            A
+            I
           </div>
-          <h1 className="portal-title text-xl font-bold">admin</h1>
-          <p className="text-sm text-slate-400">Acceso para personal interno</p>
+          <h1 className="portal-title text-xl font-bold">{BRAND_NAME}</h1>
+          <p className="text-sm text-slate-400">Panel de administración · personal interno</p>
         </div>
 
         <form onSubmit={submit} className="card space-y-4">
@@ -70,10 +71,10 @@ export function Login() {
         <div className="mt-4 rounded-lg portal-panel p-3 text-xs text-slate-400">
           <p className="mb-1 font-semibold text-slate-300">Cuentas de demostración (contraseña: Admin1234)</p>
           <ul className="space-y-0.5">
-            <li>admin@brokermx.com — Administración</li>
-            <li>juan.perez@brokermx.com — Asesor / Trader</li>
-            <li>laura.cumplimiento@brokermx.com — Cumplimiento</li>
-            <li>soporte@brokermx.com — Soporte (solo lectura)</li>
+            <li>{STAFF_EMAILS.admin} — Administración</li>
+            <li>{STAFF_EMAILS.advisor} — Asesor / Trader</li>
+            <li>{STAFF_EMAILS.compliance} — Cumplimiento</li>
+            <li>{STAFF_EMAILS.support} — Soporte (solo lectura)</li>
           </ul>
         </div>
       </div>

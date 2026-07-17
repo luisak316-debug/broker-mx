@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Broker.mx</string>
-    <string name="title_activity_main">Broker.mx</string>
+    <string name="app_name">INVERMAX LATAM</string>
+    <string name="title_activity_main">INVERMAX LATAM</string>
     <string name="package_name">com.brokermx.cliente</string>
     <string name="custom_url_scheme">com.brokermx.cliente</string>
 </resources>

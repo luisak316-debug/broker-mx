@@ -42,7 +42,7 @@ function buildCopyAllText(
 ): string {
   const acc = info.account;
   if (!acc) return '';
-  const lines = ['Depósito Broker.mx', `Método: ${DEPOSIT_METHOD_LABEL[method]}`, `Beneficiario: ${acc.beneficiary}`];
+  const lines = ['Depósito INVERMAX LATAM', `Método: ${DEPOSIT_METHOD_LABEL[method]}`, `Beneficiario: ${acc.beneficiary}`];
 
   if (method === 'OXXO') {
     lines.push(`Red: ${acc.bank}`, `Referencia OXXO: ${acc.accountNumber}`);

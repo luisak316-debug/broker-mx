@@ -2,10 +2,14 @@ import { isDatabaseEnabled } from './database';
 import { prisma } from './prisma';
 import * as legacy from '../data/adminStore';
 
-/** Clientes ficticios del seed antiguo (@correo.com, demo@brokermx.com). */
+/** Clientes ficticios del seed antiguo (@correo.com, demo legacy). */
 export function isDemoClientEmail(email: string): boolean {
   const e = email.toLowerCase();
-  return e.endsWith('@correo.com') || e === 'demo@brokermx.com';
+  return (
+    e.endsWith('@correo.com') ||
+    e === 'demo@brokermx.com' ||
+    e === 'demo@invermaxlatam.com'
+  );
 }
 
 export function purgeDemoClientsLegacy(): number {
@@ -39,6 +43,7 @@ export async function purgeDemoClientsDatabase(): Promise<number> {
       OR: [
         { email: { endsWith: '@correo.com', mode: 'insensitive' } },
         { email: { equals: 'demo@brokermx.com', mode: 'insensitive' } },
+        { email: { equals: 'demo@invermaxlatam.com', mode: 'insensitive' } },
       ],
     },
   });

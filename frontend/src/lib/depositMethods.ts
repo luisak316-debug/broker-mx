@@ -61,7 +61,7 @@ export function depositInstructions(method: DepositMethod): string {
     case 'OXXO':
       return 'Acude a cualquier tienda OXXO en México, indica que harás un pago de servicio y proporciona tu número de referencia asignado.';
     default:
-      return 'Desde tu app bancaria o banca en línea, envía una transferencia SPEI a la cuenta institucional de Broker.mx.';
+      return 'Desde tu app bancaria o banca en línea, envía una transferencia SPEI a la cuenta institucional de INVERMAX LATAM.';
   }
 }
 

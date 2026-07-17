@@ -2,11 +2,11 @@
 
 Punto de restauración **aprobado por el usuario** («Perfect. Save everything.»).
 
-- **Producción:** https://brokermx-alpha.vercel.app
-- **Registro:** https://brokermx-alpha.vercel.app/registro
+- **Producción:** https://invermaxlatam.com (Vercel: https://invermax-latam.vercel.app)
+- **Registro:** https://invermaxlatam.com/registro
 - **Tag git:** `backup/landing-ok-2026-07-09-registro-portal`
 - **Carpeta snapshot:** `backups/landing-2026-07-09-registro-portal/`
-- **Commit:** `26d8b1d`
+- **Commit:** `4bb20a2`
 - **Deploy Vercel:** `dpl_37DNCro5uoszFDdJJ92LGFETziix`
 
 ---

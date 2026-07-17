@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PortalAtmosphere } from '../components/portal/PortalAtmosphere';
+import { BRAND_NAME, STAFF_EMAILS } from '../data/brand';
 
 export function Login() {
   const { staff, login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('supervisor@brokermx.com');
+  const [email, setEmail] = useState<string>(STAFF_EMAILS.supervisor);
   const [password, setPassword] = useState('Admin1234');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,10 +34,10 @@ export function Login() {
       <div className="portal-shell w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 text-xl font-bold text-white">
-            S
+            I
           </div>
-          <h1 className="portal-title text-xl font-bold">Supervisores</h1>
-          <p className="text-sm text-slate-400">Gestión de asesores y contactos</p>
+          <h1 className="portal-title text-xl font-bold">{BRAND_NAME}</h1>
+          <p className="text-sm text-slate-400">Panel de supervisores · gestión de asesores</p>
         </div>
 
         <form onSubmit={submit} className="card space-y-4">
@@ -69,7 +70,7 @@ export function Login() {
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-500">
-          Demo: supervisor@brokermx.com · Admin1234
+          Demo: {STAFF_EMAILS.supervisor} · Admin1234
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-/** Países de Latinoamérica — registro Broker.mx (espejo del backend) */
+/** Países de Latinoamérica — registro INVERMAX LATAM (espejo del backend) */
 export interface LatamCountry {
   code: string;
   name: string;

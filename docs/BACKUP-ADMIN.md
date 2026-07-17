@@ -2,12 +2,12 @@
 
 Punto de restauración **aprobado por el usuario** («Perfect. Save everything.»).
 
-- **Admin producción:** https://brokermxadmin-khaki.vercel.app
-- **Supervisores producción:** https://brokermxsupervisors.vercel.app
+- **Admin producción:** https://invermaxlatam.com/admin847/ (Vercel: https://invermax-latam-admin.vercel.app)
+- **Supervisores producción:** https://invermax-latam-supervisors.vercel.app
 - **API:** https://broker-mx-api.onrender.com
 - **Tag git:** `backup/admin-ok-2026-07-09-comisiones-tema-negro`
 - **Carpeta snapshot:** `backups/admin-2026-07-09-comisiones-tema-negro/`
-- **Commit:** `26d8b1d`
+- **Commit:** `4bb20a2`
 - **Deploy admin Vercel:** `dpl_DHaFYCHuf5GrrWriksEt3usvtm1P`
 - **Deploy supervisores Vercel:** (tema negro, commit `93ab648`)
 

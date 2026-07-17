@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { hashPassword } from '../services/security.service';
 import { env } from '../config/env';
 import { loadLegacyPersist, saveLegacyPersist } from '../lib/filePersist';
+import { isAdminEmail, STAFF_EMAILS } from '../config/brand';
 import type {
   AuditLog,
   CashRequest,
@@ -19,16 +20,16 @@ import type {
 const DEMO_PASSWORD = 'Admin1234';
 
 export const staff: Staff[] = [
-  mkStaff('admin@brokermx.com', 'Administración', 'ADMIN'),
-  mkStaff('supervisor@brokermx.com', 'María Supervisora', 'SUPERVISOR'),
-  mkStaff('juan.perez@brokermx.com', 'Juan Pérez', 'ADVISOR'),
-  mkStaff('laura.cumplimiento@brokermx.com', 'Laura Cumplimiento', 'COMPLIANCE'),
-  mkStaff('soporte@brokermx.com', 'Carlos Soporte', 'SUPPORT'),
+  mkStaff(STAFF_EMAILS.admin, 'Administración', 'ADMIN'),
+  mkStaff(STAFF_EMAILS.supervisor, 'María Supervisora', 'SUPERVISOR'),
+  mkStaff(STAFF_EMAILS.advisor, 'Juan Pérez', 'ADVISOR'),
+  mkStaff(STAFF_EMAILS.compliance, 'Laura Cumplimiento', 'COMPLIANCE'),
+  mkStaff(STAFF_EMAILS.support, 'Carlos Soporte', 'SUPPORT'),
 ];
 
 /** Nombre visible del administrador principal. */
 export function normalizeStaffDisplay(staff: Staff): Staff {
-  if (staff.email === 'admin@brokermx.com') staff.displayName = 'Administración';
+  if (isAdminEmail(staff.email)) staff.displayName = 'Administración';
   return staff;
 }
 

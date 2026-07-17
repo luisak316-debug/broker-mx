@@ -1,4 +1,5 @@
 import Parser from 'rss-parser';
+import { PUBLIC_SITE_URL } from '../config/brand';
 
 export type InvestingCategory = 'crypto' | 'stocks' | 'commodities' | 'forex';
 
@@ -84,7 +85,7 @@ async function fetchOgImage(articleUrl: string): Promise<string | undefined> {
     const res = await fetch(articleUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'BrokerMX-NewsBot/1.0 (+https://brokermx-alpha.vercel.app)',
+        'User-Agent': `InvermaxLatam-NewsBot/1.0 (+${PUBLIC_SITE_URL})`,
         Accept: 'text/html',
       },
     });

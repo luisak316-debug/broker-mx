@@ -39,7 +39,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Griselda Barrueta',
     role: 'Inversionista · Monterrey',
-    text: 'Por fin un broker en México que habla claro y te respalda legalmente.',
+    text: 'Por fin una firma en Latinoamérica que habla claro y te respalda legalmente.',
   },
   {
     name: 'Ricardo Morales',
@@ -49,7 +49,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Patricia Velázquez',
     role: 'Inversionista · Puebla',
-    text: 'Llevaba años postergando invertir. Con Broker.mx me sentí acompañada desde el primer depósito y los resultados superaron mis expectativas.',
+    text: 'Llevaba años postergando invertir. Con INVERMAX LATAM me sentí acompañada desde el primer depósito y los resultados superaron mis expectativas.',
   },
   {
     name: 'Fernando Castillo',
@@ -69,7 +69,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Lucía Hernández',
     role: 'Contadora · CDMX',
-    text: 'Como profesional de finanzas valoro la transparencia. Broker.mx cumple lo que promete y el trato con clientes es impecable.',
+    text: 'Como profesional de finanzas valoro la transparencia. INVERMAX LATAM cumple lo que promete y el trato con clientes es impecable.',
   },
   {
     name: 'Jorge Iván Medina',
@@ -94,7 +94,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Eduardo Ponce',
     role: 'Inversionista · Hermosillo',
-    text: 'Recuperé la confianza en invertir después de malas experiencias. Broker.mx me demostró que sí se puede crecer con ética.',
+    text: 'Recuperé la confianza en invertir después de malas experiencias. INVERMAX LATAM me demostró que sí se puede crecer con ética.',
   },
   {
     name: 'Verónica Luna',
@@ -104,7 +104,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Carlos Alberto Núñez',
     role: 'Inversionista · Aguascalientes',
-    text: 'Operaciones claras, depósitos rápidos y un equipo que responde. Recomiendo Broker.mx a toda mi familia.',
+    text: 'Operaciones claras, depósitos rápidos y un equipo que responde. Recomiendo INVERMAX LATAM a toda mi familia.',
   },
   {
     name: 'Daniela Ortiz',
@@ -139,7 +139,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Isabel Camacho',
     role: 'Inversionista · Cuernavaca',
-    text: 'Broker.mx me ayudó a proteger el futuro de mis hijos. Servicio de primera y confianza absoluta en mi asesor.',
+    text: 'INVERMAX LATAM me ayudó a proteger el futuro de mis hijos. Servicio de primera y confianza absoluta en mi asesor.',
   },
   {
     name: 'Javier Mejía',
@@ -159,7 +159,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Leticia Contreras',
     role: 'Inversionista · Tampico',
-    text: 'Nunca me sentí sola en el proceso. Broker.mx cumple lo que promete y el trato es siempre respetuoso.',
+    text: 'Nunca me sentí sola en el proceso. INVERMAX LATAM cumple lo que promete y el trato es siempre respetuoso.',
   },
   {
     name: 'Emilio Zavala',
@@ -174,7 +174,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Iván Rocha',
     role: 'Ingeniero · Mexicali',
-    text: 'Depósitos rápidos, reportes claros y un equipo que responde. Recomiendo Broker.mx sin dudarlo.',
+    text: 'Depósitos rápidos, reportes claros y un equipo que responde. Recomiendo INVERMAX LATAM sin dudarlo.',
   },
   {
     name: 'Rosa María Juárez',
@@ -209,7 +209,7 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Beatriz Nava',
     role: 'Inversionista · San Miguel de Allende',
-    text: 'Broker.mx me demostró que sí se puede crecer con ética. Estoy muy agradecida con todo el equipo.',
+    text: 'INVERMAX LATAM me demostró que sí se puede crecer con ética. Estoy muy agradecida con todo el equipo.',
   },
   {
     name: 'Ulises Corona',
@@ -259,17 +259,17 @@ const ROWS: Array<Omit<Testimonial, 'initials' | 'photo'>> = [
   {
     name: 'Mónica Serrano',
     role: 'Médica · Puebla',
-    text: 'Llevaba años postergando invertir. Con Broker.mx me sentí acompañada y los resultados hablan solos.',
+    text: 'Llevaba años postergando invertir. Con INVERMAX LATAM me sentí acompañada y los resultados hablan solos.',
   },
   {
     name: 'Gael Montoya',
     role: 'Inversionista · CDMX',
-    text: 'Transparencia total y acompañamiento constante. Recomiendo Broker.mx a toda mi familia.',
+    text: 'Transparencia total y acompañamiento constante. Recomiendo INVERMAX LATAM a toda mi familia.',
   },
   {
     name: 'Yolanda Ríos',
     role: 'Inversionista · Orizaba',
-    text: 'Por fin un broker en México que habla claro y respalda legalmente. Estoy muy contenta.',
+    text: 'Por fin una firma en Latinoamérica que habla claro y respalda legalmente. Estoy muy contenta.',
   },
   {
     name: 'Leonardo Padilla',

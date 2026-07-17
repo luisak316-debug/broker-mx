@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { PortalAtmosphere } from '../portal/PortalAtmosphere';
+import { BRAND_NAME } from '../../data/brand';
 
 const NAV = [
   { to: '/', label: 'Resumen', end: true },
@@ -22,10 +23,10 @@ export function SupervisorLayout() {
         <aside className="portal-sidebar portal-panel">
           <div className="mb-8">
             <div className="portal-brand-mark flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900 font-bold text-white">
-              S
+              I
             </div>
-            <p className="portal-title mt-3 font-semibold">Supervisores</p>
-            <p className="text-xs text-slate-500">Broker.mx</p>
+            <p className="portal-title mt-3 font-semibold">{BRAND_NAME}</p>
+            <p className="text-xs text-slate-500">Supervisores</p>
           </div>
           <nav className="space-y-1">
             {NAV.map((item) => (
@@ -44,7 +45,8 @@ export function SupervisorLayout() {
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
           <header className="portal-header portal-glass-header">
             <div className="lg:hidden">
-              <p className="portal-title font-semibold">Supervisores</p>
+              <p className="portal-title text-sm font-semibold">{BRAND_NAME}</p>
+              <p className="text-xs text-slate-500">Supervisores</p>
             </div>
             <p className="hidden text-sm text-slate-400 lg:block">
               {staff?.displayName} · {staff?.email}

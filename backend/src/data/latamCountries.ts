@@ -1,4 +1,6 @@
-/** Países de Latinoamérica soportados en registro Broker.mx */
+/** Países de Latinoamérica soportados en registro INVERMAX LATAM */
+import { CLIENT_PHONE_EMAIL_DOMAIN } from '../config/brand';
+
 export interface LatamCountry {
   code: string;
   name: string;
@@ -67,10 +69,11 @@ export function otpPhoneKey(countryCode: string, national: string): string {
   return `${countryCode.toUpperCase()}:${normalizeNationalPhone(national)}`;
 }
 
+
 export function clientEmailFromPhone(countryCode: string, national: string): string {
   const cc = countryCode.toUpperCase();
   const digits = normalizeNationalPhone(national);
-  return `${cc}.${digits}@celular.brokermx`;
+  return `${cc}.${digits}@${CLIENT_PHONE_EMAIL_DOMAIN}`;
 }
 
 export function maskPhone(national: string): string {

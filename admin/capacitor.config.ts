@@ -6,7 +6,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
  */
 const config: CapacitorConfig = {
   appId: 'com.brokermx.asesores',
-  appName: 'admin',
+  appName: 'INVERMAX LATAM Admin',
   webDir: 'dist',
   android: {
     allowMixedContent: true,

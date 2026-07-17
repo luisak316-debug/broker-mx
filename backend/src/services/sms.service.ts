@@ -1,5 +1,6 @@
 import twilio from 'twilio';
 import { env } from '../config/env';
+import { smsVerificationBody } from '../config/brand';
 import { HttpError } from '../middleware/errorHandler';
 import { getLatamCountry, normalizeNationalPhone, toE164 } from '../data/latamCountries';
 
@@ -67,7 +68,7 @@ export async function sendOtpSms(
 ): Promise<{ mock: boolean }> {
   const country = getLatamCountry(countryCode);
   const to = toE164(country.code, nationalPhone);
-  const body = `Broker.mx: tu codigo de verificacion es ${code}. Valido 10 min. No lo compartas.`;
+  const body = smsVerificationBody(code);
 
   const client = getTwilioClient();
   const { fromNumber, messagingServiceSid } = env.sms;

@@ -12,6 +12,7 @@ import { LandingTraderScroll } from '../components/landing/LandingTraderScroll';
 import { GoldenHighlight } from '../components/landing/GoldenHighlight';
 import { CelebrationLink } from '../components/landing/CelebrationLink';
 import { MARKET_CATEGORIES, type MarketCategoryId } from '../data/marketCategories';
+import { BRAND_NAME } from '../data/brand';
 
 export function Landing() {
   const [activeMarket, setActiveMarket] = useState<MarketCategoryId | null>(null);
@@ -80,9 +81,9 @@ export function Landing() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <a href="#top" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
-              B
+              I
             </span>
-            <span className="text-lg font-semibold text-white">Broker.mx</span>
+            <span className="text-lg font-semibold text-white">{BRAND_NAME}</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
             <a href="#quienes" className="hover:text-white">
@@ -136,7 +137,7 @@ export function Landing() {
                   <div className="cap-hero-shell__grid">
                     <div className="hero-spotlight landing-hero__copy max-w-2xl text-left">
                       <span className="relative inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-100">
-                        Firma de intermediación profesional · México
+                        Firma de intermediación profesional · Latinoamérica
                       </span>
                       <h1 className="hero-headline relative mt-5 text-[1.75rem] font-extrabold leading-tight text-white sm:text-4xl sm:text-5xl lg:text-[3.25rem]">
                         No dejes que la inflación devore tu esfuerzo.
@@ -197,7 +198,7 @@ export function Landing() {
                   A lo largo de nuestra trayectoria hemos asesorado a empresarios, inversionistas y
                   figuras públicas en estrategias patrimoniales con disciplina y visión de largo plazo,
                   logrando resultados sólidos que se reflejan hasta el día de hoy.{' '}
-                  <strong className="text-white">Broker.mx: el broker en el que puede confiar.</strong>
+                  <strong className="text-white">{BRAND_NAME}: la intermediación en la que puede confiar.</strong>
                 </p>
               </div>
 
@@ -239,10 +240,10 @@ export function Landing() {
       <footer className="relative z-10 border-t border-ink-700/60 py-8 text-center text-xs text-slate-500">
         <div className="mx-auto max-w-7xl px-4">
           <p className="mb-2">
-            Broker.mx — intermediación financiera profesional en México. Operamos con transparencia y
+            {BRAND_NAME} — intermediación financiera profesional en Latinoamérica. Operamos con transparencia y
             conforme a la normativa aplicable.
           </p>
-          <p>© {new Date().getFullYear()} Broker.mx · Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} {BRAND_NAME} · Todos los derechos reservados.</p>
         </div>
       </footer>
 

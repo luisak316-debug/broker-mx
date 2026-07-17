@@ -11,6 +11,12 @@ import {
 } from '../repositories/staff.repository';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
+import {
+  LEGACY_STAFF_EMAIL_MAP,
+  STAFF_EMAILS,
+  managerEmail,
+  CLIENT_PHONE_EMAIL_DOMAIN,
+} from '../config/brand';
 
 export type StorageMode = 'postgres' | 'legacy';
 
@@ -106,6 +112,7 @@ async function runSlowBootstrapTasks(): Promise<void> {
       await ensureSchemaWithRetry();
     }
     await seedInstruments();
+    await migrateLegacyBrand();
     await seedStaff();
     await reassignOrphanedClientAdvisors();
     await purgeAllDemoClients();
@@ -151,13 +158,55 @@ async function seedInstruments(): Promise<void> {
   );
 }
 
+async function migrateLegacyBrand(): Promise<void> {
+  const staffMap: Record<string, string> = { ...LEGACY_STAFF_EMAIL_MAP };
+  for (let team = 1; team <= 4; team++) {
+    staffMap[`gerente${team}@brokermx.com`] = managerEmail(team);
+  }
+
+  for (const [oldEmail, newEmail] of Object.entries(staffMap)) {
+    const row = await prisma.staff.findFirst({
+      where: { email: { equals: oldEmail, mode: 'insensitive' } },
+    });
+    if (!row) continue;
+
+    const conflict = await prisma.staff.findFirst({
+      where: { email: { equals: newEmail, mode: 'insensitive' } },
+    });
+    if (conflict && conflict.id !== row.id) {
+      await prisma.staff.delete({ where: { id: row.id } });
+      continue;
+    }
+    if (row.email !== newEmail) {
+      await prisma.staff.update({ where: { id: row.id }, data: { email: newEmail } });
+    }
+  }
+
+  const legacyClients = await prisma.user.findMany({
+    where: { email: { endsWith: '@celular.brokermx', mode: 'insensitive' } },
+    select: { id: true, email: true },
+  });
+  for (const user of legacyClients) {
+    const newEmail = user.email.replace(
+      /@celular\.brokermx$/i,
+      `@${CLIENT_PHONE_EMAIL_DOMAIN}`,
+    );
+    if (newEmail === user.email) continue;
+    const conflict = await prisma.user.findFirst({
+      where: { email: { equals: newEmail, mode: 'insensitive' } },
+    });
+    if (conflict && conflict.id !== user.id) continue;
+    await prisma.user.update({ where: { id: user.id }, data: { email: newEmail } });
+  }
+}
+
 async function seedStaff(): Promise<void> {
   const demoHash = hashPassword('Admin1234');
   const staffRows = [
-    { email: 'admin@brokermx.com', displayName: 'Administración', role: 'ADMIN' as const },
-    { email: 'supervisor@brokermx.com', displayName: 'María Supervisora', role: 'SUPERVISOR' as const },
-    { email: 'laura.cumplimiento@brokermx.com', displayName: 'Laura Cumplimiento', role: 'COMPLIANCE' as const },
-    { email: 'soporte@brokermx.com', displayName: 'Carlos Soporte', role: 'SUPPORT' as const },
+    { email: STAFF_EMAILS.admin, displayName: 'Administración', role: 'ADMIN' as const },
+    { email: STAFF_EMAILS.supervisor, displayName: 'María Supervisora', role: 'SUPERVISOR' as const },
+    { email: STAFF_EMAILS.compliance, displayName: 'Laura Cumplimiento', role: 'COMPLIANCE' as const },
+    { email: STAFF_EMAILS.support, displayName: 'Carlos Soporte', role: 'SUPPORT' as const },
   ];
 
   const count = await prisma.staff.count();

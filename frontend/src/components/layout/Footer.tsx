@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BRAND_NAME } from '../../data/brand';
 
 /**
  * Aviso legal y términos — tono profesional, cumplimiento México sin alarmar al cliente.
@@ -10,8 +11,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl space-y-2">
         <p className="font-semibold text-slate-300">Aviso Legal y Términos de Uso</p>
         <p>
-          <strong className="text-brand-300">Broker.mx</strong> es una plataforma de{' '}
-          <strong>intermediación financiera profesional</strong> en México. La información y
+          <strong className="text-brand-300">{BRAND_NAME}</strong> es una plataforma de{' '}
+          <strong>intermediación financiera profesional</strong> en Latinoamérica. La información y
           cotizaciones que visualiza tienen fines operativos e informativos y no constituyen
           asesoría personalizada de inversión ni recomendación de compra o venta de valores.
         </p>
@@ -19,7 +20,7 @@ export function Footer() {
           <div className="space-y-2 rounded-lg border border-ink-600 bg-ink-800/60 p-3 text-slate-400">
             <p>
               Los mercados financieros —acciones, materias primas, divisas y criptoactivos—
-              presentan variaciones naturales en el valor de los instrumentos. En Broker.mx
+              presentan variaciones naturales en el valor de los instrumentos. En {BRAND_NAME}
               trabajamos con transparencia para que usted opere con claridad sobre su perfil y
               objetivos.
             </p>
@@ -39,7 +40,7 @@ export function Footer() {
             {open ? 'Ocultar información legal' : 'Ver información legal completa'}
           </button>
           <span className="text-slate-600">·</span>
-          <span>© {new Date().getFullYear()} Broker.mx · Intermediación financiera profesional</span>
+          <span>© {new Date().getFullYear()} {BRAND_NAME} · Intermediación financiera profesional</span>
         </div>
       </div>
     </footer>

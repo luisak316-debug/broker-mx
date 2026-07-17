@@ -171,7 +171,7 @@ export function ForgotPassword() {
                     <span className="font-semibold text-white">{maskedPhone}</span>
                   </>
                 ) : null}
-                . Inicia sesión con tu nueva contraseña en Broker.mx.
+                . Inicia sesión con tu nueva contraseña en INVERMAX LATAM.
               </p>
             </div>
 

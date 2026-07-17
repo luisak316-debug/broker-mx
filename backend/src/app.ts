@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from './config/env';
+import { BRAND_DOMAIN, PUBLIC_SITE_URL } from './config/brand';
 import { router } from './routes';
 import { adminRouter } from './routes/admin';
 import { supervisorRouter } from './routes/supervisor';
@@ -32,8 +33,8 @@ export function createApp(): express.Express {
         const allowed = new Set([
           ...env.corsOrigin,
           'https://localhost',
-          'https://brokermx.com',
-          'https://www.brokermx.com',
+          PUBLIC_SITE_URL,
+          `https://www.${BRAND_DOMAIN}`,
           'capacitor://localhost',
           'http://localhost',
         ]);

@@ -3,7 +3,7 @@ export const TERMS_SECTIONS = [
   {
     title: 'Términos y Condiciones de Uso',
     body:
-      'Broker.mx es una plataforma de intermediación financiera profesional. Al crear tu cuenta aceptas utilizar la plataforma de forma lícita, proporcionar información veraz y mantener la confidencialidad de tus credenciales. Los servicios están sujetos a verificación de identidad (KYC) y cumplimiento PLD.',
+      'INVERMAX LATAM es una plataforma de intermediación financiera profesional. Al crear tu cuenta aceptas utilizar la plataforma de forma lícita, proporcionar información veraz y mantener la confidencialidad de tus credenciales. Los servicios están sujetos a verificación de identidad (KYC) y cumplimiento PLD.',
   },
   {
     title: 'Riesgos de inversión',
@@ -18,4 +18,4 @@ export const TERMS_SECTIONS = [
 ] as const;
 
 export const TERMS_ACCEPTANCE_LABEL =
-  'He leído y acepto los Términos y Condiciones y el Aviso de Privacidad de Broker.mx.';
+  'He leído y acepto los Términos y Condiciones y el Aviso de Privacidad de INVERMAX LATAM.';

@@ -100,7 +100,7 @@ function curatedFallback(dateKey: string): MarketNewsItem[] {
       categoryLabel: LABELS[cat],
       title: LABELS[cat],
       summary: 'Titulares del día disponibles en breve.',
-      source: 'Broker.mx',
+      source: 'INVERMAX LATAM',
       url: 'https://es.investing.com/news/',
       imageUrl: LOCAL_FALLBACK[cat],
       publishedAt: new Date().toISOString(),

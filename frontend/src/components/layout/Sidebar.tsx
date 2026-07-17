@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { FundMobileNavLink, FundSidebarNavLink } from './FundNavLink';
 import { NavIcon } from './NavIcons';
 import { CLIENT_MARKET_NAV } from '../../data/clientMarketModules';
+import { BRAND_NAME } from '../../data/brand';
 
 const FUND_NAV = {
   label: 'Fondear Cuenta',
@@ -52,10 +53,10 @@ export function Sidebar() {
     <aside className="hidden w-64 shrink-0 flex-col border-r border-ink-600/60 bg-ink-900/80 p-4 lg:flex">
       <div className="mb-6 flex items-center gap-2 px-2">
         <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
-          B
+          I
         </span>
         <div>
-          <p className="text-sm font-semibold text-white">Broker.mx</p>
+          <p className="text-sm font-semibold text-white">{BRAND_NAME}</p>
           <p className="text-xs text-slate-400">Intermediación financiera</p>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
   fmtPhone,
   IDENTITY_DOCUMENT_TYPES,
 } from '../lib/format';
+import { CLIENT_PHONE_EMAIL_DOMAIN } from '../data/brand';
 import { getLatamCountry } from '../data/latamCountries';
 import type { ClientDocument, ClientProfileData } from '../types';
 
@@ -59,7 +60,7 @@ function pickIdentityDocs(documents: ClientDocument[]) {
 }
 
 function formatAccountEmail(email: string, phone: string, countryCode: string): string {
-  if (email.includes('@celular.brokermx')) {
+  if (email.includes(`@${CLIENT_PHONE_EMAIL_DOMAIN}`) || email.includes('@celular.brokermx')) {
     return phone
       ? `Cuenta vinculada al celular ${fmtPhone(phone, countryCode)}`
       : 'Cuenta vinculada a tu celular';

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { isDatabaseEnabled } from '../lib/database';
 import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
+import { isAdminEmail, managerEmail } from '../config/brand';
 import type { Staff } from '../types/admin';
 
 function mapStaff(row: {
@@ -22,7 +23,7 @@ function mapStaff(row: {
     id: row.id,
     email: row.email,
     passwordHash: row.passwordHash,
-    displayName: row.email === 'admin@brokermx.com' ? 'Administración' : row.displayName,
+    displayName: isAdminEmail(row.email) ? 'Administración' : row.displayName,
     role: row.role,
     managerTeam: row.managerTeam,
     phone: row.phone ?? null,
@@ -127,7 +128,7 @@ export async function touchStaffLogin(id: string): Promise<void> {
 }
 
 export function normalizeStaffDisplay(staff: Staff): Staff {
-  if (staff.email === 'admin@brokermx.com') staff.displayName = 'Administración';
+  if (isAdminEmail(staff.email)) staff.displayName = 'Administración';
   return staff;
 }
 
@@ -193,7 +194,7 @@ export async function ensureManagerTeamsSeeded(passwordHash: string): Promise<vo
   if (!isDatabaseEnabled()) return;
 
   for (let team = 1; team <= 4; team++) {
-    const email = `gerente${team}@brokermx.com`;
+    const email = managerEmail(team);
     await prisma.staff.upsert({
       where: { email },
       update: { displayName: `Gerencia ${team}`, role: 'MANAGER', managerTeam: team },

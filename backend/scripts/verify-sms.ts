@@ -6,6 +6,7 @@
 import dotenv from 'dotenv';
 import twilio from 'twilio';
 import path from 'node:path';
+import { smsVerificationBody } from '../src/config/brand';
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
@@ -30,7 +31,7 @@ if (!from || !from.startsWith('+')) {
 }
 
 async function main(): Promise<void> {
-  console.log('\n  Broker.mx — SMS\n');
+  console.log('\n  INVERMAX LATAM — SMS\n');
 
   const client = twilio(sid!, token!);
   const account = await client.api.accounts(sid!).fetch();
@@ -54,7 +55,7 @@ async function main(): Promise<void> {
   await client.messages.create({
     to,
     from: from!,
-    body: `Broker.mx prueba: tu codigo es ${code}.`,
+    body: smsVerificationBody(code),
   });
 
   console.log(`\n  [OK] SMS de prueba enviado a ${to}`);

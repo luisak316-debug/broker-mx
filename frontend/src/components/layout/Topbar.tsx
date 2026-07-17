@@ -5,6 +5,7 @@ import { fmtPhone } from '../../lib/format';
 import { useClientMoney } from '../../lib/clientMoney';
 import { getUploadsBase } from '../../lib/apiConfig';
 import { useClientAuth } from '../../auth/ClientAuthContext';
+import { BRAND_NAME } from '../../data/brand';
 
 function ProfileAvatarDisplay({
   photoUrl,
@@ -187,12 +188,15 @@ export function Topbar({ connected }: { connected: boolean }) {
 
       {/* Escritorio */}
       <div className="hidden items-center justify-between gap-4 px-4 py-3 md:flex">
-        <div className="flex min-w-0 items-center gap-2 text-sm text-slate-400">
+        <div className="flex min-w-0 items-center gap-3 text-sm">
           <span
             className={`inline-block h-2 w-2 shrink-0 rounded-full ${connected ? 'bg-bull' : 'bg-bear'}`}
             title={connected ? 'Feed en vivo conectado' : 'Reconectando...'}
           />
-          {connected ? 'Datos en tiempo real' : 'Reconectando…'}
+          <span className="hidden font-semibold text-white lg:inline">{BRAND_NAME}</span>
+          <span className="text-slate-400">
+            {connected ? 'Datos en tiempo real' : 'Reconectando…'}
+          </span>
         </div>
         <div className="flex min-w-0 items-center gap-4">
           <div className="shrink-0 text-right">
