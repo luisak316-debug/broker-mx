@@ -76,5 +76,6 @@ export function useDailyMarketNews() {
     ...state,
     currentFeatured,
     featuredIndex,
+    setFeaturedIndex,
   };
 }

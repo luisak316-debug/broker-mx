@@ -2,74 +2,94 @@ import type { MarketNewsItem } from '../types';
 
 const now = () => new Date().toISOString();
 
-/** 5 titulares destacados del día — rotan cada 2 min (uno por mercado + cripto extra). */
+/** Titulares destacados del día — respaldo local (Investing.com vía API). */
 export const FEATURED_DAILY_NEWS: MarketNewsItem[] = [
   {
-    id: 'featured-crypto-salinas',
+    id: 'featured-stocks-fallback',
+    category: 'featured',
+    themeCategory: 'stocks',
+    categoryLabel: 'Mercados a la baja',
+    title: 'Cadence y Synopsys caen mientras la innovación en semiconductores redefine el sector',
+    summary:
+      'El mercado de acciones tecnológicas reacciona a nuevos modelos de diseño de chips y presiones competitivas.',
+    source: 'Investing.com · Actualizado hoy',
+    url: 'https://es.investing.com/news/',
+    imageUrl: '/news/featured-stocks.jpg',
+    publishedAt: now(),
+    trend: 'down',
+  },
+  {
+    id: 'featured-crypto-fallback',
     category: 'featured',
     themeCategory: 'crypto',
-    categoryLabel: 'Destacado del día',
-    title: 'Ricardo Salinas Pliego reafirma su confianza en Bitcoin como activo de largo plazo',
+    categoryLabel: 'Mercados al alza',
+    title: 'Bitcoin consolida niveles clave mientras el flujo institucional define la tendencia',
     summary:
-      'El empresario mexicano destaca Bitcoin como reserva de valor sólida frente a la inflación y la incertidumbre global.',
-    source: 'Medios financieros · MX',
-    url: 'https://www.facebook.com/share/1FvLsLtL9K/',
-    imageUrl: '/news/featured.jpg',
+      'El mercado cripto observa volatilidad moderada con foco en ETFs y liquidez global.',
+    source: 'Investing.com · Actualizado hoy',
+    url: 'https://es.investing.com/news/',
+    imageUrl: '/news/crypto.jpg',
     publishedAt: now(),
+    trend: 'up',
+  },
+  {
+    id: 'featured-commodities-fallback',
+    category: 'featured',
+    themeCategory: 'commodities',
+    categoryLabel: 'Mercados al alza',
+    title: 'El oro refuerza su papel como resguardo patrimonial ante escenarios globales',
+    summary:
+      'La incertidumbre geopolítica impulsa la demanda del metal entre inversionistas defensivos.',
+    source: 'Investing.com · Actualizado hoy',
+    url: 'https://es.investing.com/news/',
+    imageUrl: '/news/commodities.jpg',
+    publishedAt: now(),
+    trend: 'up',
+  },
+  {
+    id: 'featured-forex-fallback',
+    category: 'featured',
+    themeCategory: 'forex',
+    categoryLabel: 'Mercados a la baja',
+    title: 'El dólar se fortalece frente a divisas emergentes en jornada de ajuste cambiario',
+    summary:
+      'Los pares FX reflejan expectativas sobre tasas e inflación en las principales economías.',
+    source: 'Investing.com · Actualizado hoy',
+    url: 'https://es.investing.com/news/',
+    imageUrl: '/news/forex.jpg',
+    publishedAt: now(),
+    trend: 'down',
   },
   {
     id: 'featured-stocks-bmv',
     category: 'featured',
     themeCategory: 'stocks',
-    categoryLabel: 'Destacado del día',
+    categoryLabel: 'Mercados al alza',
     title: 'La Bolsa Mexicana encabeza rally exportador impulsado por nearshoring e inversión extranjera',
     summary:
-      'Emisoras industriales y del IPC muestran liquidez favorable, abriendo oportunidades para inversionistas patrimoniales.',
-    source: 'BMV · MX',
-    url: 'https://www.facebook.com/share/1CwH13b7Bi/',
-    imageUrl: '/news/featured-stocks.jpg',
+      'Emisoras industriales y del IPC muestran liquidez favorable para inversionistas patrimoniales.',
+    source: 'Investing.com · Actualizado hoy',
+    url: 'https://es.investing.com/news/',
+    imageUrl: '/news/stocks.jpg',
     publishedAt: now(),
-  },
-  {
-    id: 'featured-commodities-gold',
-    category: 'featured',
-    themeCategory: 'commodities',
-    categoryLabel: 'Destacado del día',
-    title: 'El oro refuerza su papel como resguardo patrimonial ante escenarios globales',
-    summary:
-      'La incertidumbre geopolítica y las expectativas de tasas impulsan la demanda del metal a niveles históricos.',
-    source: 'Kitco · MX',
-    url: 'https://www.kitco.com/',
-    imageUrl: '/news/commodities.jpg',
-    publishedAt: now(),
-  },
-  {
-    id: 'featured-forex-usdmxn',
-    category: 'featured',
-    themeCategory: 'forex',
-    categoryLabel: 'Destacado del día',
-    title: 'Dólar-peso abre ventana estratégica para diversificación y cobertura cambiaria',
-    summary:
-      'La estabilidad relativa del par USD/MXN favorece estrategias tácticas de protección patrimonial en pesos.',
-    source: 'DailyFX · MX',
-    url: 'https://www.facebook.com/share/p/1EEUrFd29p/',
-    imageUrl: '/news/featured-forex.jpg',
-    publishedAt: now(),
-  },
-  {
-    id: 'featured-crypto-btc',
-    category: 'featured',
-    themeCategory: 'crypto',
-    categoryLabel: 'Destacado del día',
-    title: 'Bitcoin gana terreno como activo de reserva en carteras institucionales globales',
-    summary:
-      'ETFs spot y flujos corporativos consolidan a la cripto como pilar de diversificación de largo plazo.',
-    source: 'Bloomberg · MX',
-    url: 'https://www.coindesk.com/',
-    imageUrl: '/news/featured-alt.jpg',
-    publishedAt: now(),
+    trend: 'up',
   },
 ];
+
+/** Referencia de credibilidad en Quiénes Somos (no rota en destacado). */
+export const SALINAS_CREDIBILITY_NEWS: MarketNewsItem = {
+  id: 'featured-crypto-salinas',
+  category: 'featured',
+  themeCategory: 'crypto',
+  categoryLabel: 'Referencia · México',
+  title: 'Ricardo Salinas Pliego reafirma su confianza en Bitcoin como activo de largo plazo',
+  summary:
+    'El empresario mexicano destaca Bitcoin como reserva de valor sólida frente a la inflación y la incertidumbre global.',
+  source: 'Medios financieros · MX',
+  url: 'https://www.facebook.com/share/1FvLsLtL9K/',
+  imageUrl: '/news/featured.jpg',
+  publishedAt: now(),
+};
 
 /** Cuatro tarjetas fijas de mercado (móvil y escritorio). */
 export const MARKET_NEWS_GRID: MarketNewsItem[] = [

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { wakeApi } from '../api/client';
 import { FeaturedDailyNews } from '../components/landing/FeaturedDailyNews';
+import { NewsCard } from '../components/landing/MarketNewsSection';
+import { SALINAS_CREDIBILITY_NEWS } from '../data/marketNews.default';
 import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
 import { TestimonialsCarousel } from '../components/landing/TestimonialsCarousel';
 import { LandingSectionHeader } from '../components/landing/LandingSectionHeader';
@@ -13,6 +15,7 @@ import { GoldenHighlight } from '../components/landing/GoldenHighlight';
 import { CelebrationLink } from '../components/landing/CelebrationLink';
 import { MARKET_CATEGORIES, type MarketCategoryId } from '../data/marketCategories';
 import { BRAND_NAME } from '../data/brand';
+import { BrandMark } from '../components/brand/BrandMark';
 
 export function Landing() {
   const [activeMarket, setActiveMarket] = useState<MarketCategoryId | null>(null);
@@ -79,11 +82,9 @@ export function Landing() {
 
       <header className="landing-header z-50 border-b border-white/10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <a href="#top" className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
-              I
-            </span>
-            <span className="text-lg font-semibold text-white">{BRAND_NAME}</span>
+          <a href="#top" className="landing-brand flex items-center gap-2.5">
+            <BrandMark size="md" />
+            <span className="landing-brand__name text-lg font-bold text-white">{BRAND_NAME}</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
             <a href="#quienes" className="hover:text-white">
@@ -203,6 +204,10 @@ export function Landing() {
               </div>
 
               <FeaturedDailyNews />
+
+              <div className="mx-auto mt-10 max-w-3xl px-4">
+                <NewsCard item={SALINAS_CREDIBILITY_NEWS} />
+              </div>
             </section>
           }
         />

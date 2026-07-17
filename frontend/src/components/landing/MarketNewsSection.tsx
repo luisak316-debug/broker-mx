@@ -1,6 +1,6 @@
 import {
-  FEATURED_DAILY_NEWS,
   MARKET_NEWS_GRID,
+  SALINAS_CREDIBILITY_NEWS,
 } from '../../data/marketNews.default';
 import type { MarketCategoryId } from '../../data/marketCategories';
 import type { MarketNewsItem } from '../../types';
@@ -145,8 +145,8 @@ export function NewsCard({ item, featured, onOpenSimulator }: NewsCardProps) {
   );
 }
 
-/** Titular fijo del día (Ricardo Salinas Pliego). */
-export const SALINAS_FEATURED_NEWS = FEATURED_DAILY_NEWS[0];
+/** Referencia de credibilidad (Ricardo Salinas Pliego). */
+export const SALINAS_FEATURED_NEWS = SALINAS_CREDIBILITY_NEWS;
 
 type Props = {
   onOpenMarket: (id: MarketCategoryId) => void;
