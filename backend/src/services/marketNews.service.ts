@@ -53,7 +53,7 @@ const LOCAL_FALLBACK: Record<InvestingCategory, string> = {
 const FEATURED_POOL_SIZE = 24;
 
 let cache: { dateKey: string; items: MarketNewsItem[] } | null = null;
-const NEWS_CACHE_VERSION = 'hero-v2';
+const NEWS_CACHE_VERSION = 'hero-v3';
 
 function todayKey(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });

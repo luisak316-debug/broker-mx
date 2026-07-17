@@ -15,6 +15,45 @@ const FALLBACK_IMAGES: Record<string, string> = {
   forex: '/news/forex.jpg',
 };
 
+/** Pools HD locales — misma lógica que el backend (Investing CDN bloqueado en navegador). */
+const HERO_POOLS: Record<string, string[]> = {
+  stocks: [
+    '/news/featured-stocks.jpg',
+    '/news/stocks-bmv.jpg',
+    '/news/stocks.jpg',
+    '/news/featured-2.jpg',
+    '/news/featured.jpg',
+  ],
+  crypto: ['/news/crypto.jpg', '/news/featured-alt.jpg', '/news/featured.jpg', '/news/featured-2.jpg'],
+  commodities: [
+    '/news/commodities.jpg',
+    '/news/commodities-alt.jpg',
+    '/news/commodities-2.jpg',
+    '/news/featured.jpg',
+  ],
+  forex: ['/news/featured-forex.jpg', '/news/forex.jpg', '/news/featured-stocks.jpg', '/news/stocks.jpg'],
+};
+
+function hashSeed(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function isBlockedRemoteImage(url: string): boolean {
+  return /investing\.com|i-invdn-com/i.test(url);
+}
+
+function resolveNewsImage(item: MarketNewsItem): string {
+  const key = item.themeCategory ?? item.category;
+  const raw = item.imageUrl?.trim();
+  if (raw && raw.startsWith('/news/')) return raw;
+  if (raw && !isBlockedRemoteImage(raw)) return raw;
+  const pool = HERO_POOLS[key] ?? HERO_POOLS.stocks;
+  const seed = item.id || item.url || item.title;
+  return pool![hashSeed(seed) % pool!.length] ?? FALLBACK_IMAGES[key] ?? FALLBACK_IMAGES.featured;
+}
+
 const CARD_THEME: Record<string, { badge: string; border: string }> = {
   featured: {
     badge: 'border-violet-400/50 bg-violet-950/80 text-violet-100',
@@ -60,7 +99,7 @@ type NewsCardProps = {
 export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCardProps) {
   const theme = resolveTheme(item);
   const imageKey = item.themeCategory ?? item.category;
-  const image = item.imageUrl || FALLBACK_IMAGES[imageKey] || FALLBACK_IMAGES.featured;
+  const image = resolveNewsImage(item);
   const isMarketCard = Boolean(onOpenSimulator);
 
   return (

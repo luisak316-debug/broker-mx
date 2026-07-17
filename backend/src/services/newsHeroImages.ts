@@ -53,7 +53,8 @@ export function refineCategoryFromText(
 export function isBlockedInvestingImage(url: string | undefined): boolean {
   if (!url) return true;
   if (url.startsWith('/news/')) return false;
-  if (!url.includes('investing.com')) return false;
+  // Investing CDN bloquea hotlink; nunca servir esas URLs al cliente.
+  if (/investing\.com|i-invdn-com/i.test(url)) return true;
   return GENERIC_INVESTING_IMAGES.some((g) => url.includes(g));
 }
 
