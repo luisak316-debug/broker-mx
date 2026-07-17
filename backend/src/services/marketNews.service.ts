@@ -21,12 +21,11 @@ export interface MarketNewsItem {
   trend?: 'up' | 'down' | 'neutral';
 }
 
-/** Referencia de credibilidad (Quiénes Somos) — no rota en «Destacado del día». */
-export const SALINAS_CREDIBILITY: MarketNewsItem = {
-  id: 'credibility-salinas',
+const SALINAS_FEATURED: MarketNewsItem = {
+  id: 'featured-salinas',
   category: 'featured',
   themeCategory: 'crypto',
-  categoryLabel: 'Referencia · México',
+  categoryLabel: 'Destacado del día',
   title: 'Ricardo Salinas Pliego reafirma su confianza en Bitcoin como activo de largo plazo',
   summary:
     'El empresario mexicano destaca Bitcoin como reserva de valor sólida frente a la inflación y la incertidumbre global.',
@@ -50,10 +49,7 @@ const LOCAL_FALLBACK: Record<InvestingCategory, string> = {
   forex: '/news/forex.jpg',
 };
 
-const FEATURED_POOL_SIZE = 24;
-
 let cache: { dateKey: string; items: MarketNewsItem[] } | null = null;
-const NEWS_CACHE_VERSION = 'hero-v3';
 
 function todayKey(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
@@ -67,7 +63,7 @@ function trendBadge(trend: InvestingArticle['trend']): string {
 
 function toGridItem(article: InvestingArticle, dateKey: string): MarketNewsItem {
   return {
-    id: `${article.category}-${dateKey}-${article.url.slice(-12)}`,
+    id: `${article.category}-${dateKey}`,
     category: article.category,
     categoryLabel: LABELS[article.category],
     title: article.title,
@@ -96,59 +92,7 @@ function toFeaturedItem(article: InvestingArticle, dateKey: string, index: numbe
   };
 }
 
-function investingFallbackFeatured(dateKey: string): MarketNewsItem[] {
-  const samples: Array<{ cat: InvestingCategory; title: string; summary: string; trend: 'up' | 'down' }> = [
-    {
-      cat: 'stocks',
-      title: 'Wall Street abre mixto mientras los inversores evalúan datos macro y resultados corporativos',
-      summary: 'Los principales índices muestran movimientos selectivos entre sectores tecnológicos y defensivos.',
-      trend: 'down',
-    },
-    {
-      cat: 'crypto',
-      title: 'Bitcoin consolida niveles clave mientras el flujo institucional define la siguiente tendencia',
-      summary: 'El mercado cripto observa volatilidad moderada con foco en ETFs y liquidez global.',
-      trend: 'up',
-    },
-    {
-      cat: 'commodities',
-      title: 'El oro mantiene demanda defensiva ante escenarios de incertidumbre geopolítica',
-      summary: 'Los metales preciosos siguen atrayendo cobertura patrimonial en ciclos volátiles.',
-      trend: 'up',
-    },
-    {
-      cat: 'forex',
-      title: 'El dólar se fortalece frente a divisas emergentes en jornada de ajuste cambiario',
-      summary: 'Los pares FX reflejan expectativas sobre tasas y datos de inflación regionales.',
-      trend: 'down',
-    },
-    {
-      cat: 'stocks',
-      title: 'Sector tecnológico presiona al alza tras señales de recuperación en la cadena de suministro',
-      summary: 'Semiconductores y software lideran ganancias parciales en la sesión.',
-      trend: 'up',
-    },
-  ];
-
-  return samples.map((s, i) =>
-    toFeaturedItem(
-      {
-        title: s.title,
-        summary: s.summary,
-        url: 'https://es.investing.com/news/',
-        imageUrl: LOCAL_FALLBACK[s.cat],
-        publishedAt: new Date().toISOString(),
-        category: s.cat,
-        trend: s.trend,
-      },
-      dateKey,
-      i,
-    ),
-  );
-}
-
 function curatedFallback(dateKey: string): MarketNewsItem[] {
-  const featured = investingFallbackFeatured(dateKey);
   const grid: MarketNewsItem[] = (['forex', 'commodities', 'stocks', 'crypto'] as InvestingCategory[]).map(
     (cat) => ({
       id: `${cat}-fallback-${dateKey}`,
@@ -162,7 +106,7 @@ function curatedFallback(dateKey: string): MarketNewsItem[] {
       publishedAt: new Date().toISOString(),
     }),
   );
-  return [...featured, ...grid];
+  return [SALINAS_FEATURED, ...grid];
 }
 
 async function buildDailyNews(): Promise<MarketNewsItem[]> {
@@ -171,20 +115,20 @@ async function buildDailyNews(): Promise<MarketNewsItem[]> {
   try {
     const [gridArticles, headlinePool] = await Promise.all([
       fetchInvestingDailyNews(),
-      fetchInvestingHeadlinePool(FEATURED_POOL_SIZE),
+      fetchInvestingHeadlinePool(),
     ]);
 
     const grid = gridArticles.map((a) => toGridItem(a, dateKey));
-    const featured =
-      headlinePool.length > 0
-        ? headlinePool.map((a, i) => toFeaturedItem(a, dateKey, i))
-        : investingFallbackFeatured(dateKey);
+    const featuredInvesting = headlinePool.slice(0, 4).map((a, i) => toFeaturedItem(a, dateKey, i));
+
+    // Salinas permanece como referencia de calidad; Investing rota en destacados.
+    const featured: MarketNewsItem[] = [SALINAS_FEATURED, ...featuredInvesting];
 
     if (grid.length >= 4) {
       return [...featured, ...grid];
     }
 
-    const mergedGrid = grid.length ? grid : curatedFallback(dateKey).slice(featured.length);
+    const mergedGrid = grid.length ? grid : curatedFallback(dateKey).slice(1);
     return [...featured, ...mergedGrid];
   } catch (err) {
     console.warn('[market-news] Investing.com no disponible, usando respaldo:', err);
@@ -193,7 +137,7 @@ async function buildDailyNews(): Promise<MarketNewsItem[]> {
 }
 
 export async function getDailyMarketNews(): Promise<MarketNewsItem[]> {
-  const dateKey = `${todayKey()}-${NEWS_CACHE_VERSION}`;
+  const dateKey = todayKey();
   if (cache?.dateKey === dateKey) return cache.items;
   const items = await buildDailyNews();
   cache = { dateKey, items };

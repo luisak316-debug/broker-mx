@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import {
   FEATURED_DAILY_NEWS,
   MARKET_NEWS_GRID,
+  MARKET_NEWS_ROTATION_MS,
 } from '../data/marketNews.default';
 import type { MarketNewsItem } from '../types';
 
@@ -61,12 +62,19 @@ export function useDailyMarketNews() {
     };
   }, []);
 
+  useEffect(() => {
+    if (state.featured.length <= 1) return;
+    const id = window.setInterval(() => {
+      setFeaturedIndex((i) => (i + 1) % state.featured.length);
+    }, MARKET_NEWS_ROTATION_MS);
+    return () => window.clearInterval(id);
+  }, [state.featured.length]);
+
   const currentFeatured = state.featured[featuredIndex] ?? state.featured[0] ?? fallbackFeatured[0];
 
   return {
     ...state,
     currentFeatured,
     featuredIndex,
-    setFeaturedIndex,
   };
 }

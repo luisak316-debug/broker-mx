@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { wakeApi } from '../api/client';
 import { FeaturedDailyNews } from '../components/landing/FeaturedDailyNews';
-import { NewsCard } from '../components/landing/MarketNewsSection';
-import { SALINAS_CREDIBILITY_NEWS } from '../data/marketNews.default';
 import { MarketCategoryModal } from '../components/landing/MarketCategoryModal';
 import { TestimonialsCarousel } from '../components/landing/TestimonialsCarousel';
 import { LandingSectionHeader } from '../components/landing/LandingSectionHeader';
@@ -204,10 +202,6 @@ export function Landing() {
               </div>
 
               <FeaturedDailyNews />
-
-              <div className="mx-auto mt-10 max-w-3xl px-4">
-                <NewsCard item={SALINAS_CREDIBILITY_NEWS} />
-              </div>
             </section>
           }
         />

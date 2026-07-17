@@ -1,6 +1,6 @@
 import {
+  FEATURED_DAILY_NEWS,
   MARKET_NEWS_GRID,
-  SALINAS_CREDIBILITY_NEWS,
 } from '../../data/marketNews.default';
 import type { MarketCategoryId } from '../../data/marketCategories';
 import type { MarketNewsItem } from '../../types';
@@ -14,45 +14,6 @@ const FALLBACK_IMAGES: Record<string, string> = {
   commodities: '/news/commodities.jpg',
   forex: '/news/forex.jpg',
 };
-
-/** Pools HD locales — misma lógica que el backend (Investing CDN bloqueado en navegador). */
-const HERO_POOLS: Record<string, string[]> = {
-  stocks: [
-    '/news/featured-stocks.jpg',
-    '/news/stocks-bmv.jpg',
-    '/news/stocks.jpg',
-    '/news/featured-2.jpg',
-    '/news/featured.jpg',
-  ],
-  crypto: ['/news/crypto.jpg', '/news/featured-alt.jpg', '/news/featured.jpg', '/news/featured-2.jpg'],
-  commodities: [
-    '/news/commodities.jpg',
-    '/news/commodities-alt.jpg',
-    '/news/commodities-2.jpg',
-    '/news/featured.jpg',
-  ],
-  forex: ['/news/featured-forex.jpg', '/news/forex.jpg', '/news/featured-stocks.jpg', '/news/stocks.jpg'],
-};
-
-function hashSeed(seed: string): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) >>> 0;
-  return h;
-}
-
-function isBlockedRemoteImage(url: string): boolean {
-  return /investing\.com|i-invdn-com/i.test(url);
-}
-
-function resolveNewsImage(item: MarketNewsItem): string {
-  const key = item.themeCategory ?? item.category;
-  const raw = item.imageUrl?.trim();
-  if (raw && raw.startsWith('/news/')) return raw;
-  if (raw && !isBlockedRemoteImage(raw)) return raw;
-  const pool = HERO_POOLS[key] ?? HERO_POOLS.stocks;
-  const seed = item.id || item.url || item.title;
-  return pool![hashSeed(seed) % pool!.length] ?? FALLBACK_IMAGES[key] ?? FALLBACK_IMAGES.featured;
-}
 
 const CARD_THEME: Record<string, { badge: string; border: string }> = {
   featured: {
@@ -92,14 +53,13 @@ function resolveTheme(item: MarketNewsItem) {
 type NewsCardProps = {
   item: MarketNewsItem;
   featured?: boolean;
-  carousel?: boolean;
   onOpenSimulator?: () => void;
 };
 
-export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCardProps) {
+export function NewsCard({ item, featured, onOpenSimulator }: NewsCardProps) {
   const theme = resolveTheme(item);
   const imageKey = item.themeCategory ?? item.category;
-  const image = resolveNewsImage(item);
+  const image = item.imageUrl || FALLBACK_IMAGES[imageKey] || FALLBACK_IMAGES.featured;
   const isMarketCard = Boolean(onOpenSimulator);
 
   return (
@@ -109,12 +69,8 @@ export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCard
       } ${theme.border}`}
     >
       <div
-        className={`relative overflow-hidden bg-ink-900 ${
-          featured
-            ? carousel
-              ? 'aspect-[16/10] min-h-[220px] sm:min-h-[280px] lg:min-h-[320px]'
-              : 'h-52 shrink-0 sm:h-60 lg:h-[280px]'
-            : 'h-40 shrink-0 sm:h-44'
+        className={`relative overflow-hidden ${
+          featured ? 'h-52 shrink-0 sm:h-60 lg:h-[280px]' : 'h-40 shrink-0 sm:h-44'
         }`}
       >
         <img
@@ -123,23 +79,14 @@ export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCard
           loading={featured ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={featured ? 'high' : 'auto'}
-          className={`h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02] ${
-            carousel ? 'scale-100' : ''
-          }`}
-          sizes={featured ? '(min-width: 1024px) 768px, 100vw' : undefined}
+          className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
           onError={(e) => {
             const img = e.currentTarget;
             const fb = FALLBACK_IMAGES[imageKey] ?? FALLBACK_IMAGES.featured;
             if (fb && !img.src.endsWith(fb)) img.src = fb;
           }}
         />
-        <div
-          className={`absolute inset-0 ${
-            carousel
-              ? 'bg-gradient-to-t from-ink-950 via-ink-950/25 to-transparent'
-              : 'bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent'
-          }`}
-        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent" />
         <span
           className={`absolute left-3 top-3 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${theme.badge}`}
         >
@@ -198,8 +145,8 @@ export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCard
   );
 }
 
-/** Referencia de credibilidad (Ricardo Salinas Pliego). */
-export const SALINAS_FEATURED_NEWS = SALINAS_CREDIBILITY_NEWS;
+/** Titular fijo del día (Ricardo Salinas Pliego). */
+export const SALINAS_FEATURED_NEWS = FEATURED_DAILY_NEWS[0];
 
 type Props = {
   onOpenMarket: (id: MarketCategoryId) => void;

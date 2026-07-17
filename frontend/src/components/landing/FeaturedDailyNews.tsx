@@ -1,10 +1,10 @@
 import { useDailyMarketNews } from '../../hooks/useDailyMarketNews';
 import { LandingSectionHeader } from './LandingSectionHeader';
-import { FeaturedNewsCarousel } from './FeaturedNewsCarousel';
+import { NewsCard } from './MarketNewsSection';
 
-/** Destacado del día — carrusel Investing.com (imagen + texto en una tarjeta). */
+/** Destacado del día — Salinas + titulares Investing.com (rotación cada 2 min, cache 24 h). */
 export function FeaturedDailyNews() {
-  const { featured, dateKey, loading, featuredIndex, setFeaturedIndex } = useDailyMarketNews();
+  const { currentFeatured, dateKey, loading } = useDailyMarketNews();
 
   return (
     <div className="mx-auto mt-12 max-w-3xl px-4">
@@ -14,20 +14,12 @@ export function FeaturedDailyNews() {
         meta={
           loading
             ? 'Sincronizando con Investing.com…'
-            : `Investing.com · Actualizado ${dateKey || 'hoy'} · ${featured.length} titulares · carrusel automático`
+            : `Investing.com · Actualizado ${dateKey || 'hoy'} · rotación cada 2 min`
         }
         description="Titulares reales del mercado — lo que sube, lo que baja y las noticias que mueven las inversiones hoy."
       />
       <div className="mt-6">
-        {loading && featured.length === 0 ? (
-          <div className="featured-news-carousel__skeleton h-[420px] animate-pulse rounded-2xl border border-white/10 bg-ink-950/80 sm:h-[460px]" />
-        ) : (
-          <FeaturedNewsCarousel
-            items={featured}
-            activeIndex={featuredIndex}
-            onIndexChange={setFeaturedIndex}
-          />
-        )}
+        <NewsCard item={currentFeatured} featured />
       </div>
     </div>
   );
