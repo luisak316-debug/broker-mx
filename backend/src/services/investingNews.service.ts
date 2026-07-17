@@ -1,5 +1,5 @@
 import Parser from 'rss-parser';
-import { PUBLIC_SITE_URL } from '../config/brand';
+import { resolveHeroImage } from './newsHeroImages';
 
 export type InvestingCategory = 'crypto' | 'stocks' | 'commodities' | 'forex';
 
@@ -46,13 +46,6 @@ const INVESTING_RSS_FEEDS = [
   'https://es.investing.com/rss/commodities.rss',
 ] as const;
 
-const LOCAL_FALLBACK: Record<InvestingCategory, string> = {
-  crypto: '/news/crypto.jpg',
-  stocks: '/news/stocks.jpg',
-  commodities: '/news/commodities.jpg',
-  forex: '/news/forex.jpg',
-};
-
 const UP_WORDS =
   /\b(sube|suben|subió|subio|alza|alcista|repunte|rally|ganancias|positivo|positiva|aumenta|impulsa|fortaleza|recuperaci[oó]n|m[aá]ximos?|avanza|repuntan)\b/i;
 const DOWN_WORDS =
@@ -95,52 +88,6 @@ function parseDate(raw?: string): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-function quickImage(enclosureUrl: string | undefined, category: InvestingCategory): string {
-  const upscaled = upscaleInvestingImage(enclosureUrl);
-  if (upscaled && !upscaled.includes('108x81')) return upscaled;
-  return LOCAL_FALLBACK[category];
-}
-
-async function fetchOgImage(articleUrl: string): Promise<string | undefined> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 3500);
-  try {
-    const res = await fetch(articleUrl, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': `InvermaxLatam-NewsBot/1.0 (+${PUBLIC_SITE_URL})`,
-        Accept: 'text/html',
-      },
-    });
-    if (!res.ok) return undefined;
-    const html = await res.text();
-    const match =
-      html.match(/property=["']og:image["']\s+content=["']([^"']+)["']/i) ??
-      html.match(/content=["']([^"']+)["']\s+property=["']og:image["']/i);
-    return match?.[1] ? upscaleInvestingImage(match[1]) : undefined;
-  } catch {
-    return undefined;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function enhanceTopImages(articles: InvestingArticle[], limit = 18): Promise<void> {
-  const needOg = articles.slice(0, limit).filter(
-    (a) => !a.imageUrl || a.imageUrl.startsWith('/news/') || a.imageUrl.includes('108x81'),
-  );
-  const batchSize = 4;
-  for (let i = 0; i < needOg.length; i += batchSize) {
-    const batch = needOg.slice(i, i + batchSize);
-    await Promise.all(
-      batch.map(async (article) => {
-        const og = await fetchOgImage(article.url);
-        if (og) article.imageUrl = og;
-      }),
-    );
-  }
-}
-
 function mapRssItem(item: RssItem): RawRow | null {
   if (!item.title || !item.link) return null;
   const category = classifyItem(item.link, item.title);
@@ -154,6 +101,19 @@ function mapRssItem(item: RssItem): RawRow | null {
     category,
     trend: detectTrend(item.title, summary),
     sortTs: parseDate(item.pubDate),
+  };
+}
+
+function rowToArticle(row: RawRow): InvestingArticle {
+  const remote = upscaleInvestingImage(row.enclosureUrl);
+  return {
+    title: row.title,
+    summary: row.summary,
+    url: row.url,
+    imageUrl: resolveHeroImage(row.category, row.title, row.summary, row.url, remote),
+    publishedAt: row.publishedAt,
+    category: row.category,
+    trend: row.trend,
   };
 }
 
@@ -181,18 +141,6 @@ async function fetchAllRssRows(): Promise<RawRow[]> {
   return rows.sort((a, b) => b.sortTs - a.sortTs);
 }
 
-function rowToArticle(row: RawRow): InvestingArticle {
-  return {
-    title: row.title,
-    summary: row.summary,
-    url: row.url,
-    imageUrl: quickImage(row.enclosureUrl, row.category),
-    publishedAt: row.publishedAt,
-    category: row.category,
-    trend: row.trend,
-  };
-}
-
 function trendScore(t: InvestingArticle['trend']): number {
   if (t === 'up' || t === 'down') return 2;
   return 1;
@@ -218,14 +166,13 @@ export async function fetchInvestingDailyNews(): Promise<InvestingArticle[]> {
     if (row) articles.push(rowToArticle(row));
   }
 
-  await enhanceTopImages(articles, 4);
   return articles;
 }
 
 /** Pool amplio de titulares para rotación del destacado (prioriza sube/baja). */
 export async function fetchInvestingHeadlinePool(maxItems = 24): Promise<InvestingArticle[]> {
   const rows = await fetchAllRssRows();
-  const articles = rows
+  return rows
     .map(rowToArticle)
     .sort((a, b) => {
       const byTrend = trendScore(b.trend) - trendScore(a.trend);
@@ -233,9 +180,6 @@ export async function fetchInvestingHeadlinePool(maxItems = 24): Promise<Investi
       return parseDate(b.publishedAt) - parseDate(a.publishedAt);
     })
     .slice(0, maxItems);
-
-  await enhanceTopImages(articles, 18);
-  return articles;
 }
 
 /** Pick titular destacado del día — prioriza movimientos de mercado (sube/baja). */

@@ -53,6 +53,7 @@ const LOCAL_FALLBACK: Record<InvestingCategory, string> = {
 const FEATURED_POOL_SIZE = 24;
 
 let cache: { dateKey: string; items: MarketNewsItem[] } | null = null;
+const NEWS_CACHE_VERSION = 'hero-v2';
 
 function todayKey(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
@@ -192,7 +193,7 @@ async function buildDailyNews(): Promise<MarketNewsItem[]> {
 }
 
 export async function getDailyMarketNews(): Promise<MarketNewsItem[]> {
-  const dateKey = todayKey();
+  const dateKey = `${todayKey()}-${NEWS_CACHE_VERSION}`;
   if (cache?.dateKey === dateKey) return cache.items;
   const items = await buildDailyNews();
   cache = { dateKey, items };

@@ -97,7 +97,7 @@ export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCard
         <div
           className={`absolute inset-0 ${
             carousel
-              ? 'bg-gradient-to-t from-ink-950/90 via-ink-950/15 to-transparent'
+              ? 'bg-gradient-to-t from-ink-950 via-ink-950/25 to-transparent'
               : 'bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent'
           }`}
         />
