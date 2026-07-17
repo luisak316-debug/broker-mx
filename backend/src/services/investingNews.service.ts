@@ -125,15 +125,20 @@ async function fetchOgImage(articleUrl: string): Promise<string | undefined> {
   }
 }
 
-async function enhanceTopImages(articles: InvestingArticle[], limit = 5): Promise<void> {
-  const top = articles.slice(0, limit);
-  await Promise.all(
-    top.map(async (article) => {
-      if (article.imageUrl && !article.imageUrl.startsWith('/news/')) return;
-      const og = await fetchOgImage(article.url);
-      if (og) article.imageUrl = og;
-    }),
+async function enhanceTopImages(articles: InvestingArticle[], limit = 18): Promise<void> {
+  const needOg = articles.slice(0, limit).filter(
+    (a) => !a.imageUrl || a.imageUrl.startsWith('/news/') || a.imageUrl.includes('108x81'),
   );
+  const batchSize = 4;
+  for (let i = 0; i < needOg.length; i += batchSize) {
+    const batch = needOg.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map(async (article) => {
+        const og = await fetchOgImage(article.url);
+        if (og) article.imageUrl = og;
+      }),
+    );
+  }
 }
 
 function mapRssItem(item: RssItem): RawRow | null {
@@ -229,7 +234,7 @@ export async function fetchInvestingHeadlinePool(maxItems = 24): Promise<Investi
     })
     .slice(0, maxItems);
 
-  await enhanceTopImages(articles, 6);
+  await enhanceTopImages(articles, 18);
   return articles;
 }
 

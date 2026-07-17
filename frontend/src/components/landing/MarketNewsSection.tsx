@@ -53,10 +53,11 @@ function resolveTheme(item: MarketNewsItem) {
 type NewsCardProps = {
   item: MarketNewsItem;
   featured?: boolean;
+  carousel?: boolean;
   onOpenSimulator?: () => void;
 };
 
-export function NewsCard({ item, featured, onOpenSimulator }: NewsCardProps) {
+export function NewsCard({ item, featured, carousel, onOpenSimulator }: NewsCardProps) {
   const theme = resolveTheme(item);
   const imageKey = item.themeCategory ?? item.category;
   const image = item.imageUrl || FALLBACK_IMAGES[imageKey] || FALLBACK_IMAGES.featured;
@@ -69,8 +70,12 @@ export function NewsCard({ item, featured, onOpenSimulator }: NewsCardProps) {
       } ${theme.border}`}
     >
       <div
-        className={`relative overflow-hidden ${
-          featured ? 'h-52 shrink-0 sm:h-60 lg:h-[280px]' : 'h-40 shrink-0 sm:h-44'
+        className={`relative overflow-hidden bg-ink-900 ${
+          featured
+            ? carousel
+              ? 'aspect-[16/10] min-h-[220px] sm:min-h-[280px] lg:min-h-[320px]'
+              : 'h-52 shrink-0 sm:h-60 lg:h-[280px]'
+            : 'h-40 shrink-0 sm:h-44'
         }`}
       >
         <img
@@ -79,14 +84,23 @@ export function NewsCard({ item, featured, onOpenSimulator }: NewsCardProps) {
           loading={featured ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={featured ? 'high' : 'auto'}
-          className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
+          className={`h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02] ${
+            carousel ? 'scale-100' : ''
+          }`}
+          sizes={featured ? '(min-width: 1024px) 768px, 100vw' : undefined}
           onError={(e) => {
             const img = e.currentTarget;
             const fb = FALLBACK_IMAGES[imageKey] ?? FALLBACK_IMAGES.featured;
             if (fb && !img.src.endsWith(fb)) img.src = fb;
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent" />
+        <div
+          className={`absolute inset-0 ${
+            carousel
+              ? 'bg-gradient-to-t from-ink-950/90 via-ink-950/15 to-transparent'
+              : 'bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent'
+          }`}
+        />
         <span
           className={`absolute left-3 top-3 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${theme.badge}`}
         >
