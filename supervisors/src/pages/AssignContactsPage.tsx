@@ -5,13 +5,14 @@ import { fmtDate, isoDate, clientFirstName } from '../lib/format';
 import { parseBulkContacts, previewDistribution } from '../lib/parseBulkContacts';
 import { isValidContactPhoneE164, normalizeContactPhoneE164 } from '../lib/contactPhone';
 import { ManagerTeamsBulkForm } from '../components/assign/ManagerTeamsBulkForm';
-import type { AdvisorRow, ContactRow } from '../types';
+import type { AdvisorRow, ContactRow, ManagerTeamRow } from '../types';
 
 type Mode = 'bulk' | 'managers' | 'single';
 
 export function AssignContactsPage() {
   const [mode, setMode] = useState<Mode>('bulk');
   const [advisors, setAdvisors] = useState<AdvisorRow[]>([]);
+  const [teams, setTeams] = useState<ManagerTeamRow[]>([]);
   const [todayRows, setTodayRows] = useState<ContactRow[]>([]);
   const [form, setForm] = useState({
     advisorId: '',
@@ -60,6 +61,7 @@ export function AssignContactsPage() {
       setAdvisors(list);
       if (list[0]) setForm((f) => ({ ...f, advisorId: f.advisorId || list[0].id }));
     });
+    api.managers().then(setTeams);
     reloadToday();
   }, []);
 
@@ -180,6 +182,7 @@ export function AssignContactsPage() {
       {mode === 'managers' ? (
         <ManagerTeamsBulkForm
           advisors={advisors}
+          teams={teams}
           today={callDay}
           onSaved={() => reloadToday()}
         />

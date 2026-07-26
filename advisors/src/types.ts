@@ -6,6 +6,7 @@ export interface StaffSession {
   displayName: string;
   role: StaffRole;
   managerTeam?: number | null;
+  managerTeamName?: string | null;
   lastLoginAt?: string;
 }
 

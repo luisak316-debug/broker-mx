@@ -11,7 +11,7 @@ const NAV = [
 export function AdvisorLayout() {
   const { staff, logout } = useAuth();
   const navigate = useNavigate();
-  const teamLabel = staff?.managerTeam ? `Gerencia ${staff.managerTeam}` : 'Asesor';
+  const teamLabel = staff?.managerTeamName ?? (staff?.managerTeam ? `Gerencia ${staff.managerTeam}` : 'Asesor');
 
   return (
     <div className="portal-page flex min-h-screen">

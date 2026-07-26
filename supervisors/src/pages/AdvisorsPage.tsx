@@ -1,12 +1,15 @@
-import { Fragment, useEffect, useState, type FormEvent } from 'react';
+import { Fragment, useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import { AdvisorManagePanel } from '../components/advisors/AdvisorManagePanel';
+import { GerenciasManageDialog } from '../components/advisors/GerenciasManageDialog';
+import { GerenciasRenameDialog } from '../components/advisors/GerenciasRenameDialog';
 import { Card } from '../components/ui/Card';
 import { fmtDate } from '../lib/format';
-import type { AdvisorRow } from '../types';
+import type { AdvisorRow, ManagerTeamRow } from '../types';
 
 export function AdvisorsPage() {
   const [rows, setRows] = useState<AdvisorRow[]>([]);
+  const [teams, setTeams] = useState<ManagerTeamRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
@@ -20,8 +23,19 @@ export function AdvisorsPage() {
   });
   const [busy, setBusy] = useState(false);
   const [manageId, setManageId] = useState<string | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [manageTeamsOpen, setManageTeamsOpen] = useState(false);
+  const [teamsBusy, setTeamsBusy] = useState(false);
 
-  function reload() {
+  const teamLabel = useCallback(
+    (teamId: number | null | undefined) => {
+      if (!teamId) return '—';
+      return teams.find((t) => t.team === teamId)?.displayName ?? `Gerencia ${teamId}`;
+    },
+    [teams],
+  );
+
+  function reloadAdvisors() {
     setLoading(true);
     api
       .advisors()
@@ -29,11 +43,20 @@ export function AdvisorsPage() {
       .finally(() => setLoading(false));
   }
 
+  function reloadTeams() {
+    return api.managers().then(setTeams);
+  }
+
+  function reloadAll() {
+    reloadAdvisors();
+    void reloadTeams();
+  }
+
   useEffect(() => {
-    reload();
-    const timer = window.setInterval(reload, 30_000);
+    reloadAll();
+    const timer = window.setInterval(reloadAll, 30_000);
     const onVisible = () => {
-      if (document.visibilityState === 'visible') reload();
+      if (document.visibilityState === 'visible') reloadAll();
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => {
@@ -65,7 +88,7 @@ export function AdvisorsPage() {
         hireDate: '',
       });
       setOk('Asesor agregado correctamente.');
-      reload();
+      reloadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear asesor.');
     } finally {
@@ -80,9 +103,57 @@ export function AdvisorsPage() {
       await api.removeAdvisor(id);
       setOk('Asesor desactivado.');
       if (manageId === id) setManageId(null);
-      reload();
+      reloadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo eliminar.');
+    }
+  }
+
+  async function onSaveRename(updates: Array<{ id: number; displayName: string }>) {
+    setTeamsBusy(true);
+    setError(null);
+    try {
+      const next = await api.renameManagerTeams(updates);
+      setTeams(next);
+      setOk('Nombres de gerencias actualizados.');
+      setRenameOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudieron renombrar las gerencias.');
+    } finally {
+      setTeamsBusy(false);
+    }
+  }
+
+  async function onAddTeam() {
+    setTeamsBusy(true);
+    setError(null);
+    try {
+      const next = await api.addManagerTeam();
+      setTeams(next);
+      setOk('Gerencia agregada.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo agregar la gerencia.');
+    } finally {
+      setTeamsBusy(false);
+    }
+  }
+
+  async function onRemoveTeam(teamId: number) {
+    const label = teamLabel(teamId);
+    if (!confirm(`¿Eliminar la gerencia «${label}»?`)) return;
+    setTeamsBusy(true);
+    setError(null);
+    try {
+      const next = await api.removeManagerTeam(teamId);
+      setTeams(next);
+      setOk('Gerencia eliminada.');
+      if (form.managerTeam === String(teamId)) {
+        setForm((f) => ({ ...f, managerTeam: '' }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar la gerencia.');
+    } finally {
+      setTeamsBusy(false);
     }
   }
 
@@ -91,7 +162,7 @@ export function AdvisorsPage() {
       <header>
         <h1 className="text-2xl font-bold text-white">Asesores</h1>
         <p className="text-sm text-slate-400">
-          Control de asesores: teléfono actual, historial de números, ingreso e inactividad.
+          Control de asesores, gerencias y acceso al portal de llamadas.
         </p>
       </header>
 
@@ -149,17 +220,36 @@ export function AdvisorsPage() {
             />
           </div>
           <div>
-            <label className="label">Equipo de gerencia (1–4)</label>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <label className="label mb-0">Equipo de gerencia</label>
+              <div className="flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-1 text-xs"
+                  onClick={() => setRenameOpen(true)}
+                >
+                  Renombrar gerencias
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost px-2 py-1 text-xs"
+                  onClick={() => setManageTeamsOpen(true)}
+                >
+                  + / − gerencias
+                </button>
+              </div>
+            </div>
             <select
               className="input max-w-md"
               value={form.managerTeam}
               onChange={(e) => setForm({ ...form, managerTeam: e.target.value })}
             >
               <option value="">Sin equipo</option>
-              <option value="1">Gerencia 1</option>
-              <option value="2">Gerencia 2</option>
-              <option value="3">Gerencia 3</option>
-              <option value="4">Gerencia 4</option>
+              {teams.map((t) => (
+                <option key={t.team} value={t.team}>
+                  {t.displayName}
+                </option>
+              ))}
             </select>
           </div>
           {error && <p className="sm:col-span-2 text-sm text-danger">{error}</p>}
@@ -204,7 +294,7 @@ export function AdvisorsPage() {
                   <Fragment key={a.id}>
                     <tr>
                       <td className="font-medium text-white">{a.displayName}</td>
-                      <td>{a.managerTeam ? `Gerencia ${a.managerTeam}` : '—'}</td>
+                      <td>{teamLabel(a.managerTeam)}</td>
                       <td className="font-mono">{a.phone ?? '—'}</td>
                       <td>{a.hireDate ? fmtDate(a.hireDate) : '—'}</td>
                       <td>{a.inactiveDate ? fmtDate(a.inactiveDate) : '—'}</td>
@@ -233,7 +323,7 @@ export function AdvisorsPage() {
                         <td colSpan={7} className="pb-4 pt-0">
                           <AdvisorManagePanel
                             advisor={a}
-                            onUpdated={reload}
+                            onUpdated={reloadAll}
                             onClose={() => setManageId(null)}
                           />
                         </td>
@@ -246,6 +336,22 @@ export function AdvisorsPage() {
           </table>
         </div>
       </Card>
+
+      <GerenciasRenameDialog
+        teams={teams}
+        open={renameOpen}
+        busy={teamsBusy}
+        onClose={() => setRenameOpen(false)}
+        onSave={onSaveRename}
+      />
+      <GerenciasManageDialog
+        teams={teams}
+        open={manageTeamsOpen}
+        busy={teamsBusy}
+        onClose={() => setManageTeamsOpen(false)}
+        onAdd={onAddTeam}
+        onRemove={onRemoveTeam}
+      />
     </div>
   );
 }

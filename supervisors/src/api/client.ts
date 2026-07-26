@@ -44,6 +44,18 @@ export const api = {
   },
   advisors: () => http<import('../types').AdvisorRow[]>('/advisors'),
   managers: () => http<import('../types').ManagerTeamRow[]>('/managers'),
+  renameManagerTeams: (teams: Array<{ id: number; displayName: string }>) =>
+    http<import('../types').ManagerTeamRow[]>('/managers/rename', {
+      method: 'PATCH',
+      body: JSON.stringify({ teams }),
+    }),
+  addManagerTeam: (displayName?: string) =>
+    http<import('../types').ManagerTeamRow[]>('/managers', {
+      method: 'POST',
+      body: JSON.stringify(displayName ? { displayName } : {}),
+    }),
+  removeManagerTeam: (id: number) =>
+    http<import('../types').ManagerTeamRow[]>(`/managers/${id}`, { method: 'DELETE' }),
   createAdvisor: (payload: {
     email: string;
     displayName: string;

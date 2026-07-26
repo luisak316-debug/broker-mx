@@ -22,7 +22,7 @@ export function Home() {
     return () => window.clearInterval(timer);
   }, [reload]);
 
-  const teamLabel = staff?.managerTeam ? `Gerencia ${staff.managerTeam}` : 'Sin gerencia asignada';
+  const teamLabel = staff?.managerTeamName ?? (staff?.managerTeam ? `Gerencia ${staff.managerTeam}` : 'Sin gerencia asignada');
 
   return (
     <div className="space-y-6">

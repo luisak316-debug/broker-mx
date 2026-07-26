@@ -2,8 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { isDatabaseEnabled } from '../lib/database';
 import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
-import { isAdminEmail, managerEmail } from '../config/brand';
+import { isAdminEmail } from '../config/brand';
 import { hashPassword } from '../services/security.service';
+import {
+  ensureManagerTeamRecordsSeeded,
+  ensureManagerStaffForTeam,
+  listActiveManagerTeams,
+  findManagerTeamById,
+} from './managerTeam.repository';
 import type { Staff } from '../types/admin';
 
 function mapStaff(row: {
@@ -160,53 +166,25 @@ export async function listAdvisorsByManagerTeam(team: number): Promise<Staff[]> 
 export async function listManagerTeams(): Promise<
   Array<{ team: number; displayName: string; managerId?: string; advisorCount: number }>
 > {
-  const teams = [1, 2, 3, 4] as const;
-  if (!isDatabaseEnabled()) {
-    return teams.map((team) => ({
-      team,
-      displayName: `Gerencia ${team}`,
-      advisorCount: legacy.staff.filter(
-        (s) => s.role === 'ADVISOR' && s.active && (s as Staff).managerTeam === team,
-      ).length,
-    }));
-  }
-
-  const managers = await prisma.staff.findMany({
-    where: { role: 'MANAGER', active: true, managerTeam: { in: [...teams] } },
-  });
-  const advisorCounts = await Promise.all(
-    teams.map((team) =>
-      prisma.staff.count({ where: { role: 'ADVISOR', active: true, managerTeam: team } }),
-    ),
-  );
-
-  return teams.map((team, i) => {
-    const mgr = managers.find((m) => m.managerTeam === team);
-    return {
-      team,
-      displayName: `Gerencia ${team}`,
-      managerId: mgr?.id,
-      advisorCount: advisorCounts[i],
-    };
-  });
+  const teams = await listActiveManagerTeams();
+  return teams.map((t) => ({
+    team: t.id,
+    displayName: t.displayName,
+    managerId: t.managerId,
+    advisorCount: t.advisorCount,
+  }));
 }
+
+export { findManagerTeamById, getManagerTeamDisplayName } from './managerTeam.repository';
 
 export async function ensureManagerTeamsSeeded(passwordHash: string): Promise<void> {
   if (!isDatabaseEnabled()) return;
 
-  for (let team = 1; team <= 4; team++) {
-    const email = managerEmail(team);
-    await prisma.staff.upsert({
-      where: { email },
-      update: { displayName: `Gerencia ${team}`, role: 'MANAGER', managerTeam: team },
-      create: {
-        email,
-        displayName: `Gerencia ${team}`,
-        role: 'MANAGER',
-        managerTeam: team,
-        passwordHash,
-      },
-    });
+  await ensureManagerTeamRecordsSeeded();
+  const teams = await listActiveManagerTeams();
+
+  for (const t of teams) {
+    await ensureManagerStaffForTeam(t.id, passwordHash);
   }
 }
 

@@ -6,7 +6,12 @@ import {
   deleteAdvisorContact,
   listAdvisorContacts,
 } from '../../repositories/advisorContact.repository';
-import { findStaffById, listAdvisorsByManagerTeam, listStaffByRole } from '../../repositories/staff.repository';
+import {
+  findStaffById,
+  listAdvisorsByManagerTeam,
+  listStaffByRole,
+  findManagerTeamById,
+} from '../../repositories/staff.repository';
 import { distributeContacts, parseBulkContacts } from '../../lib/parseBulkContacts';
 import { normalizeContactPhoneE164 } from '../../lib/contactPhone';
 import { record } from '../../services/audit.service';
@@ -180,7 +185,7 @@ const managerBulkSchema = z.object({
   teams: z
     .array(
       z.object({
-        team: z.number().int().min(1).max(4),
+        team: z.number().int().min(1),
         rawText: z.string(),
       }),
     )
@@ -217,6 +222,19 @@ export async function bulkAssignContactsToManagers(req: Request, res: Response):
   for (const entry of body.teams) {
     const raw = entry.rawText.trim();
     if (!raw) continue;
+
+    const teamRow = await findManagerTeamById(entry.team);
+    if (!teamRow) {
+      teamResults.push({
+        team: entry.team,
+        saved: 0,
+        skipped: 0,
+        advisorCount: 0,
+        distribution: [],
+        warning: `Gerencia ${entry.team} no existe o fue eliminada.`,
+      });
+      continue;
+    }
 
     const { contacts, skippedLines } = parseBulkContacts(raw);
     totalSkipped += skippedLines.length;

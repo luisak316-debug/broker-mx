@@ -1,36 +1,41 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { api } from '../../api/client';
-import { Card } from '../ui/Card';
+import { Card } from '../../components/ui/Card';
 import { parseBulkContacts, previewDistribution } from '../../lib/parseBulkContacts';
-import type { AdvisorRow } from '../../types';
-
-const TEAM_IDS = [1, 2, 3, 4] as const;
-
-function teamLabel(team: number): string {
-  return `Gerencia ${team}`;
-}
+import type { AdvisorRow, ManagerTeamRow } from '../../types';
 
 type Props = {
   advisors: AdvisorRow[];
+  teams: ManagerTeamRow[];
   today: string;
   onSaved: () => void;
 };
 
-export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
-  const [teamTexts, setTeamTexts] = useState<Record<number, string>>({ 1: '', 2: '', 3: '', 4: '' });
+export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props) {
+  const [teamTexts, setTeamTexts] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
 
+  useEffect(() => {
+    setTeamTexts((prev) => {
+      const next: Record<number, string> = {};
+      for (const t of teams) {
+        next[t.team] = prev[t.team] ?? '';
+      }
+      return next;
+    });
+  }, [teams]);
+
   const teamPreviews = useMemo(() => {
-    return TEAM_IDS.map((team) => {
-      const raw = teamTexts[team] ?? '';
+    return teams.map((t) => {
+      const raw = teamTexts[t.team] ?? '';
       const parsed = raw.trim() ? parseBulkContacts(raw) : { contacts: [], skippedLines: [] as string[] };
-      const teamAdvisors = advisors.filter((a) => a.managerTeam === team);
+      const teamAdvisors = advisors.filter((a) => a.managerTeam === t.team);
       const counts = previewDistribution(parsed.contacts.length, teamAdvisors.length);
       return {
-        team,
-        label: teamLabel(team),
+        team: t.team,
+        label: t.displayName,
         advisorCount: teamAdvisors.length,
         parsed,
         distribution: teamAdvisors.map((a, i) => ({
@@ -40,7 +45,7 @@ export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
         })),
       };
     });
-  }, [teamTexts, advisors]);
+  }, [teamTexts, advisors, teams]);
 
   const totalContacts = teamPreviews.reduce((s, t) => s + t.parsed.contacts.length, 0);
 
@@ -57,15 +62,20 @@ export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
     try {
       const result = await api.bulkAssignContactsToManagers({
         assignedDate: today,
-        teams: TEAM_IDS.filter((t) => (teamTexts[t] ?? '').trim()).map((team) => ({
-          team,
-          rawText: teamTexts[team],
-        })),
+        teams: teams
+          .filter((t) => (teamTexts[t.team] ?? '').trim())
+          .map((t) => ({
+            team: t.team,
+            rawText: teamTexts[t.team],
+          })),
       });
 
       const parts = result.teams
         .filter((t) => t.saved > 0)
-        .map((t) => `Equipo ${t.team}: ${t.saved}`)
+        .map((t) => {
+          const label = teams.find((x) => x.team === t.team)?.displayName ?? `Equipo ${t.team}`;
+          return `${label}: ${t.saved}`;
+        })
         .join(' · ');
       const warnings = result.teams.filter((t) => t.warning).map((t) => t.warning);
       setSaved(
@@ -73,7 +83,7 @@ export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
           warnings.length ? ` · ${warnings.join(' ')}` : ''
         }`,
       );
-      setTeamTexts({ 1: '', 2: '', 3: '', 4: '' });
+      setTeamTexts(Object.fromEntries(teams.map((t) => [t.team, ''])));
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar.');
@@ -82,13 +92,22 @@ export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
     }
   }
 
+  if (teams.length === 0) {
+    return (
+      <Card title="Asignación por equipos de gerencia">
+        <p className="text-sm text-slate-400">
+          No hay gerencias activas. Créalas en Asesores → + / − gerencias.
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <Card title="Asignación por equipos de gerencia">
       <form onSubmit={onSubmit} className="space-y-6">
         <p className="text-sm text-slate-400">
-          Pega contactos en cada equipo que quieras cargar hoy. Cada bloque se reparte solo entre los
-          asesores de esa gerencia (equipo 1, 2, 3 o 4). Puedes enviar 50 a un equipo y 2 a otro, como
-          necesites.
+          Pega contactos en cada gerencia que quieras cargar hoy. Cada bloque se reparte solo entre
+          los asesores de esa gerencia.
         </p>
 
         {teamPreviews.map(({ team, label, advisorCount, parsed, distribution }) => (
@@ -102,7 +121,7 @@ export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
 
             <textarea
               className="input min-h-[140px] resize-y font-mono text-sm leading-relaxed"
-              value={teamTexts[team]}
+              value={teamTexts[team] ?? ''}
               onChange={(e) => setTeamTexts({ ...teamTexts, [team]: e.target.value })}
               placeholder={`Contactos para ${label}… (opcional si no hay lista hoy)`}
             />
@@ -118,7 +137,7 @@ export function ManagerTeamsBulkForm({ advisors, today, onSaved }: Props) {
                 </p>
                 {advisorCount === 0 && (
                   <p className="mt-1 text-amber-400">
-                    Asigna asesores al equipo {team} en la sección Asesores.
+                    Asigna asesores a {label} en la sección Asesores.
                   </p>
                 )}
               </div>

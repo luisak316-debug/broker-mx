@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { listAdvisorContacts } from '../../repositories/advisorContact.repository';
 import { listStaffByRole } from '../../repositories/staff.repository';
+import { listActiveManagerTeams } from '../../repositories/managerTeam.repository';
 import { maskContactPhoneE164 } from '../../lib/contactPhone';
 import { HttpError } from '../../middleware/errorHandler';
 
@@ -48,10 +49,13 @@ export async function listMyAssignedContacts(req: Request, res: Response): Promi
 export async function listContactsDistribution(req: Request, res: Response): Promise<void> {
   const { y, m, d, iso } = parseDateQuery(req);
 
-  const [contacts, advisors] = await Promise.all([
+  const [contacts, advisors, managerTeams] = await Promise.all([
     listAdvisorContacts({ year: y, month: m, day: d }),
     listStaffByRole('ADVISOR'),
+    listActiveManagerTeams(),
   ]);
+
+  const teamNameById = new Map(managerTeams.map((t) => [t.id, t.displayName]));
 
   const byAdvisorId = new Map<string, typeof contacts>();
   for (const c of contacts) {
@@ -85,7 +89,9 @@ export async function listContactsDistribution(req: Request, res: Response): Pro
   function ensureTeam(team: number | null): TeamBlock {
     const existing = teamMap.get(team);
     if (existing) return existing;
-    const label = team ? `Gerencia ${team}` : 'Sin gerencia asignada';
+    const label = team
+      ? (teamNameById.get(team) ?? `Gerencia ${team}`)
+      : 'Sin gerencia asignada';
     const block: TeamBlock = { team, label, contactCount: 0, advisors: [] };
     teamMap.set(team, block);
     return block;

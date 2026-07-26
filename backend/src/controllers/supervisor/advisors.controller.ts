@@ -10,6 +10,7 @@ import {
   updateAdvisorDates,
   updateAdvisorPhone,
 } from '../../repositories/staff.repository';
+import { findManagerTeamById } from '../../repositories/staff.repository';
 import { hashPassword } from '../../services/security.service';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
@@ -30,7 +31,7 @@ const dateSchema = z
 const createSchema = z.object({
   email: z.string().email('Correo inválido.'),
   displayName: z.string().trim().min(2, 'Nombre requerido.'),
-  managerTeam: z.number().int().min(1).max(4).optional().nullable(),
+  managerTeam: z.number().int().min(1).optional().nullable(),
   phone: z.preprocess(
     (val) => (val === '' || val === null || val === undefined ? null : val),
     phoneSchema.nullable().optional(),
@@ -91,6 +92,11 @@ export async function createAdvisor(req: Request, res: Response): Promise<void> 
   const body = createSchema.parse(req.body);
   const existing = await findStaffByEmail(body.email);
   if (existing) throw new HttpError(409, 'Ya existe personal con ese correo.');
+
+  if (body.managerTeam != null) {
+    const team = await findManagerTeamById(body.managerTeam);
+    if (!team) throw new HttpError(400, 'Gerencia no válida.');
+  }
 
   const advisor = await createStaff({
     email: body.email,

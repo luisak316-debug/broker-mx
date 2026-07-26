@@ -6,6 +6,7 @@ import {
   normalizeStaffDisplay,
   touchStaffLogin,
 } from '../../repositories/staff.repository';
+import { getManagerTeamDisplayName } from '../../repositories/managerTeam.repository';
 import { signToken, verifyPassword } from '../../services/security.service';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
@@ -28,6 +29,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   normalizeStaffDisplay(staff);
   await touchStaffLogin(staff.id);
+  const managerTeamName = await getManagerTeamDisplayName(staff.managerTeam);
   const token = signToken({
     sub: staff.id,
     role: staff.role,
@@ -51,6 +53,7 @@ export async function login(req: Request, res: Response): Promise<void> {
         displayName: staff.displayName,
         role: staff.role,
         managerTeam: staff.managerTeam ?? null,
+        managerTeamName,
       },
     },
   });
@@ -63,6 +66,7 @@ export async function me(req: Request, res: Response): Promise<void> {
     throw new HttpError(403, 'Acceso reservado para asesores.');
   }
   normalizeStaffDisplay(staff);
+  const managerTeamName = await getManagerTeamDisplayName(staff.managerTeam);
   res.json({
     data: {
       id: staff.id,
@@ -70,6 +74,7 @@ export async function me(req: Request, res: Response): Promise<void> {
       displayName: staff.displayName,
       role: staff.role,
       managerTeam: staff.managerTeam ?? null,
+      managerTeamName,
       lastLoginAt: staff.lastLoginAt,
     },
   });

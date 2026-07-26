@@ -74,7 +74,7 @@ model Staff {
   passwordHash  String
   displayName   String
   role          StaffRole  @default(ADVISOR)
-  /// Equipo de gerencia 1–4 (asesores y gerentes).
+  /// Equipo de gerencia (id en tabla ManagerTeam).
   managerTeam   Int?
   /// Teléfono actual del asesor (10 dígitos).
   phone         String?
@@ -95,6 +95,16 @@ model Staff {
   assignedContacts AdvisorContact[] @relation("AssignedContacts")
   phoneHistory  AdvisorPhoneHistory[] @relation("AdvisorPhoneHistory")
   phoneChangesMade AdvisorPhoneHistory[] @relation("PhoneHistoryChangedBy")
+}
+
+/// Equipos de gerencia (nombres personalizables: Los Tiburones, Los Tigres, etc.).
+model ManagerTeam {
+  id          Int      @id @default(autoincrement())
+  displayName String
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 /// Historial de teléfonos que tuvo un asesor (números anteriores al actual).
