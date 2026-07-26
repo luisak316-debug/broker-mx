@@ -7,6 +7,8 @@ import { Clients } from './pages/Clients';
 import { ClientProfile } from './pages/ClientProfile';
 import { Transactions } from './pages/Transactions';
 import { AuditLog } from './pages/AuditLog';
+import { AssignedContacts } from './pages/AssignedContacts';
+import { ContactDistribution } from './pages/ContactDistribution';
 import type { StaffRole } from './types';
 import type { ReactNode } from 'react';
 
@@ -26,6 +28,22 @@ export function App() {
             <Route index element={<Dashboard />} />
             <Route path="clientes" element={<Clients />} />
             <Route path="clientes/:id" element={<ClientProfile />} />
+            <Route
+              path="contactos"
+              element={
+                <RequireRole roles={['ADVISOR']}>
+                  <AssignedContacts />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="reparticion-contactos"
+              element={
+                <RequireRole roles={['ADMIN']}>
+                  <ContactDistribution />
+                </RequireRole>
+              }
+            />
             <Route path="transacciones" element={<Transactions />} />
             <Route
               path="auditoria"

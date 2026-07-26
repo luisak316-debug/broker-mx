@@ -9,14 +9,15 @@ import { BRAND_DOMAIN, PUBLIC_SITE_URL } from './config/brand';
 import { router } from './routes';
 import { adminRouter } from './routes/admin';
 import { supervisorRouter } from './routes/supervisor';
+import { advisorRouter } from './routes/advisor';
 import { errorHandler, notFound } from './middleware/errorHandler';
-import { ADMIN_WEB_PATH } from './config/paths';
+import { ADMIN_WEB_PATH, ADVISOR_WEB_PATH } from './config/paths';
 
 function repoRoot(): string {
   return path.resolve(__dirname, '..', '..');
 }
 
-function distExists(subdir: 'frontend' | 'admin'): boolean {
+function distExists(subdir: 'frontend' | 'admin' | 'advisors'): boolean {
   const dir = path.join(repoRoot(), subdir, 'dist');
   return fs.existsSync(path.join(dir, 'index.html'));
 }
@@ -53,10 +54,12 @@ export function createApp(): express.Express {
   app.use('/api', router);
   app.use('/api/admin', adminRouter);
   app.use('/api/supervisor', supervisorRouter);
+  app.use('/api/advisor', advisorRouter);
 
   if (env.isProd && distExists('frontend')) {
     const clientDist = path.join(repoRoot(), 'frontend', 'dist');
     const adminDist = path.join(repoRoot(), 'admin', 'dist');
+    const advisorsDist = path.join(repoRoot(), 'advisors', 'dist');
 
     if (distExists('admin')) {
       app.use(ADMIN_WEB_PATH, express.static(adminDist, { index: false }));
@@ -65,11 +68,22 @@ export function createApp(): express.Express {
       });
     }
 
+    if (distExists('advisors')) {
+      app.use(ADVISOR_WEB_PATH, express.static(advisorsDist, { index: false }));
+      app.get(new RegExp(`^${ADVISOR_WEB_PATH}(\\/.*)?$`), (_req, res) => {
+        res.sendFile(path.join(advisorsDist, 'index.html'));
+      });
+    }
+
     app.use(express.static(clientDist, { index: false }));
     const adminEsc = ADMIN_WEB_PATH.replace(/\//g, '\\/');
-    app.get(new RegExp(`^(?!\\/api|${adminEsc}|\\/uploads|\\/ws).*`), (_req, res) => {
-      res.sendFile(path.join(clientDist, 'index.html'));
-    });
+    const advisorEsc = ADVISOR_WEB_PATH.replace(/\//g, '\\/');
+    app.get(
+      new RegExp(`^(?!\\/api|${adminEsc}|${advisorEsc}|\\/uploads|\\/ws).*`),
+      (_req, res) => {
+        res.sendFile(path.join(clientDist, 'index.html'));
+      },
+    );
   }
 
   app.use(notFound);

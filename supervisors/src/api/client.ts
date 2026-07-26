@@ -1,7 +1,7 @@
 import type { StaffSession, CashRequest } from '../types';
 import { getApiBase } from '../lib/apiConfig';
 
-const TOKEN_KEY = 'brokermx_supervisor_token';
+const TOKEN_KEY = 'invermax_supervisor_token';
 
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
@@ -66,6 +66,14 @@ export const api = {
     payload: { hireDate?: string | null; inactiveDate?: string | null },
   ) =>
     http<import('../types').AdvisorRow>(`/advisors/${id}/dates`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  updateAdvisorAccess: (
+    id: string,
+    payload: { email?: string; displayName?: string; password?: string },
+  ) =>
+    http<import('../types').AdvisorRow>(`/advisors/${id}/access`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),

@@ -8,6 +8,7 @@ import {
 } from '../../repositories/advisorContact.repository';
 import { findStaffById, listAdvisorsByManagerTeam, listStaffByRole } from '../../repositories/staff.repository';
 import { distributeContacts, parseBulkContacts } from '../../lib/parseBulkContacts';
+import { normalizeContactPhoneE164 } from '../../lib/contactPhone';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
@@ -15,7 +16,7 @@ import { HttpError } from '../../middleware/errorHandler';
 const contactSchema = z.object({
   advisorId: z.string().min(1),
   clientName: z.string().trim().min(2, 'Nombre del cliente requerido.'),
-  phone: z.string().trim().min(10, 'Teléfono de 10 dígitos.'),
+  phone: z.string().trim().min(11, 'Teléfono internacional con + y código de país.'),
   email: z.string().email('Correo inválido.').or(z.literal('')).optional(),
   description: z.string().trim().max(4000).optional(),
   assignedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -45,8 +46,8 @@ export async function saveContact(req: Request, res: Response): Promise<void> {
     throw new HttpError(400, 'Asesor no válido.');
   }
 
-  const phone = body.phone.replace(/\D/g, '').slice(-10);
-  if (phone.length !== 10) throw new HttpError(400, 'Teléfono de 10 dígitos.');
+  const phone = normalizeContactPhoneE164(body.phone);
+  if (!phone) throw new HttpError(400, 'Teléfono internacional inválido. Usa +código de país y número.');
 
   const assignedDate = body.assignedDate ? new Date(`${body.assignedDate}T12:00:00.000Z`) : new Date();
 

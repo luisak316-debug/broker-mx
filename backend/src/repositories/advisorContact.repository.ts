@@ -1,6 +1,11 @@
 import { isDatabaseEnabled } from '../lib/database';
 import { prisma } from '../lib/prisma';
+import { normalizeContactPhoneE164 } from '../lib/contactPhone';
 import type { AdvisorContactRow } from '../types/admin';
+
+function storeContactPhone(raw: string): string {
+  return normalizeContactPhoneE164(raw) ?? raw.trim();
+}
 
 function startOfDay(d: Date): Date {
   return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -95,7 +100,7 @@ export async function createAdvisorContact(data: {
       advisorId: data.advisorId,
       assignedById: data.assignedById,
       clientName: data.clientName.trim(),
-      phone: data.phone.replace(/\D/g, '').slice(-10),
+      phone: storeContactPhone(data.phone),
       email: data.email.trim().toLowerCase(),
       description: data.description.trim(),
       assignedDate,
@@ -128,7 +133,7 @@ export async function createAdvisorContactsBulk(
           advisorId: item.advisorId,
           assignedById: item.assignedById,
           clientName: item.clientName,
-          phone: item.phone.replace(/\D/g, '').slice(-10),
+          phone: storeContactPhone(item.phone),
           email: item.email.trim().toLowerCase(),
           description: item.description,
           assignedDate: startOfDay(item.assignedDate),
@@ -147,4 +152,13 @@ export async function deleteAdvisorContact(id: string): Promise<void> {
   }
 
   await prisma.advisorContact.delete({ where: { id } });
+}
+
+export async function findAdvisorContactById(id: string): Promise<AdvisorContactRow | null> {
+  if (!isDatabaseEnabled()) return null;
+  const row = await prisma.advisorContact.findUnique({
+    where: { id },
+    include: { advisor: true, assignedBy: true },
+  });
+  return row ? mapRow(row) : null;
 }

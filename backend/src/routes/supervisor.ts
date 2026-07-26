@@ -25,6 +25,7 @@ supervisorRouter.post('/advisors', asyncHandler(advisors.createAdvisor));
 supervisorRouter.get('/advisors/:id/phones', asyncHandler(advisors.listAdvisorPhones));
 supervisorRouter.patch('/advisors/:id/phone', asyncHandler(advisors.updateAdvisorPhoneHandler));
 supervisorRouter.patch('/advisors/:id/dates', asyncHandler(advisors.updateAdvisorDatesHandler));
+supervisorRouter.patch('/advisors/:id/access', asyncHandler(advisors.updateAdvisorAccessHandler));
 supervisorRouter.delete('/advisors/:id', asyncHandler(advisors.removeAdvisor));
 
 supervisorRouter.get('/managers', asyncHandler(managers.listManagers));

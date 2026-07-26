@@ -31,11 +31,12 @@ export function parseBulkContacts(raw: string): {
     }
 
     let rest = work.slice(phoneMatch[0].length).trim();
-    const phone = phoneMatch[1].replace(/\D/g, '').slice(-10);
-    if (phone.length !== 10) {
+    const phoneDigits = phoneMatch[1].replace(/\D/g, '');
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
       skippedLines.push(line);
       continue;
     }
+    const phone = `+${phoneDigits}`;
 
     const nameMatch = rest.match(/^"([^"]+)"/);
     if (!nameMatch) {

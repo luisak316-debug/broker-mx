@@ -7,6 +7,7 @@ import { purgeAllDemoClients } from './purgeDemoClients';
 import { prisma } from './prisma';
 import {
   ensureManagerTeamsSeeded,
+  ensureDefaultAdvisorsSeeded,
   reassignOrphanedClientAdvisors,
 } from '../repositories/staff.repository';
 import { hashPassword } from '../services/security.service';
@@ -238,6 +239,7 @@ async function seedStaff(): Promise<void> {
   }
 
   await ensureManagerTeamsSeeded(demoHash);
+  await ensureDefaultAdvisorsSeeded();
 }
 
 export async function pingDatabase(): Promise<boolean> {

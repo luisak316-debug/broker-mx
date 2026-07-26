@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { fmtDate, isoDate, clientFirstName } from '../lib/format';
 import { parseBulkContacts, previewDistribution } from '../lib/parseBulkContacts';
+import { isValidContactPhoneE164, normalizeContactPhoneE164 } from '../lib/contactPhone';
 import { ManagerTeamsBulkForm } from '../components/assign/ManagerTeamsBulkForm';
 import type { AdvisorRow, ContactRow } from '../types';
 
@@ -70,8 +71,8 @@ export function AssignContactsPage() {
       setError('Selecciona un asesor.');
       return;
     }
-    if (!/^\d{10}$/.test(form.phone.replace(/\D/g, ''))) {
-      setError('Teléfono de 10 dígitos.');
+    if (!isValidContactPhoneE164(form.phone)) {
+      setError('Teléfono internacional inválido. Usa +código de país y número (ej. +525551234567).');
       return;
     }
     setBusy(true);
@@ -79,7 +80,7 @@ export function AssignContactsPage() {
       await api.saveContact({
         advisorId: form.advisorId,
         clientName: form.clientName,
-        phone: form.phone.replace(/\D/g, '').slice(-10),
+        phone: normalizeContactPhoneE164(form.phone)!,
         email: form.email,
         description: form.description,
         assignedDate: callDay,
@@ -192,9 +193,11 @@ export function AssignContactsPage() {
             <p className="rounded-lg bg-slate-800/80 px-3 py-2 text-xs text-slate-400">
               Formato por línea:{' '}
               <span className="text-slate-300">
-                +52teléfono &quot;Nombre completo&quot; correo@ejemplo.com &quot;Descripción o notas&quot;
+                +códigoTeléfono &quot;Nombre completo&quot; correo@ejemplo.com &quot;Descripción o notas&quot;
                 monto
               </span>
+              {' '}
+              (ej. +52 México, +57 Colombia, +1 EE.UU.)
             </p>
 
             <div>
@@ -326,15 +329,13 @@ export function AssignContactsPage() {
                 />
               </div>
               <div>
-                <label className="label">Teléfono (10 dígitos)</label>
+                <label className="label">Teléfono internacional</label>
                 <input
                   className="input"
-                  inputMode="numeric"
+                  inputMode="tel"
                   value={form.phone}
-                  onChange={(e) =>
-                    setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
-                  }
-                  placeholder="5512345678"
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="+525551234567"
                   required
                 />
               </div>

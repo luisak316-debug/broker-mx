@@ -8,6 +8,8 @@ import * as deposit from '../controllers/admin/depositAccount.controller';
 import * as txns from '../controllers/admin/transactions.controller';
 import * as audit from '../controllers/admin/audit.controller';
 import * as metrics from '../controllers/admin/metrics.controller';
+import * as calls from '../controllers/admin/calls.controller';
+import * as advisorContacts from '../controllers/admin/advisorContacts.controller';
 
 export const adminRouter = Router();
 
@@ -23,6 +25,26 @@ adminRouter.get('/metrics', asyncHandler(metrics.dashboardMetrics));
 // Módulo 1: Gestión de clientes (CRM)
 adminRouter.get('/clients', asyncHandler(clientsCtrl.listClientsHandler));
 adminRouter.get('/clients/:id', asyncHandler(clientsCtrl.getClient));
+adminRouter.post(
+  '/clients/:id/call-dial',
+  requireRole('ADVISOR', 'COMPLIANCE', 'ADMIN'),
+  asyncHandler(calls.getClientDialString),
+);
+adminRouter.get(
+  '/my-contacts',
+  requireRole('ADVISOR'),
+  asyncHandler(advisorContacts.listMyAssignedContacts),
+);
+adminRouter.get(
+  '/assigned-contacts/distribution',
+  requireRole('ADMIN'),
+  asyncHandler(advisorContacts.listContactsDistribution),
+);
+adminRouter.post(
+  '/contacts/:id/call-dial',
+  requireRole('ADVISOR', 'COMPLIANCE', 'ADMIN'),
+  asyncHandler(calls.getContactDialString),
+);
 adminRouter.patch(
   '/clients/:id/access',
   requireRole('ADMIN', 'COMPLIANCE'),

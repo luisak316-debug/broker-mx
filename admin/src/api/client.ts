@@ -11,7 +11,7 @@ import type {
 
 import { getApiBase } from '../lib/apiConfig';
 
-const TOKEN_KEY = 'brokermx_admin_token';
+const TOKEN_KEY = 'invermax_admin_token';
 
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
@@ -63,6 +63,65 @@ export const api = {
     return http<ClientRow[]>(`/clients?${qs.toString()}`);
   },
   client: (id: string) => http<ClientProfile>(`/clients/${id}`),
+
+  /** Cadena MicroSIP (*8088*+1...*+52...*) — solo backend arma números completos. */
+  clientCallDial: (id: string) =>
+    http<{ dialString: string; receiverMasked: string; emitterMasked: string }>(
+      `/clients/${id}/call-dial`,
+      { method: 'POST', body: JSON.stringify({}) },
+    ),
+
+  myContacts: (params?: { year?: number; month?: number; day?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.year) qs.set('year', String(params.year));
+    if (params?.month) qs.set('month', String(params.month));
+    if (params?.day) qs.set('day', String(params.day));
+    return http<
+      Array<{
+        id: string;
+        clientName: string;
+        phone: string;
+        email: string;
+        description: string;
+        assignedDate: string;
+      }>
+    >(`/my-contacts?${qs.toString()}`);
+  },
+
+  contactCallDial: (id: string) =>
+    http<{ dialString: string; receiverMasked: string; emitterMasked: string }>(
+      `/contacts/${id}/call-dial`,
+      { method: 'POST', body: JSON.stringify({}) },
+    ),
+
+  contactsDistribution: (params?: { year?: number; month?: number; day?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.year) qs.set('year', String(params.year));
+    if (params?.month) qs.set('month', String(params.month));
+    if (params?.day) qs.set('day', String(params.day));
+    return http<{
+      assignedDate: string;
+      totalContacts: number;
+      advisorCount: number;
+      teams: Array<{
+        team: number | null;
+        label: string;
+        contactCount: number;
+        advisors: Array<{
+          advisorId: string;
+          advisorName: string;
+          contactCount: number;
+          contacts: Array<{
+            id: string;
+            clientName: string;
+            phone: string;
+            email: string;
+            description: string;
+          }>;
+        }>;
+      }>;
+    }>(`/assigned-contacts/distribution?${qs.toString()}`);
+  },
 
   updateClientAccess: (
     id: string,

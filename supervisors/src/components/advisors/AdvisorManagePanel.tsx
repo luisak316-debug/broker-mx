@@ -10,6 +10,9 @@ type Props = {
 };
 
 export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
+  const [displayName, setDisplayName] = useState(advisor.displayName);
+  const [email, setEmail] = useState(advisor.email);
+  const [password, setPassword] = useState('');
   const [phone, setPhone] = useState(advisor.phone ?? '');
   const [hireDate, setHireDate] = useState(advisor.hireDate ?? '');
   const [inactiveDate, setInactiveDate] = useState(advisor.inactiveDate ?? '');
@@ -17,10 +20,14 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [busyPhone, setBusyPhone] = useState(false);
   const [busyDates, setBusyDates] = useState(false);
+  const [busyAccess, setBusyAccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
 
   useEffect(() => {
+    setDisplayName(advisor.displayName);
+    setEmail(advisor.email);
+    setPassword('');
     setPhone(advisor.phone ?? '');
     setHireDate(advisor.hireDate ?? '');
     setInactiveDate(advisor.inactiveDate ?? '');
@@ -34,6 +41,34 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
       .catch(() => setHistory([]))
       .finally(() => setLoadingHistory(false));
   }, [advisor.id, advisor.phone]);
+
+  async function onUpdateAccess(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setOk(null);
+
+    const payload: { email?: string; displayName?: string; password?: string } = {};
+    if (displayName.trim() !== advisor.displayName) payload.displayName = displayName.trim();
+    if (email.trim().toLowerCase() !== advisor.email.toLowerCase()) payload.email = email.trim();
+    if (password.trim()) payload.password = password.trim();
+
+    if (!payload.displayName && !payload.email && !payload.password) {
+      setError('No hay cambios en el acceso al portal de asesores.');
+      return;
+    }
+
+    setBusyAccess(true);
+    try {
+      await api.updateAdvisorAccess(advisor.id, payload);
+      setOk('Acceso al portal de asesores actualizado.');
+      setPassword('');
+      onUpdated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo actualizar el acceso.');
+    } finally {
+      setBusyAccess(false);
+    }
+  }
 
   async function onUpdatePhone(e: FormEvent) {
     e.preventDefault();
@@ -87,6 +122,48 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
           Cerrar
         </button>
       </div>
+
+      <form onSubmit={onUpdateAccess} className="space-y-3 rounded-lg border border-amber-500/20 bg-amber-950/10 p-4">
+        <p className="text-sm font-medium text-amber-100/90">Acceso al portal de asesores</p>
+        <p className="text-xs text-slate-500">
+          Correo y contraseña para entrar en la página de asesores (contactos y llamadas).
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label">Nombre</label>
+            <input
+              className="input"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="label">Correo (usuario)</label>
+            <input
+              type="email"
+              className="input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label className="label">Nueva contraseña (opcional)</label>
+          <input
+            type="password"
+            className="input max-w-md"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Dejar vacío para no cambiar"
+            autoComplete="new-password"
+          />
+        </div>
+        <button type="submit" className="btn-primary text-sm" disabled={busyAccess}>
+          {busyAccess ? 'Guardando…' : 'Guardar acceso'}
+        </button>
+      </form>
 
       <form onSubmit={onUpdatePhone} className="space-y-3">
         <p className="text-sm font-medium text-slate-300">Teléfono actual</p>

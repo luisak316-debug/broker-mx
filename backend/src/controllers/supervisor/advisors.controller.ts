@@ -6,6 +6,7 @@ import {
   findStaffByEmail,
   listAdvisorPhoneHistory,
   listStaffByRole,
+  updateAdvisorAccess,
   updateAdvisorDates,
   updateAdvisorPhone,
 } from '../../repositories/staff.repository';
@@ -50,6 +51,22 @@ const updateDatesSchema = z.object({
   hireDate: dateSchema,
   inactiveDate: dateSchema,
 });
+
+const passwordSchema = z
+  .string()
+  .min(8, 'Mínimo 8 caracteres.')
+  .regex(/[A-Za-z]/, 'Debe incluir letras.')
+  .regex(/\d/, 'Debe incluir números.');
+
+const updateAccessSchema = z
+  .object({
+    email: z.string().email('Correo inválido.').optional(),
+    displayName: z.string().trim().min(2, 'Nombre requerido.').optional(),
+    password: passwordSchema.optional(),
+  })
+  .refine((v) => v.email || v.displayName || v.password, {
+    message: 'Indica nombre, correo o contraseña para actualizar.',
+  });
 
 function mapAdvisor(a: Awaited<ReturnType<typeof listStaffByRole>>[number]) {
   return {
@@ -129,6 +146,32 @@ export async function updateAdvisorDatesHandler(req: Request, res: Response): Pr
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'No se pudo actualizar.';
     throw new HttpError(404, msg);
+  }
+}
+
+export async function updateAdvisorAccessHandler(req: Request, res: Response): Promise<void> {
+  const body = updateAccessSchema.parse(req.body);
+  const advisors = await listStaffByRole('ADVISOR');
+  if (!advisors.some((a) => a.id === req.params.id)) {
+    throw new HttpError(404, 'Asesor no encontrado.');
+  }
+
+  try {
+    const advisor = await updateAdvisorAccess(req.params.id, {
+      email: body.email,
+      displayName: body.displayName,
+      passwordHash: body.password ? hashPassword(body.password) : undefined,
+    });
+    await record({
+      actor: req.staff!,
+      action: 'ADVISOR_ACCESS_UPDATE',
+      description: `Supervisor actualizó acceso del asesor ${advisor.displayName} (${advisor.email}).`,
+      ip: clientIp(req),
+    });
+    res.json({ data: mapAdvisor(advisor) });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'No se pudo actualizar.';
+    throw new HttpError(msg.includes('correo') ? 409 : 400, msg);
   }
 }
 

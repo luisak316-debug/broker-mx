@@ -144,7 +144,7 @@ export function AdvisorsPage() {
               className="input max-w-md"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Mín. 8 caracteres, letras y números"
+              placeholder="Ej. INVERMAX1997 (misma para todos por ahora)"
               required
             />
           </div>

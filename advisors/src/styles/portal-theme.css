@@ -1,0 +1,81 @@
+/* INVERMAX LATAM — portal asesores: negro, neutros y acentos dorados */
+
+:root {
+  --portal-black: #000000;
+  --portal-surface: #0a0a0a;
+  --portal-surface-raised: #111111;
+  --portal-border: rgba(255, 255, 255, 0.08);
+  --portal-border-strong: rgba(255, 255, 255, 0.14);
+  --portal-gold-soft: rgba(251, 191, 36, 0.35);
+  --portal-gold-glow: rgba(251, 191, 36, 0.12);
+}
+
+.portal-page {
+  position: relative;
+  min-height: 100%;
+  color: #e5e9f0;
+  background-color: var(--portal-black);
+}
+
+.portal-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--portal-black);
+}
+
+.portal-atmosphere::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 70% 35% at 50% -8%,
+    rgba(251, 191, 36, 0.035) 0%,
+    transparent 58%
+  );
+}
+
+.portal-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.portal-panel {
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+}
+
+.portal-glass-header {
+  background: rgba(8, 8, 8, 0.96);
+  border-bottom: 1px solid var(--portal-border);
+}
+
+.portal-title,
+.portal-page main h1 {
+  color: #ffffff;
+  text-shadow:
+    0 0 10px rgba(251, 191, 36, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.portal-brand-mark {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  box-shadow:
+    0 0 12px rgba(251, 191, 36, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.portal-brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(120, 113, 108, 0.15));
+  filter: blur(8px);
+  opacity: 0.5;
+}

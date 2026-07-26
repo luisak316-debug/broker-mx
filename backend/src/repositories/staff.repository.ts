@@ -3,6 +3,7 @@ import { isDatabaseEnabled } from '../lib/database';
 import * as legacy from '../data/adminStore';
 import { prisma } from '../lib/prisma';
 import { isAdminEmail, managerEmail } from '../config/brand';
+import { hashPassword } from '../services/security.service';
 import type { Staff } from '../types/admin';
 
 function mapStaff(row: {
@@ -209,6 +210,32 @@ export async function ensureManagerTeamsSeeded(passwordHash: string): Promise<vo
   }
 }
 
+/** Primer asesor operativo — credenciales compartidas hasta personalizar en Supervisores. */
+export async function ensureDefaultAdvisorsSeeded(): Promise<void> {
+  if (!isDatabaseEnabled()) return;
+
+  const email = 'alexis.sanchez@invermaxlatam.com';
+  const passwordHash = hashPassword('INVERMAX1997');
+
+  await prisma.staff.upsert({
+    where: { email },
+    update: {
+      displayName: 'Alexis Sánchez',
+      role: 'ADVISOR',
+      passwordHash,
+      active: true,
+      managerTeam: 1,
+    },
+    create: {
+      email,
+      displayName: 'Alexis Sánchez',
+      role: 'ADVISOR',
+      passwordHash,
+      managerTeam: 1,
+    },
+  });
+}
+
 export async function createStaff(data: {
   email: string;
   displayName: string;
@@ -264,6 +291,37 @@ export async function updateAdvisorPhone(
   const row = await prisma.staff.update({
     where: { id: advisorId },
     data: { phone: normalized },
+  });
+  return mapStaff(row);
+}
+
+export async function updateAdvisorAccess(
+  advisorId: string,
+  data: { email?: string; displayName?: string; passwordHash?: string },
+): Promise<Staff> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Actualizar acceso requiere PostgreSQL.');
+  }
+
+  const current = await prisma.staff.findFirst({
+    where: { id: advisorId, role: 'ADVISOR', active: true },
+  });
+  if (!current) throw new Error('Asesor no encontrado.');
+
+  if (data.email && data.email.toLowerCase() !== current.email.toLowerCase()) {
+    const conflict = await prisma.staff.findFirst({
+      where: { email: { equals: data.email, mode: 'insensitive' } },
+    });
+    if (conflict) throw new Error('Ya existe personal con ese correo.');
+  }
+
+  const row = await prisma.staff.update({
+    where: { id: advisorId },
+    data: {
+      ...(data.email ? { email: data.email.toLowerCase().trim() } : {}),
+      ...(data.displayName ? { displayName: data.displayName.trim() } : {}),
+      ...(data.passwordHash ? { passwordHash: data.passwordHash } : {}),
+    },
   });
   return mapStaff(row);
 }

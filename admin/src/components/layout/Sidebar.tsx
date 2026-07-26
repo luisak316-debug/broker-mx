@@ -6,6 +6,8 @@ import type { StaffRole } from '../../types';
 const NAV: Array<{ to: string; label: string; icon: string; roles?: StaffRole[]; end?: boolean }> = [
   { to: '/', label: 'Dashboard', icon: '▦', end: true },
   { to: '/clientes', label: 'Directorio de clientes', icon: '👤' },
+  { to: '/contactos', label: 'Mis contactos', icon: '📞', roles: ['ADVISOR'] },
+  { to: '/reparticion-contactos', label: 'Repartición contactos', icon: '📋', roles: ['ADMIN'] },
   { to: '/transacciones', label: 'Transacciones', icon: '↹' },
   { to: '/auditoria', label: 'Bitácora de auditoría', icon: '🛡', roles: ['COMPLIANCE'] },
 ];
