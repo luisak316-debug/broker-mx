@@ -1,0 +1,22 @@
+<include>
+  <!-- Trunk UDP hacia proveedor (rdx.narayana.im) -->
+  <profile name="external">
+    <gateways>
+      <gateway name="narayana">
+        <param name="username" value="$${SIP_USERNAME}"/>
+        <param name="password" value="$${SIP_PASSWORD}"/>
+        <param name="realm" value="$${SIP_DOMAIN}"/>
+        <param name="proxy" value="$${SIP_PROVIDER_HOST}:$${SIP_PROVIDER_PORT}"/>
+        <param name="register" value="true"/>
+        <param name="caller-id-in-from" value="true"/>
+      </gateway>
+    </gateways>
+    <settings>
+      <param name="context" value="public"/>
+      <param name="rtp-ip" value="$${local_ip_v4}"/>
+      <param name="sip-ip" value="$${local_ip_v4}"/>
+      <param name="ext-rtp-ip" value="auto-nat"/>
+      <param name="ext-sip-ip" value="auto-nat"/>
+    </settings>
+  </profile>
+</include>

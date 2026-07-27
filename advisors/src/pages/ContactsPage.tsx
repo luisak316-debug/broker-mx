@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { useCall } from '../call/CallContext';
 import { Card } from '../components/ui/Card';
 import { fmtDate, clientFirstName, isoDate } from '../lib/format';
-import { dialViaMicrosip } from '../lib/microsipCall';
 
 export function ContactsPage() {
   const today = isoDate(new Date());
+  const { startCall, phoneReady, phoneError } = useCall();
   const [rows, setRows] = useState<Awaited<ReturnType<typeof api.myContacts>>>([]);
   const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,16 +23,11 @@ export function ContactsPage() {
       .finally(() => setLoading(false));
   }, [y, m, d]);
 
-  async function onCall(id: string) {
+  async function onCall(id: string, clientName: string) {
     setCallingId(id);
     setError(null);
-    setFeedback(null);
     try {
-      const { dialString } = await api.contactCallDial(id);
-      await dialViaMicrosip(dialString);
-      setFeedback(
-        'Llamada enviada a MicroSIP. Si no marca, ejecuta una vez tools\\invermax-call\\INSTALAR_LLAMADAS.bat en esta laptop.',
-      );
+      await startCall(id, clientName);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar la llamada.');
     } finally {
@@ -50,12 +45,13 @@ export function ContactsPage() {
         </p>
       </header>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
-      {feedback && (
-        <p className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-100">
-          {feedback}
+      {!phoneReady && phoneError && (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
+          {phoneError}
         </p>
       )}
+
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <Card title={loading ? 'Cargando…' : `Contactos (${rows.length})`}>
         <div className="overflow-x-auto">
@@ -89,8 +85,8 @@ export function ContactsPage() {
                       <button
                         type="button"
                         className="btn-call px-3 py-1.5 text-xs font-semibold"
-                        disabled={callingId === c.id}
-                        onClick={() => void onCall(c.id)}
+                        disabled={callingId === c.id || !phoneReady}
+                        onClick={() => void onCall(c.id, c.clientName)}
                       >
                         {callingId === c.id ? '…' : '📞 Llamar'}
                       </button>
@@ -104,9 +100,8 @@ export function ContactsPage() {
       </Card>
 
       <p className="text-xs text-slate-500">
-        Pulsa <strong className="text-slate-400">Llamar</strong> y la marcación se abre en MicroSIP al
-        instante. Primera vez en la laptop: ejecuta{' '}
-        <code className="text-slate-400">tools\invermax-call\INSTALAR_LLAMADAS.bat</code>.
+        Pulsa <strong className="text-slate-400">Llamar</strong> y aparece la ventana INVERMAX en
+        tu pantalla. No se abre MicroSIP ni se muestran credenciales del sistema.
       </p>
     </div>
   );

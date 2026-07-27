@@ -1,0 +1,18 @@
+<include>
+  <!-- Perfil interno: navegadores asesores (WSS + WebRTC) -->
+  <profile name="internal">
+    <settings>
+      <param name="debug" value="0"/>
+      <param name="sip-trace" value="no"/>
+      <param name="context" value="default"/>
+      <param name="rtp-ip" value="$${local_ip_v4}"/>
+      <param name="sip-ip" value="$${local_ip_v4}"/>
+      <param name="ext-rtp-ip" value="auto-nat"/>
+      <param name="ext-sip-ip" value="auto-nat"/>
+      <param name="wss-binding" value=":7443"/>
+      <param name="tls" value="true"/>
+      <param name="tls-only" value="false"/>
+      <param name="apply-inbound-acl" value="domains"/>
+    </settings>
+  </profile>
+</include>

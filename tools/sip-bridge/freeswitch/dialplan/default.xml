@@ -1,0 +1,10 @@
+<include>
+  <context name="default">
+    <!-- Marcación saliente: reenvía al gateway narayana -->
+    <extension name="outbound">
+      <condition field="destination_number" expression="^(.+)$">
+        <action application="bridge" data="sofia/gateway/narayana/${destination_number}"/>
+      </condition>
+    </extension>
+  </context>
+</include>

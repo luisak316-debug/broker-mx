@@ -1,5 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { CallProvider } from '../../call/CallContext';
+import { CallWidget } from '../../call/CallWidget';
 import { PortalAtmosphere } from '../portal/PortalAtmosphere';
 import { BRAND_NAME } from '../../data/brand';
 
@@ -14,9 +16,11 @@ export function AdvisorLayout() {
   const teamLabel = staff?.managerTeamName ?? (staff?.managerTeam ? `Gerencia ${staff.managerTeam}` : 'Asesor');
 
   return (
-    <div className="portal-page flex min-h-screen">
-      <PortalAtmosphere />
-      <div className="portal-shell flex min-h-screen min-w-0 flex-1">
+    <CallProvider>
+      <div className="portal-page flex min-h-screen">
+        <PortalAtmosphere />
+        <CallWidget />
+        <div className="portal-shell flex min-h-screen min-w-0 flex-1">
         <aside className="portal-sidebar portal-panel">
           <div className="mb-8">
             <div className="portal-brand-mark flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900 font-bold text-white">
@@ -83,6 +87,7 @@ export function AdvisorLayout() {
           </main>
         </div>
       </div>
-    </div>
+      </div>
+    </CallProvider>
   );
 }

@@ -4,7 +4,8 @@ import { env } from './config/env';
 import { bootstrapDatabaseFast, bootstrapDatabaseSlow } from './lib/bootstrap';
 import { setStorageMode } from './routes/index';
 import { marketData } from './services/marketData.service';
-import { attachPriceFeed } from './sockets/priceFeed';
+import { attachWebSockets } from './sockets/attachWebSockets';
+import { isSipBridgeReady } from './config/sipTelephony';
 import { smsStatusLabel } from './services/sms.service';
 import { warmMarketNewsCache } from './services/marketNews.service';
 import { ADMIN_WEB_PATH } from './config/paths';
@@ -16,7 +17,7 @@ async function main(): Promise<void> {
   const app = createApp();
   const server = createServer(app);
 
-  attachPriceFeed(server);
+  attachWebSockets(server);
   marketData.start();
   warmMarketNewsCache();
 
@@ -25,6 +26,9 @@ async function main(): Promise<void> {
     console.log(`\n  INVERMAX LATAM API`);
     console.log(`  ➜ REST:      http://localhost:${env.port}/api`);
     console.log(`  ➜ WebSocket: ws://localhost:${env.port}/ws/prices`);
+    if (isSipBridgeReady()) {
+      console.log(`  ➜ SIP bridge:  wss://…/ws/sip  (WSS→UDP ${process.env.SIP_UDP_HOST ?? process.env.SIP_DOMAIN})`);
+    }
     console.log(`  ➜ Moneda base: ${env.baseCurrency}`);
     console.log(`  ➜ SMS registro: ${smsStatusLabel()}`);
     console.log(

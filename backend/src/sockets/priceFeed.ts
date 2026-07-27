@@ -1,10 +1,10 @@
-import type { Server } from 'node:http';
+import type { Server, IncomingMessage } from 'node:http';
 import { WebSocketServer, WebSocket, type RawData } from 'ws';
 import { marketData } from '../services/marketData.service';
 import type { Quote } from '../types/market';
 
 interface ClientState {
-  symbols: Set<string> | null; // null = todos
+  symbols: Set<string> | null;
 }
 
 /**
@@ -15,14 +15,11 @@ interface ClientState {
  *  -> { "type": "subscribe", "symbols": "*" }   // todos
  *  <- { "type": "quotes", "data": Quote[] }
  */
-export function attachPriceFeed(server: Server): WebSocketServer {
-  const wss = new WebSocketServer({ server, path: '/ws/prices' });
+export function registerPriceFeed(wss: WebSocketServer): void {
   const clients = new Map<WebSocket, ClientState>();
 
   wss.on('connection', (ws: WebSocket) => {
     clients.set(ws, { symbols: null });
-
-    // Envía un snapshot inmediato al conectar.
     ws.send(JSON.stringify({ type: 'quotes', data: marketData.getQuotes() }));
 
     ws.on('message', (raw: RawData) => {
@@ -53,6 +50,20 @@ export function attachPriceFeed(server: Server): WebSocketServer {
       if (payload.length) ws.send(JSON.stringify({ type: 'quotes', data: payload }));
     }
   });
+}
 
+/** @deprecated Usar attachWebSockets */
+export function attachPriceFeed(server: Server): WebSocketServer {
+  const wss = new WebSocketServer({ server, path: '/ws/prices' });
+  registerPriceFeed(wss);
   return wss;
+}
+
+export function pathnameFromUpgrade(req: IncomingMessage): string {
+  const host = req.headers.host ?? 'localhost';
+  try {
+    return new URL(req.url ?? '/', `http://${host}`).pathname;
+  } catch {
+    return '/';
+  }
 }

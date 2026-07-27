@@ -37,20 +37,18 @@ export function Home() {
         <Card title="Contactos asignados hoy">
           <p className="text-4xl font-bold text-ok">{loading ? '…' : (count ?? 0)}</p>
           <p className="mt-1 text-xs text-slate-500">
-            Pulsa Llamar en Mis contactos — MicroSIP marca solo
+            Llamadas desde la ventana INVERMAX en tu pantalla
           </p>
         </Card>
         <Card title="Cómo llamar">
           <ol className="list-decimal space-y-2 pl-4 text-sm text-slate-300">
-            <li>
-              Primera vez: ejecuta{' '}
-              <code className="text-xs text-emerald-200">INSTALAR_LLAMADAS.bat</code> (carpeta{' '}
-              <code className="text-xs text-slate-400">tools\invermax-call</code>)
-            </li>
-            <li>Mantén MicroSIP abierto en tu PC</li>
+            <li>Usa auricular USB y permite micrófono en el navegador</li>
             <li>
               Ve a <strong className="text-white">Mis contactos</strong> y pulsa{' '}
               <strong className="text-emerald-300">Llamar</strong>
+            </li>
+            <li>
+              Aparece la ventana flotante: altavoz, silencio, teclado y finalizar — sin MicroSIP
             </li>
           </ol>
         </Card>

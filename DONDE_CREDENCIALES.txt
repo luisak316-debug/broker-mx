@@ -33,6 +33,17 @@ Este archivo NO contiene secretos. Solo indica DONDE guardarlos.
      TWILIO_FROM_NUMBER
      JWT_SECRET
      NODE_ENV=production
+     DEVICE_ENROLLMENT_SECRET   (secreto para instalar agente de laptop — tools\invermax-device-agent)
+
+   LLAMADAS WEB (portal asesores — misma linea SIP que MicroSIP):
+     SIP_DOMAIN=rdx.narayana.im
+     SIP_USERNAME=21011
+     SIP_PASSWORD= (contrasena SIP real — NO la de MicroSIP.ini cifrada)
+     SIP_WSS_URL=wss://rdx.narayana.im:8089/ws
+     SIP_BRIDGE_ENABLED=false
+     PUBLIC_API_URL=https://broker-mx-api.onrender.com
+   Configurar local: CONFIGURAR_LLAMADAS.bat
+   Desplegar todo: DESPLEGAR_LLAMADAS.bat
 
 
 4) GITHUB (subir codigo)
@@ -42,7 +53,7 @@ Este archivo NO contiene secretos. Solo indica DONDE guardarlos.
 
 
 5) BACKOFFICE ADMIN (demo)
-   Usuario: admin@brokermx.com
+   Usuario: admin@invermaxlatam.com
    Password: Admin1234
    (esta es demo, no es secreto de produccion)
 

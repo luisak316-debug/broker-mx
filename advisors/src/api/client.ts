@@ -50,4 +50,14 @@ export const api = {
       `/contacts/${id}/call-dial`,
       { method: 'POST', body: JSON.stringify({}) },
     ),
+  telephonyWebRtcConfig: () =>
+    http<{
+      wssUrl: string;
+      bridgeMode: 'provider' | 'embedded' | 'custom';
+      domain: string;
+      username: string;
+      authorizationPassword: string;
+      displayName: string;
+      stunServers: string[];
+    }>('/telephony/webrtc-config'),
 };

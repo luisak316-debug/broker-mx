@@ -33,6 +33,20 @@ services:
         sync: false
       - key: TWILIO_FROM_NUMBER
         sync: false
+      - key: PUBLIC_API_URL
+        value: https://broker-mx-api.onrender.com
+      - key: SIP_DOMAIN
+        value: rdx.narayana.im
+      - key: SIP_USERNAME
+        value: "21011"
+      - key: SIP_PASSWORD
+        sync: false
+      - key: SIP_WSS_URL
+        value: wss://rdx.narayana.im:8089/ws
+      - key: SIP_BRIDGE_ENABLED
+        value: "false"
+      - key: SIP_STUN_SERVERS
+        value: stun:stun.l.google.com:19302
 
 databases:
   - name: broker-mx-db
