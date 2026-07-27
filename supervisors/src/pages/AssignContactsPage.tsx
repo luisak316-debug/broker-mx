@@ -113,7 +113,16 @@ export function AssignContactsPage() {
 
     setBusy(true);
     try {
-      const result = await api.bulkAssignContacts({ rawText: bulkText, assignedDate: callDay });
+      const result = await api.bulkAssignContacts({
+        rawText: bulkText,
+        contacts: bulkPreview.contacts.map((c) => ({
+          clientName: c.clientName,
+          phone: c.phone,
+          email: c.email || 'sin-correo@facebook.lead',
+          description: c.description || 'Lead Facebook',
+        })),
+        assignedDate: callDay,
+      });
       const detail = result.distribution
         .filter((d) => d.count > 0)
         .map((d) => `${d.advisorName}: ${d.count}`)
@@ -187,20 +196,16 @@ export function AssignContactsPage() {
           onSaved={() => reloadToday()}
         />
       ) : mode === 'bulk' ? (
-        <Card title="Asignación masiva — pegar desde libreta">
+        <Card title="Asignación masiva — pegar contactos">
           <form onSubmit={onSaveBulk} className="space-y-4">
             <p className="text-sm text-slate-400">
-              Pega todos tus contactos en un solo bloque. El sistema los reparte de forma equitativa
-              entre los {advisors.length || '…'} asesores activos.
+              Pega la lista tal cual desde Facebook:{' '}
+              <strong className="text-white">nombre en una línea, teléfono en la siguiente</strong>.
+              El sistema reparte entre los {advisors.length || '…'} asesores activos.
             </p>
             <p className="rounded-lg bg-slate-800/80 px-3 py-2 text-xs text-slate-400">
-              Formato por línea:{' '}
-              <span className="text-slate-300">
-                +códigoTeléfono &quot;Nombre completo&quot; correo@ejemplo.com &quot;Descripción o notas&quot;
-                monto
-              </span>
-              {' '}
-              (ej. +52 México, +57 Colombia, +1 EE.UU.)
+              Ejemplo:
+              <span className="mt-1 block font-mono text-slate-300 whitespace-pre-wrap">{`Martin Eduardo Cruz Pablo\n+528130747149\nMaria del socorro Rodrigues\n+526145333247`}</span>
             </p>
 
             <div>
@@ -209,7 +214,7 @@ export function AssignContactsPage() {
                 className="input min-h-[280px] resize-y font-mono text-sm leading-relaxed"
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder={`Pega aquí tus contactos, uno por línea…\n\n+528442984802 "William Alberto Díaz Ayala" diazayala25@hotmail.com "trabajo como comprador de amazon" 400,000`}
+                placeholder={`Nombre en una línea, teléfono en la siguiente:\n\nMartin Eduardo Cruz Pablo\n+528130747149\nMaria del socorro Rodrigues\n+526145333247`}
               />
             </div>
 

@@ -81,14 +81,54 @@ export async function removeContact(req: Request, res: Response): Promise<void> 
   res.json({ data: { ok: true } });
 }
 
-const bulkSchema = z.object({
-  rawText: z.string().min(20, 'Pega la lista de contactos.'),
-  assignedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+const bulkContactItemSchema = z.object({
+  clientName: z.string().trim().min(2),
+  phone: z.string().trim().min(11),
+  email: z.string().optional().default(''),
+  description: z.string().optional().default(''),
 });
 
+const bulkSchema = z
+  .object({
+    rawText: z.string().optional(),
+    contacts: z.array(bulkContactItemSchema).optional(),
+    assignedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  })
+  .refine(
+    (b) => (b.contacts && b.contacts.length > 0) || (b.rawText && b.rawText.trim().length >= 20),
+    { message: 'Pega la lista de contactos.' },
+  );
+
+function resolveBulkContacts(body: z.infer<typeof bulkSchema>): {
+  contacts: ReturnType<typeof parseBulkContacts>['contacts'];
+  skippedLines: string[];
+} {
+  if (body.contacts && body.contacts.length > 0) {
+    const contacts: ReturnType<typeof parseBulkContacts>['contacts'] = [];
+    const skippedLines: string[] = [];
+    for (const c of body.contacts) {
+      const phone = normalizeContactPhoneE164(c.phone);
+      if (!phone) {
+        skippedLines.push(`${c.clientName} ${c.phone}`);
+        continue;
+      }
+      contacts.push({
+        clientName: c.clientName.trim(),
+        phone,
+        email: (c.email || '').trim().toLowerCase(),
+        description: (c.description || 'Lead Facebook').trim().slice(0, 4000),
+      });
+    }
+    return { contacts, skippedLines };
+  }
+  return parseBulkContacts(body.rawText!);
+}
+
 export async function previewBulkContacts(req: Request, res: Response): Promise<void> {
-  const { rawText } = bulkSchema.parse(req.body);
-  const { contacts, skippedLines } = parseBulkContacts(rawText);
+  const body = bulkSchema.parse(req.body);
+  const { contacts, skippedLines } = body.contacts?.length
+    ? resolveBulkContacts(body)
+    : parseBulkContacts(body.rawText!);
   const advisors = await listStaffByRole('ADVISOR');
 
   const perAdvisor =
@@ -131,7 +171,7 @@ export async function bulkAssignContacts(req: Request, res: Response): Promise<v
     throw new HttpError(400, 'No hay asesores activos. Agrega asesores primero.');
   }
 
-  const { contacts, skippedLines } = parseBulkContacts(body.rawText);
+  const { contacts, skippedLines } = resolveBulkContacts(body);
   if (contacts.length === 0) {
     throw new HttpError(400, 'No se detectaron contactos válidos. Revisa el formato.');
   }

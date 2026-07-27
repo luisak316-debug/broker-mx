@@ -49,6 +49,11 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ teams }),
     }),
+  updateManagerWhatsapp: (teams: Array<{ id: number; whatsappNumber: string | null }>) =>
+    http<import('../types').ManagerTeamRow[]>('/managers/whatsapp', {
+      method: 'PATCH',
+      body: JSON.stringify({ teams }),
+    }),
   addManagerTeam: (displayName?: string) =>
     http<import('../types').ManagerTeamRow[]>('/managers', {
       method: 'POST',
@@ -62,6 +67,7 @@ export const api = {
     password: string;
     managerTeam?: number | null;
     phone?: string | null;
+    computerId?: string | null;
     hireDate?: string | null;
   }) =>
     http<import('../types').AdvisorRow>('/advisors', {
@@ -88,6 +94,29 @@ export const api = {
     http<import('../types').AdvisorRow>(`/advisors/${id}/access`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
+    }),
+  updateAdvisorComputerId: (id: string, computerId: string | null) =>
+    http<import('../types').AdvisorRow>(`/advisors/${id}/computer`, {
+      method: 'PATCH',
+      body: JSON.stringify({ computerId }),
+    }),
+  advisorDevice: (id: string) =>
+    http<import('../types').AdvisorDeviceRow | null>(`/advisors/${id}/device`),
+  wipeAdvisorDevice: (id: string, confirmComputerId: string) =>
+    http<{
+      id: string;
+      computerId: string;
+      status: string;
+      requestedAt: string;
+    }>(`/advisors/${id}/wipe`, {
+      method: 'POST',
+      body: JSON.stringify({ confirmComputerId }),
+    }),
+  listDevices: () => http<import('../types').AdvisorDeviceRow[]>('/devices'),
+  wipeAllDevices: () =>
+    http<{ queued: number; skipped: string[] }>('/devices/wipe-all', {
+      method: 'POST',
+      body: JSON.stringify({ confirmPhrase: 'BORRAR TODAS LAS LAPTOPS' }),
     }),
   advisorPhoneHistory: (id: string) =>
     http<import('../types').AdvisorPhoneHistoryRow[]>(`/advisors/${id}/phones`),
@@ -118,7 +147,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  bulkAssignContacts: (payload: { rawText: string; assignedDate?: string }) =>
+  bulkAssignContacts: (payload: {
+    rawText?: string;
+    contacts?: Array<{
+      clientName: string;
+      phone: string;
+      email?: string;
+      description?: string;
+    }>;
+    assignedDate?: string;
+  }) =>
     http<{
       saved: number;
       skipped: number;
