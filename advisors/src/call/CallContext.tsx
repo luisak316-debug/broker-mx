@@ -11,6 +11,7 @@ import {
 import { SessionState } from 'sip.js';
 import { api } from '../api/client';
 import { AdvisorSipPhone, sessionStateToPhase } from './sipPhone';
+import { startRingback, stopRingback } from './ringback';
 import type { CallUiState, WebRtcSipConfig } from './types';
 
 const initialState: CallUiState = {
@@ -50,6 +51,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     phone.setCallbacks({
       onSessionState: (sessionState: SessionState) => {
         const phase = sessionStateToPhase(sessionState);
+        if (phase === 'active' || phase === 'ended') stopRingback();
         setState((s) => ({
           ...s,
           phase: phase === 'ended' ? 'ended' : phase,
@@ -61,7 +63,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
           }, 1200);
         }
       },
+      onRinging: () => {
+        startRingback();
+        setState((s) => (s.phase === 'connecting' || s.phase === 'ringing' ? { ...s, phase: 'ringing' } : s));
+      },
       onError: (message) => {
+        stopRingback();
         setState((s) => ({ ...s, phase: 'error', error: message }));
       },
     });
@@ -72,11 +79,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
         if (!navigator.mediaDevices?.getUserMedia) {
           throw new Error('Tu navegador no soporta micrófono web.');
         }
-        await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
 
         const config: WebRtcSipConfig = await api.telephonyWebRtcConfig();
         if (cancelled) return;
-        await phone.connect(config);
+        await phone.connect(config, stream);
         if (cancelled) return;
         setPhoneReady(true);
         setPhoneError(null);
@@ -151,9 +158,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
               }
             : null,
         }));
+        startRingback();
         await phoneRef.current.call(dial.dialString);
-        setState((s) => ({ ...s, phase: 'ringing' }));
       } catch (e) {
+        stopRingback();
         setState((s) => ({
           ...s,
           phase: 'error',
@@ -165,6 +173,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   );
 
   const hangup = useCallback(async () => {
+    stopRingback();
     await phoneRef.current.hangup();
     setState((s) => ({ ...s, phase: 'ended' }));
     window.setTimeout(() => setState({ ...initialState }), 800);
