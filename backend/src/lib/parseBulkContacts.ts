@@ -2,9 +2,11 @@ import {
   looksLikeAlternatingNamePhone,
   looksLikeFacebookExport,
   looksLikeFacebookLeadTsv,
+  looksLikeNamePhoneSameLine,
   parseAlternatingNamePhoneContacts,
   parseFacebookContacts,
   parseFacebookLeadTsv,
+  parseNamePhoneSameLineContacts,
 } from './parseFacebookContacts';
 
 export interface ParsedBulkContact {
@@ -81,6 +83,10 @@ export function parseBulkContacts(raw: string): {
     return parseFacebookLeadTsv(trimmed);
   }
 
+  if (looksLikeNamePhoneSameLine(trimmed)) {
+    return parseNamePhoneSameLineContacts(trimmed);
+  }
+
   if (looksLikeAlternatingNamePhone(trimmed)) {
     return parseAlternatingNamePhoneContacts(trimmed);
   }
@@ -106,7 +112,10 @@ export function parseBulkContacts(raw: string): {
     contacts.push(parsed);
   }
 
-  if (contacts.length === 0 && skippedLines.length >= 2) {
+  if (contacts.length === 0 && skippedLines.length >= 1) {
+    const sameLine = parseNamePhoneSameLineContacts(trimmed);
+    if (sameLine.contacts.length > 0) return sameLine;
+
     const alt = parseAlternatingNamePhoneContacts(trimmed);
     if (alt.contacts.length > 0) return alt;
 

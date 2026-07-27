@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { fmtDate, clientFirstName, isoDate } from '../lib/format';
+import { dialViaMicrosip } from '../lib/microsipCall';
 
 export function ContactsPage() {
   const today = isoDate(new Date());
@@ -28,10 +29,12 @@ export function ContactsPage() {
     setFeedback(null);
     try {
       const { dialString } = await api.contactCallDial(id);
-      await navigator.clipboard.writeText(dialString);
-      setFeedback('Marcación copiada. Pégala en MicroSIP y pulsa el botón verde para llamar.');
+      await dialViaMicrosip(dialString);
+      setFeedback(
+        'Llamada enviada a MicroSIP. Si no marca, ejecuta una vez tools\\invermax-call\\INSTALAR_LLAMADAS.bat en esta laptop.',
+      );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo generar la marcación.');
+      setError(e instanceof Error ? e.message : 'No se pudo iniciar la llamada.');
     } finally {
       setCallingId(null);
     }
@@ -101,8 +104,9 @@ export function ContactsPage() {
       </Card>
 
       <p className="text-xs text-slate-500">
-        Cada llamada usa un número americano aleatorio como emisor. La cadena se copia al portapapeles
-        para pegarla en MicroSIP.
+        Pulsa <strong className="text-slate-400">Llamar</strong> y la marcación se abre en MicroSIP al
+        instante. Primera vez en la laptop: ejecuta{' '}
+        <code className="text-slate-400">tools\invermax-call\INSTALAR_LLAMADAS.bat</code>.
       </p>
     </div>
   );

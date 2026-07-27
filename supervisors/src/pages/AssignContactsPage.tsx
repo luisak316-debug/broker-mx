@@ -7,6 +7,14 @@ import { isValidContactPhoneE164, normalizeContactPhoneE164 } from '../lib/conta
 import { ManagerTeamsBulkForm } from '../components/assign/ManagerTeamsBulkForm';
 import type { AdvisorRow, ContactRow, ManagerTeamRow } from '../types';
 
+const CONTACT_LIST_EXAMPLE = `Martin Eduardo Cruz Pablo +528130747149
+Maria del socorro Rodrigues +526145333247
+Juan Hixmatlahua +523418787600
+Gabriel Galeana Galeana +527719595854
+Jose javier Naveda Díaz +522226813249
+Mario Alberto Martínez López +529981717592
+Gustavo Romero viramontes +525615176215`;
+
 type Mode = 'bulk' | 'managers' | 'single';
 
 export function AssignContactsPage() {
@@ -225,13 +233,16 @@ export function AssignContactsPage() {
         <Card title="Asignación masiva — pegar contactos">
           <form onSubmit={onSaveBulk} className="space-y-4">
             <p className="text-sm text-slate-400">
-              Pega la lista tal cual desde Facebook:{' '}
-              <strong className="text-white">nombre en una línea, teléfono en la siguiente</strong>.
-              El sistema reparte entre los {advisors.length || '…'} asesores activos.
+              Pega la lista con{' '}
+              <strong className="text-white">nombre y teléfono en la misma línea</strong> (teléfono
+              al final, con +52). El sistema reparte entre los {advisors.length || '…'} asesores
+              activos.
             </p>
             <p className="rounded-lg bg-slate-800/80 px-3 py-2 text-xs text-slate-400">
-              Ejemplo:
-              <span className="mt-1 block font-mono text-slate-300 whitespace-pre-wrap">{`Martin Eduardo Cruz Pablo\n+528130747149\nMaria del socorro Rodrigues\n+526145333247`}</span>
+              Ejemplo (copia tal cual):
+              <span className="mt-1 block font-mono text-slate-300 whitespace-pre-wrap">
+                {CONTACT_LIST_EXAMPLE}
+              </span>
             </p>
 
             <div>
@@ -240,7 +251,7 @@ export function AssignContactsPage() {
                 className="input min-h-[280px] resize-y font-mono text-sm leading-relaxed"
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder={`Nombre en una línea, teléfono en la siguiente:\n\nMartin Eduardo Cruz Pablo\n+528130747149\nMaria del socorro Rodrigues\n+526145333247`}
+                placeholder={CONTACT_LIST_EXAMPLE}
               />
             </div>
 

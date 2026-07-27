@@ -129,6 +129,73 @@ function isPhoneLine(line: string): boolean {
   return digits.length >= 10 && digits.length <= 15;
 }
 
+/** Formato preferido: nombre y teléfono en la misma línea (teléfono al final). */
+function parseNamePhoneSameLine(line: string): ParsedBulkContact | null {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.length < 14) return null;
+
+  const match = trimmed.match(/^(.+?)\s+(?:p:)?(\+?\d{10,15})\s*$/i);
+  if (!match) return null;
+
+  const clientName = cleanName(match[1]);
+  const phone =
+    normalizePhone(match[2].replace(/^p:/i, '')) ??
+    normalizePhone(extractPhonesFromText(match[2])[0] ?? '');
+
+  if (!clientName || !phone) return null;
+  if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(clientName)) return null;
+
+  return {
+    phone,
+    clientName,
+    email: '',
+    description: 'Lead Facebook',
+  };
+}
+
+export function looksLikeNamePhoneSameLine(raw: string): boolean {
+  if (looksLikeFacebookLeadTsv(raw)) return false;
+  if (looksLikeAlternatingNamePhone(raw)) return false;
+
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return false;
+
+  let match = 0;
+  for (const line of lines) {
+    if (parseNamePhoneSameLine(line)) match++;
+  }
+  return match >= 1 && match >= lines.length * 0.6;
+}
+
+export function parseNamePhoneSameLineContacts(raw: string): {
+  contacts: ParsedBulkContact[];
+  skippedLines: string[];
+} {
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const contacts: ParsedBulkContact[] = [];
+  const skippedLines: string[] = [];
+  const seenPhones = new Set<string>();
+
+  for (const line of lines) {
+    const parsed = parseNamePhoneSameLine(line);
+    if (!parsed) {
+      skippedLines.push(line);
+      continue;
+    }
+    if (seenPhones.has(parsed.phone)) continue;
+    seenPhones.add(parsed.phone);
+    contacts.push(parsed);
+  }
+
+  return { contacts, skippedLines };
+}
+
 /** Formato: nombre en una línea, teléfono en la siguiente (sin línea en blanco). */
 export function looksLikeAlternatingNamePhone(raw: string): boolean {
   const lines = raw
@@ -238,6 +305,7 @@ export function parseFacebookLeadTsv(raw: string): {
 }
 
 export function looksLikeFacebookExport(raw: string): boolean {
+  if (looksLikeNamePhoneSameLine(raw)) return false;
   if (looksLikeAlternatingNamePhone(raw)) return false;
   if (looksLikeFacebookLeadTsv(raw)) return false;
   const lower = raw.toLowerCase();
@@ -289,5 +357,5 @@ export function toSupervisorBulkLine(c: ParsedBulkContact): string {
 }
 
 export function toSimpleListLine(c: ParsedBulkContact): string {
-  return `${c.clientName} | ${c.phone}`;
+  return `${c.clientName} ${c.phone}`;
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
 import { fmtDate, clientFirstName, isoDate } from '../lib/format';
+import { dialViaMicrosip } from '../lib/microsipCall';
 
 export function AssignedContacts() {
   const today = isoDate(new Date());
@@ -34,8 +35,8 @@ export function AssignedContacts() {
     setFeedback(null);
     try {
       const { dialString } = await api.contactCallDial(id);
-      await navigator.clipboard.writeText(dialString);
-      setFeedback('Marcación copiada. Pégala en MicroSIP y pulsa el botón verde.');
+      await dialViaMicrosip(dialString);
+      setFeedback('Llamada enviada a MicroSIP.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo generar la marcación.');
     } finally {
