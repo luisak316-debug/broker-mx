@@ -13,6 +13,7 @@ import {
   findManagerTeamById,
 } from '../../repositories/staff.repository';
 import { distributeContacts, parseBulkContacts } from '../../lib/parseBulkContacts';
+import { parseCalendarDate, formatCalendarDateIso } from '../../lib/calendarDate';
 import { normalizeContactPhoneE164 } from '../../lib/contactPhone';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
@@ -54,7 +55,7 @@ export async function saveContact(req: Request, res: Response): Promise<void> {
   const phone = normalizeContactPhoneE164(body.phone);
   if (!phone) throw new HttpError(400, 'Teléfono internacional inválido. Usa +código de país y número.');
 
-  const assignedDate = body.assignedDate ? new Date(`${body.assignedDate}T12:00:00.000Z`) : new Date();
+  const assignedDate = body.assignedDate ? parseCalendarDate(body.assignedDate) : new Date();
 
   const row = await createAdvisorContact({
     advisorId: body.advisorId,
@@ -176,9 +177,7 @@ export async function bulkAssignContacts(req: Request, res: Response): Promise<v
     throw new HttpError(400, 'No se detectaron contactos válidos. Revisa el formato.');
   }
 
-  const assignedDate = body.assignedDate
-    ? new Date(`${body.assignedDate}T12:00:00.000Z`)
-    : new Date();
+  const assignedDate = body.assignedDate ? parseCalendarDate(body.assignedDate) : new Date();
 
   const distributed = distributeContacts(
     contacts,
@@ -215,28 +214,31 @@ export async function bulkAssignContacts(req: Request, res: Response): Promise<v
       saved: rows.length,
       skipped: skippedLines.length,
       distribution: byAdvisor,
-      assignedDate: assignedDate.toISOString().slice(0, 10),
+      assignedDate: formatCalendarDateIso(assignedDate),
     },
   });
 }
 
+const managerTeamEntrySchema = z
+  .object({
+    team: z.number().int().min(1),
+    rawText: z.string().optional(),
+    contacts: z.array(bulkContactItemSchema).optional(),
+  })
+  .refine(
+    (t) =>
+      (t.contacts && t.contacts.length > 0) || (t.rawText && t.rawText.trim().length >= 20),
+    { message: 'Contactos requeridos para el equipo.' },
+  );
+
 const managerBulkSchema = z.object({
   assignedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  teams: z
-    .array(
-      z.object({
-        team: z.number().int().min(1),
-        rawText: z.string(),
-      }),
-    )
-    .min(1),
+  teams: z.array(managerTeamEntrySchema).min(1),
 });
 
 export async function bulkAssignContactsToManagers(req: Request, res: Response): Promise<void> {
   const body = managerBulkSchema.parse(req.body);
-  const assignedDate = body.assignedDate
-    ? new Date(`${body.assignedDate}T12:00:00.000Z`)
-    : new Date();
+  const assignedDate = body.assignedDate ? parseCalendarDate(body.assignedDate) : new Date();
 
   let totalSaved = 0;
   let totalSkipped = 0;
@@ -260,8 +262,8 @@ export async function bulkAssignContactsToManagers(req: Request, res: Response):
   }> = [];
 
   for (const entry of body.teams) {
-    const raw = entry.rawText.trim();
-    if (!raw) continue;
+    const raw = (entry.rawText ?? '').trim();
+    if (!raw && !(entry.contacts && entry.contacts.length > 0)) continue;
 
     const teamRow = await findManagerTeamById(entry.team);
     if (!teamRow) {
@@ -276,7 +278,10 @@ export async function bulkAssignContactsToManagers(req: Request, res: Response):
       continue;
     }
 
-    const { contacts, skippedLines } = parseBulkContacts(raw);
+    const { contacts, skippedLines } =
+      entry.contacts && entry.contacts.length > 0
+        ? resolveBulkContacts({ contacts: entry.contacts })
+        : parseBulkContacts(raw);
     totalSkipped += skippedLines.length;
 
     const advisors = await listAdvisorsByManagerTeam(entry.team);
@@ -359,7 +364,7 @@ export async function bulkAssignContactsToManagers(req: Request, res: Response):
     data: {
       saved: totalSaved,
       skipped: totalSkipped,
-      assignedDate: assignedDate.toISOString().slice(0, 10),
+      assignedDate: formatCalendarDateIso(assignedDate),
       teams: teamResults,
     },
   });

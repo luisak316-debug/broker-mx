@@ -4,7 +4,19 @@ const num = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
 export const fmtMxn = (v: number) => mxn.format(v);
 export const fmtNum = (v: number) => num.format(v);
 export const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: '2-digit' });
+  new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('es-MX', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  });
+/** Fecha local del navegador (YYYY-MM-DD) — igual que supervisores y asesores. */
+export function isoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString('es-MX', {
     year: 'numeric',

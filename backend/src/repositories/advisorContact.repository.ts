@@ -1,14 +1,11 @@
 import { isDatabaseEnabled } from '../lib/database';
 import { prisma } from '../lib/prisma';
+import { normalizeCalendarDate } from '../lib/calendarDate';
 import { normalizeContactPhoneE164 } from '../lib/contactPhone';
 import type { AdvisorContactRow } from '../types/admin';
 
 function storeContactPhone(raw: string): string {
   return normalizeContactPhoneE164(raw) ?? raw.trim();
-}
-
-function startOfDay(d: Date): Date {
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
 function mapRow(row: {
@@ -34,7 +31,7 @@ function mapRow(row: {
     phone: row.phone,
     email: row.email,
     description: row.description,
-    assignedDate: row.assignedDate.toISOString().slice(0, 10),
+    assignedDate: row.assignedDate.toISOString().slice(0, 10), // UTC calendario
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -93,7 +90,7 @@ export async function createAdvisorContact(data: {
     throw new Error('Asignar contactos requiere PostgreSQL.');
   }
 
-  const assignedDate = startOfDay(data.assignedDate ?? new Date());
+  const assignedDate = normalizeCalendarDate(data.assignedDate ?? new Date());
 
   const row = await prisma.advisorContact.create({
     data: {
@@ -136,7 +133,7 @@ export async function createAdvisorContactsBulk(
           phone: storeContactPhone(item.phone),
           email: item.email.trim().toLowerCase(),
           description: item.description,
-          assignedDate: startOfDay(item.assignedDate),
+          assignedDate: normalizeCalendarDate(item.assignedDate),
         },
         include: { advisor: true, assignedBy: true },
       }),

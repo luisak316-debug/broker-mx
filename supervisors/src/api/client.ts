@@ -168,7 +168,16 @@ export const api = {
     }),
   bulkAssignContactsToManagers: (payload: {
     assignedDate?: string;
-    teams: Array<{ team: number; rawText: string }>;
+    teams: Array<{
+      team: number;
+      rawText?: string;
+      contacts?: Array<{
+        clientName: string;
+        phone: string;
+        email?: string;
+        description?: string;
+      }>;
+    }>;
   }) =>
     http<{
       saved: number;

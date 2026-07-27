@@ -64,10 +64,19 @@ export function ManagerTeamsBulkForm({ advisors, teams, today, onSaved }: Props)
         assignedDate: today,
         teams: teams
           .filter((t) => (teamTexts[t.team] ?? '').trim())
-          .map((t) => ({
-            team: t.team,
-            rawText: teamTexts[t.team],
-          })),
+          .map((t) => {
+            const preview = teamPreviews.find((p) => p.team === t.team)!;
+            return {
+              team: t.team,
+              rawText: teamTexts[t.team],
+              contacts: preview.parsed.contacts.map((c) => ({
+                clientName: c.clientName,
+                phone: c.phone,
+                email: c.email || 'sin-correo@facebook.lead',
+                description: c.description || 'Lead Facebook',
+              })),
+            };
+          }),
       });
 
       const parts = result.teams

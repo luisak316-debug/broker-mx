@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { Card } from '../components/ui/Card';
-import { fmtDate, clientFirstName } from '../lib/format';
-
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
+import { fmtDate, clientFirstName, isoDate } from '../lib/format';
 
 function parseIso(iso: string): { year: number; month: number; day: number } {
   const [year, month, day] = iso.split('-').map(Number);
