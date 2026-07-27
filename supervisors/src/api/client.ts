@@ -166,6 +166,37 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  previewBulkContacts: (payload: {
+    rawText?: string;
+    contacts?: Array<{
+      clientName: string;
+      phone: string;
+      email?: string;
+      description?: string;
+    }>;
+  }) =>
+    http<{
+      total: number;
+      skipped: number;
+      skippedLines: string[];
+      advisors: number;
+      contacts: Array<{
+        clientName: string;
+        phone: string;
+        email: string;
+        description: string;
+      }>;
+      allContacts: Array<{
+        clientName: string;
+        phone: string;
+        email: string;
+        description: string;
+      }>;
+      distribution: Array<{ advisorId: string; advisorName: string; count: number }>;
+    }>('/contacts/bulk/preview', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   bulkAssignContactsToManagers: (payload: {
     assignedDate?: string;
     teams: Array<{

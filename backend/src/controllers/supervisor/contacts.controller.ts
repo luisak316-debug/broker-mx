@@ -120,16 +120,17 @@ function resolveBulkContacts(body: z.infer<typeof bulkSchema>): {
         description: (c.description || 'Lead Facebook').trim().slice(0, 4000),
       });
     }
-    return { contacts, skippedLines };
+    if (contacts.length > 0) return { contacts, skippedLines };
   }
-  return parseBulkContacts(body.rawText!);
+  if (body.rawText?.trim()) {
+    return parseBulkContacts(body.rawText);
+  }
+  return { contacts: [], skippedLines: [] };
 }
 
 export async function previewBulkContacts(req: Request, res: Response): Promise<void> {
   const body = bulkSchema.parse(req.body);
-  const { contacts, skippedLines } = body.contacts?.length
-    ? resolveBulkContacts(body)
-    : parseBulkContacts(body.rawText!);
+  const { contacts, skippedLines } = resolveBulkContacts(body);
   const advisors = await listStaffByRole('ADVISOR');
 
   const perAdvisor =
@@ -154,6 +155,7 @@ export async function previewBulkContacts(req: Request, res: Response): Promise<
       skippedLines: skippedLines.slice(0, 5),
       advisors: advisors.length,
       contacts: contacts.slice(0, 5),
+      allContacts: contacts,
       distribution: advisors.map((a, i) => {
         const base = Math.floor(contacts.length / advisors.length);
         const extra = contacts.length % advisors.length;
@@ -174,7 +176,12 @@ export async function bulkAssignContacts(req: Request, res: Response): Promise<v
 
   const { contacts, skippedLines } = resolveBulkContacts(body);
   if (contacts.length === 0) {
-    throw new HttpError(400, 'No se detectaron contactos válidos. Revisa el formato.');
+    const received = body.contacts?.length ?? 0;
+    const hint =
+      received > 0
+        ? `Se recibieron ${received} contacto(s) pero ninguno tuvo teléfono válido.`
+        : 'No se detectaron contactos válidos.';
+    throw new HttpError(400, `${hint} Revisa el formato.`);
   }
 
   const assignedDate = body.assignedDate ? parseCalendarDate(body.assignedDate) : new Date();

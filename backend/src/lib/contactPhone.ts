@@ -1,7 +1,7 @@
 /** Teléfono internacional de contacto (E.164) — supervisor pega +código y número. */
 
 export function normalizeContactPhoneE164(raw: string): string | null {
-  const trimmed = raw.trim();
+  const trimmed = raw.trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
   if (!trimmed) return null;
   const digits = trimmed.replace(/\D/g, '');
   if (digits.length < 10 || digits.length > 15) return null;

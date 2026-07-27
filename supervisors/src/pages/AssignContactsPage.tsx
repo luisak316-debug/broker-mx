@@ -113,9 +113,35 @@ export function AssignContactsPage() {
 
     setBusy(true);
     try {
-      const result = await api.bulkAssignContacts({
+      const payload = {
         rawText: bulkText,
         contacts: bulkPreview.contacts.map((c) => ({
+          clientName: c.clientName,
+          phone: c.phone,
+          email: c.email || 'sin-correo@facebook.lead',
+          description: c.description || 'Lead Facebook',
+        })),
+      };
+
+      const serverPreview = await api.previewBulkContacts(payload);
+      if (serverPreview.total === 0) {
+        const skippedHint =
+          serverPreview.skippedLines.length > 0
+            ? ` Ejemplo omitido: ${serverPreview.skippedLines[0]}`
+            : '';
+        setError(
+          `El servidor no detectó contactos válidos.${skippedHint} Recarga con Ctrl+F5 si la vista previa local muestra contactos.`,
+        );
+        return;
+      }
+
+      const serverContacts = serverPreview.allContacts?.length
+        ? serverPreview.allContacts
+        : serverPreview.contacts;
+
+      const result = await api.bulkAssignContacts({
+        ...payload,
+        contacts: serverContacts.map((c) => ({
           clientName: c.clientName,
           phone: c.phone,
           email: c.email || 'sin-correo@facebook.lead',
