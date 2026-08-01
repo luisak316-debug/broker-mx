@@ -1,12 +1,12 @@
 type BrandMarkSize = 'sm' | 'md' | 'lg';
 
 const SIZE_CLASS: Record<BrandMarkSize, string> = {
-  sm: 'h-8 w-8 rounded-lg',
-  md: 'h-10 w-10 rounded-xl',
-  lg: 'h-12 w-12 rounded-xl',
+  sm: 'invermax-brand-mark--sm h-9 w-9 rounded-lg text-base',
+  md: 'invermax-brand-mark--md h-10 w-10 rounded-lg text-lg',
+  lg: 'invermax-brand-mark--lg h-12 w-12 rounded-xl text-xl',
 };
 
-/** Logotipo INVERMAX LATAM — imagen oficial junto al nombre de marca. */
+/** Icono «I» INVERMAX LATAM — gris arriba, carbón abajo, halo dorado. */
 export function BrandMark({
   size = 'md',
   className = '',
@@ -15,11 +15,11 @@ export function BrandMark({
   className?: string;
 }) {
   return (
-    <img
-      src="/logo.png"
-      alt=""
+    <span
+      className={`invermax-brand-mark grid shrink-0 place-items-center font-bold text-white ${SIZE_CLASS[size]} ${className}`}
       aria-hidden
-      className={`invermax-brand-mark shrink-0 object-cover ${SIZE_CLASS[size]} ${className}`}
-    />
+    >
+      I
+    </span>
   );
 }

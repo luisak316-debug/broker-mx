@@ -68,7 +68,38 @@
 
 .portal-brand-mark,
 .invermax-brand-mark {
-  display: block;
-  object-fit: cover;
-  flex-shrink: 0;
+  position: relative;
+  isolation: isolate;
+  line-height: 1;
+  background: linear-gradient(
+    180deg,
+    #52525b 0%,
+    #3f3f46 22%,
+    #27272a 55%,
+    #4a4035 82%,
+    #6b5d45 100%
+  );
+  box-shadow:
+    0 0 0 1.5px rgba(251, 191, 36, 0.85),
+    0 0 18px rgba(251, 191, 36, 0.72),
+    0 0 36px rgba(245, 158, 11, 0.48),
+    0 0 52px rgba(234, 179, 8, 0.28),
+    inset 0 1px 0 rgba(255, 236, 179, 0.22);
+}
+
+.portal-brand-mark::after,
+.invermax-brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.78) 0%,
+    rgba(245, 158, 11, 0.55) 40%,
+    rgba(217, 119, 6, 0.38) 100%
+  );
+  filter: blur(12px);
+  opacity: 0.95;
 }
