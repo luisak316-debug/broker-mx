@@ -36,12 +36,25 @@ function mapRow(row: {
   };
 }
 
+function parseIsoDateRange(iso: string): { gte: Date; lt: Date } {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!match) throw new Error(`Fecha inválida: ${iso}`);
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const d = Number(match[3]);
+  const gte = new Date(Date.UTC(y, m - 1, d));
+  const lt = new Date(Date.UTC(y, m - 1, d + 1));
+  return { gte, lt };
+}
+
 export async function listAdvisorContacts(filters: {
   advisorId?: string;
   assignedById?: string;
   year?: number;
   month?: number;
   day?: number;
+  fromDate?: string;
+  toDate?: string;
 }): Promise<AdvisorContactRow[]> {
   if (!isDatabaseEnabled()) return [];
 
@@ -54,7 +67,15 @@ export async function listAdvisorContacts(filters: {
   if (filters.advisorId) where.advisorId = filters.advisorId;
   if (filters.assignedById) where.assignedById = filters.assignedById;
 
-  if (filters.year && filters.month && filters.day) {
+  if (filters.fromDate || filters.toDate) {
+    const from = filters.fromDate
+      ? parseIsoDateRange(filters.fromDate).gte
+      : new Date(Date.UTC(2000, 0, 1));
+    const to = filters.toDate
+      ? parseIsoDateRange(filters.toDate).lt
+      : new Date(Date.UTC(2100, 0, 1));
+    where.assignedDate = { gte: from, lt: to };
+  } else if (filters.year && filters.month && filters.day) {
     const start = new Date(Date.UTC(filters.year, filters.month - 1, filters.day));
     const end = new Date(Date.UTC(filters.year, filters.month - 1, filters.day + 1));
     where.assignedDate = { gte: start, lt: end };

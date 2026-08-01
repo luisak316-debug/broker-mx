@@ -10,6 +10,11 @@ export type WebRtcSipConfig = {
   stunServers: string[];
 };
 
+/** microsip = línea UDP vía MicroSIP oculto; webrtc = SIP.js (solo señalización útil hoy). */
+export type TelephonyConfig = WebRtcSipConfig & {
+  callMode?: 'microsip' | 'webrtc';
+};
+
 export type ActiveCallInfo = {
   contactId: string;
   clientName: string;
@@ -21,6 +26,7 @@ export type CallUiState = {
   phase: CallPhase;
   call: ActiveCallInfo | null;
   error: string | null;
+  statusDetail: string | null;
   muted: boolean;
   speakerOn: boolean;
   keypadOpen: boolean;

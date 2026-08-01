@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { useCall } from '../call/CallContext';
@@ -6,7 +7,7 @@ import { fmtDate, clientFirstName, isoDate } from '../lib/format';
 
 export function ContactsPage() {
   const today = isoDate(new Date());
-  const { startCall, phoneReady, phoneError } = useCall();
+  const { startCall, phoneReady, phoneError, callBackend } = useCall();
   const [rows, setRows] = useState<Awaited<ReturnType<typeof api.myContacts>>>([]);
   const [error, setError] = useState<string | null>(null);
   const [callingId, setCallingId] = useState<string | null>(null);
@@ -37,14 +38,31 @@ export function ContactsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-white">Mis contactos de hoy</h1>
-        <p className="text-sm text-slate-400">
-          {fmtDate(today)} · {rows.length} contacto{rows.length === 1 ? '' : 's'} · teléfono
-          enmascarado
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Mis contactos de hoy</h1>
+          <p className="text-sm text-slate-400">
+            {fmtDate(today)} · {rows.length} contacto{rows.length === 1 ? '' : 's'} · teléfono
+            enmascarado
+          </p>
+        </div>
+        <Link to="/contactos/historial" className="btn-ghost text-sm">
+          Ver historial →
+        </Link>
       </header>
 
+      {phoneReady && callBackend === 'microsip' && (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-100">
+          Modo llamada real: MicroSIP en segundo plano (bandeja). Ejecuta{' '}
+          <code className="text-xs">tools\invermax-call\INSTALAR_LLAMADAS.bat</code> una vez si
+          Llamar no marca.
+        </p>
+      )}
+      {phoneReady && callBackend === 'webrtc' && (
+        <p className="rounded-lg border border-sky-500/30 bg-sky-950/30 px-3 py-2 text-sm text-sky-100">
+          Modo audio en navegador (WebRTC). Requiere micrófono permitido.
+        </p>
+      )}
       {!phoneReady && phoneError && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
           {phoneError}

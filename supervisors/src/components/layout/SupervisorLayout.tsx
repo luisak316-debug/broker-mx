@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { PortalAtmosphere } from '../portal/PortalAtmosphere';
+import { BrandMark } from '../brand/BrandMark';
 import { BRAND_NAME } from '../../data/brand';
 
 const NAV = [
@@ -21,12 +22,12 @@ export function SupervisorLayout() {
       <PortalAtmosphere />
       <div className="portal-shell flex min-h-screen min-w-0 flex-1">
         <aside className="portal-sidebar portal-panel">
-          <div className="mb-8">
-            <div className="portal-brand-mark flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900 font-bold text-white">
-              I
+          <div className="mb-8 flex items-center gap-2.5">
+            <BrandMark size="md" />
+            <div className="min-w-0">
+              <p className="portal-title font-semibold leading-tight">{BRAND_NAME}</p>
+              <p className="text-xs text-slate-500">Supervisores</p>
             </div>
-            <p className="portal-title mt-3 font-semibold">{BRAND_NAME}</p>
-            <p className="text-xs text-slate-500">Supervisores</p>
           </div>
           <nav className="space-y-1">
             {NAV.map((item) => (
@@ -44,9 +45,12 @@ export function SupervisorLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
           <header className="portal-header portal-glass-header">
-            <div className="lg:hidden">
-              <p className="portal-title text-sm font-semibold">{BRAND_NAME}</p>
-              <p className="text-xs text-slate-500">Supervisores</p>
+            <div className="flex items-center gap-2 lg:hidden">
+              <BrandMark size="sm" />
+              <div>
+                <p className="portal-title text-sm font-semibold">{BRAND_NAME}</p>
+                <p className="text-xs text-slate-500">Supervisores</p>
+              </div>
             </div>
             <p className="hidden text-sm text-slate-400 lg:block">
               {staff?.displayName} · {staff?.email}

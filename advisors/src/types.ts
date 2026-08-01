@@ -17,4 +17,16 @@ export interface AssignedContact {
   email: string;
   description: string;
   assignedDate: string;
+  assignedByName?: string;
+  createdAt?: string;
+}
+
+export interface ContactHistoryContact extends AssignedContact {
+  assignedByName: string;
+  createdAt: string;
+}
+
+export interface ContactHistoryResponse {
+  contacts: ContactHistoryContact[];
+  total: number;
 }

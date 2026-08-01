@@ -5,6 +5,7 @@ import { PortalAtmosphere } from './components/portal/PortalAtmosphere';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { ContactsPage } from './pages/ContactsPage';
+import { ContactHistoryPage } from './pages/ContactHistoryPage';
 
 function ProtectedLayout() {
   const { staff, loading } = useAuth();
@@ -30,6 +31,7 @@ export function App() {
           <Route path="/" element={<ProtectedLayout />}>
             <Route index element={<Home />} />
             <Route path="contactos" element={<ContactsPage />} />
+            <Route path="contactos/historial" element={<ContactHistoryPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

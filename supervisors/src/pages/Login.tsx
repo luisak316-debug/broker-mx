@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PortalAtmosphere } from '../components/portal/PortalAtmosphere';
+import { BrandMark } from '../components/brand/BrandMark';
 import { BRAND_NAME, STAFF_EMAILS } from '../data/brand';
 
 export function Login() {
@@ -33,10 +34,10 @@ export function Login() {
       <PortalAtmosphere />
       <div className="portal-shell w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div className="portal-brand-mark mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 text-xl font-bold text-white">
-            I
+          <div className="mb-3 flex items-center justify-center gap-2.5">
+            <BrandMark size="lg" />
+            <h1 className="portal-title text-xl font-bold">{BRAND_NAME}</h1>
           </div>
-          <h1 className="portal-title text-xl font-bold">{BRAND_NAME}</h1>
           <p className="text-sm text-slate-400">Panel de supervisores · gestión de asesores</p>
         </div>
 

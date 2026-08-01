@@ -90,6 +90,12 @@ export function CallWidget() {
         {state.call && (
           <p className="call-widget-meta px-4 text-xs text-slate-500">
             Cliente {state.call.receiverMasked} · Línea {state.call.emitterMasked}
+            {state.statusDetail ? (
+              <>
+                <br />
+                <span className="text-slate-400">{state.statusDetail}</span>
+              </>
+            ) : null}
           </p>
         )}
 

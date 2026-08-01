@@ -3,6 +3,7 @@ import { FundMobileNavLink, FundSidebarNavLink } from './FundNavLink';
 import { NavIcon } from './NavIcons';
 import { CLIENT_MARKET_NAV } from '../../data/clientMarketModules';
 import { BRAND_NAME } from '../../data/brand';
+import { BrandMark } from '../brand/BrandMark';
 
 const FUND_NAV = {
   label: 'Fondear Cuenta',
@@ -51,11 +52,9 @@ export function MobileClientNav() {
 export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-ink-600/60 bg-ink-900/80 p-4 lg:flex">
-      <div className="mb-6 flex items-center gap-2 px-2">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 font-bold text-white">
-          I
-        </span>
-        <div>
+      <div className="mb-6 flex items-center gap-2.5 px-2">
+        <BrandMark size="md" />
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-white">{BRAND_NAME}</p>
           <p className="text-xs text-slate-400">Intermediación financiera</p>
         </div>

@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { BRAND_NAME } from '../../data/brand';
+import { BrandMark } from '../brand/BrandMark';
 import type { StaffRole } from '../../types';
 
 const NAV: Array<{ to: string; label: string; icon: string; roles?: StaffRole[]; end?: boolean }> = [
@@ -34,11 +35,9 @@ function NavItems() {
 export function Sidebar() {
   return (
     <aside className="portal-sidebar portal-panel">
-      <div className="mb-6 flex items-center gap-2 px-2">
-        <span className="portal-brand-mark grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900 font-bold text-white">
-          I
-        </span>
-        <div>
+      <div className="mb-6 flex items-center gap-2.5 px-2">
+        <BrandMark size="md" />
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-white">{BRAND_NAME}</p>
           <p className="text-xs text-slate-500">Panel de administración</p>
         </div>

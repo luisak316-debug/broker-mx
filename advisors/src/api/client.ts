@@ -1,4 +1,4 @@
-import type { AssignedContact, StaffSession } from '../types';
+import type { AssignedContact, ContactHistoryResponse, StaffSession } from '../types';
 import { getApiBase } from '../lib/apiConfig';
 
 const TOKEN_KEY = 'invermax_advisor_token';
@@ -45,15 +45,24 @@ export const api = {
     if (params?.day) qs.set('day', String(params.day));
     return http<AssignedContact[]>(`/my-contacts?${qs.toString()}`);
   },
+  myContactHistory: (params?: { year?: number; from?: string; to?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.year) qs.set('year', String(params.year));
+    if (params?.from) qs.set('from', params.from);
+    if (params?.to) qs.set('to', params.to);
+    const query = qs.toString();
+    return http<ContactHistoryResponse>(`/my-contacts/history${query ? `?${query}` : ''}`);
+  },
   contactCallDial: (id: string) =>
     http<{ dialString: string; receiverMasked: string; emitterMasked: string }>(
       `/contacts/${id}/call-dial`,
       { method: 'POST', body: JSON.stringify({}) },
     ),
-  telephonyWebRtcConfig: () =>
+  telephonyConfig: () =>
     http<{
       wssUrl: string;
       bridgeMode: 'provider' | 'embedded' | 'custom';
+      callMode?: 'microsip' | 'webrtc';
       domain: string;
       username: string;
       authorizationPassword: string;

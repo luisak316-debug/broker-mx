@@ -18,3 +18,26 @@ export function isoDate(d: Date): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
+
+export function shiftDays(base: Date, delta: number): Date {
+  const d = new Date(base);
+  d.setDate(d.getDate() + delta);
+  return d;
+}
+
+export const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleString('es-MX', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+
+export function fmtMonthYear(year: number, month: number): string {
+  return new Date(year, month - 1, 1).toLocaleDateString('es-MX', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+export function fmtYear(year: number): string {
+  return String(year);
+}

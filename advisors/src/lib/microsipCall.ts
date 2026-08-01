@@ -1,30 +1,37 @@
-/** Protocolo Windows registrado con tools/invermax-call/INSTALAR_LLAMADAS.bat */
+/** Protocolo Windows — tools/invermax-call/INSTALAR_LLAMADAS.bat */
 export const MICROSIP_CALL_PROTOCOL = 'invermax-call:';
 
+const DIAL_RE = /^\*\d+\*\+1\d+\*\+\d+\*$/;
+
+let lastDialAt = 0;
+let lastDialString = '';
+
 export function buildMicrosipCallUri(dialString: string): string {
-  return `${MICROSIP_CALL_PROTOCOL}${dialString}`;
+  const dial = dialString.trim();
+  if (!DIAL_RE.test(dial)) {
+    throw new Error('Formato de marcación inválido.');
+  }
+  return `${MICROSIP_CALL_PROTOCOL}${encodeURIComponent(dial)}`;
 }
 
-/**
- * Envía la marcación a MicroSIP (Windows).
- * Requiere ejecutar INSTALAR_LLAMADAS.bat una vez en la laptop del asesor.
- */
+export function hangupMicrosip(): void {
+  window.location.href = `${MICROSIP_CALL_PROTOCOL}hangup`;
+}
+
+/** Solo al pulsar Llamar — nunca en carga de página. */
 export function launchMicrosipCall(dialString: string): void {
-  const uri = buildMicrosipCallUri(dialString);
-  const anchor = document.createElement('a');
-  anchor.href = uri;
-  anchor.rel = 'noopener noreferrer';
-  anchor.style.display = 'none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
+  const now = Date.now();
+  const dial = dialString.trim();
+  if (dial === lastDialString && now - lastDialAt < 8000) {
+    return;
+  }
+  lastDialAt = now;
+  lastDialString = dial;
+
+  const uri = buildMicrosipCallUri(dial);
+  window.location.href = uri;
 }
 
 export async function dialViaMicrosip(dialString: string): Promise<void> {
   launchMicrosipCall(dialString);
-  try {
-    await navigator.clipboard.writeText(dialString);
-  } catch {
-    /* respaldo silencioso si el portapapeles falla */
-  }
 }

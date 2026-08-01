@@ -6,7 +6,6 @@ const SIZE_CLASS: Record<BrandMarkSize, string> = {
   lg: 'h-12 w-12 rounded-xl',
 };
 
-/** Logotipo INVERMAX LATAM — imagen oficial junto al nombre de marca. */
 export function BrandMark({
   size = 'md',
   className = '',

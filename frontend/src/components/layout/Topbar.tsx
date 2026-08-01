@@ -6,6 +6,7 @@ import { useClientMoney } from '../../lib/clientMoney';
 import { getUploadsBase } from '../../lib/apiConfig';
 import { useClientAuth } from '../../auth/ClientAuthContext';
 import { BRAND_NAME } from '../../data/brand';
+import { BrandMark } from '../brand/BrandMark';
 
 function ProfileAvatarDisplay({
   photoUrl,
@@ -127,8 +128,8 @@ export function Topbar({ connected }: { connected: boolean }) {
       }).catch(() => setCash(null));
     }
     refresh();
-    window.addEventListener('brokermx:balance-updated', refresh);
-    return () => window.removeEventListener('brokermx:balance-updated', refresh);
+    window.addEventListener('invermax:balance-updated', refresh);
+    return () => window.removeEventListener('invermax:balance-updated', refresh);
   }, [client?.id]);
 
   function onLogout() {
@@ -193,7 +194,10 @@ export function Topbar({ connected }: { connected: boolean }) {
             className={`inline-block h-2 w-2 shrink-0 rounded-full ${connected ? 'bg-bull' : 'bg-bear'}`}
             title={connected ? 'Feed en vivo conectado' : 'Reconectando...'}
           />
-          <span className="hidden font-semibold text-white lg:inline">{BRAND_NAME}</span>
+          <div className="hidden items-center gap-2 lg:flex">
+            <BrandMark size="sm" />
+            <span className="font-semibold text-white">{BRAND_NAME}</span>
+          </div>
           <span className="text-slate-400">
             {connected ? 'Datos en tiempo real' : 'Reconectando…'}
           </span>

@@ -4,6 +4,7 @@ import {
   RegistererState,
   Session,
   SessionState,
+  SIPExtension,
   UserAgent,
   Web,
   type UserAgentOptions,
@@ -14,12 +15,14 @@ import type { WebRtcSipConfig } from './types';
 export type SipPhoneCallbacks = {
   onSessionState: (state: SessionState) => void;
   onRinging: () => void;
+  onStatus: (detail: string) => void;
   onError: (message: string) => void;
 };
 
 type BrowserSdh = {
   peerConnection?: RTCPeerConnection;
   remoteMediaStream?: MediaStream;
+  setDescription?: (sdp: string, type: RTCSdpType) => Promise<void>;
 };
 
 function getBrowserSdh(session: Session | null): BrowserSdh | undefined {
@@ -37,6 +40,29 @@ function dialTargetUri(dialString: string, domain: string) {
   return UserAgent.makeURI(`sip:${dialString}@${domain}`);
 }
 
+type RegisterDoneDelegate = {
+  onAccept?: () => void;
+  onReject?: () => void;
+};
+
+/** SIP.js resuelve register/unregister antes de la respuesta final — hay que esperar onAccept/onReject. */
+function waitRegisterResponse(
+  run: (delegate: RegisterDoneDelegate) => Promise<unknown>,
+  timeoutMs = 12000,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(() => resolve(), timeoutMs);
+    const done = () => {
+      window.clearTimeout(timeout);
+      resolve();
+    };
+    void run({
+      onAccept: done,
+      onReject: done,
+    }).catch(() => done());
+  });
+}
+
 /** Softphone WebRTC (SIP.js) — el asesor solo ve nuestra ventana, no MicroSIP. */
 export class AdvisorSipPhone {
   private ua: UserAgent | null = null;
@@ -47,6 +73,29 @@ export class AdvisorSipPhone {
   private config: WebRtcSipConfig | null = null;
   private callbacks: SipPhoneCallbacks | null = null;
   private hangupRequested = false;
+  private opChain: Promise<void> = Promise.resolve();
+
+  private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const next = this.opChain.then(fn, fn);
+    this.opChain = next.then(
+      () => undefined,
+      () => undefined,
+    );
+    return next;
+  }
+
+  private async clearOtherSoftphones(ua: UserAgent): Promise<void> {
+    const boot = new Registerer(ua);
+    try {
+      await waitRegisterResponse((delegate) =>
+        boot.unregister({ all: true, requestDelegate: delegate }),
+      );
+    } catch {
+      /* sin registros previos */
+    } finally {
+      await boot.dispose();
+    }
+  }
 
   setCallbacks(callbacks: SipPhoneCallbacks): void {
     this.callbacks = callbacks;
@@ -57,8 +106,12 @@ export class AdvisorSipPhone {
   }
 
   async connect(config: WebRtcSipConfig, localStream: MediaStream): Promise<void> {
+    return this.enqueue(() => this.connectInternal(config, localStream));
+  }
+
+  private async connectInternal(config: WebRtcSipConfig, localStream: MediaStream): Promise<void> {
     if (this.ua) {
-      await this.disconnect();
+      await this.disconnectInternal();
     }
     this.config = config;
     this.localStream = localStream;
@@ -72,14 +125,20 @@ export class AdvisorSipPhone {
       displayName: config.displayName,
       authorizationUsername: config.username,
       authorizationPassword: config.authorizationPassword,
+      userAgentString: 'INVERMAX-WebPhone/1.0',
+      forceRport: true,
+      sipExtension100rel: SIPExtension.Supported,
       transportOptions: { server: wssWithAdvisorToken(config.wssUrl) },
       sessionDescriptionHandlerFactory: Web.defaultSessionDescriptionHandlerFactory(
         () => Promise.resolve(streamForCall),
       ),
       sessionDescriptionHandlerFactoryOptions: {
         constraints: { audio: true, video: false },
+        iceGatheringTimeout: 10000,
         peerConnectionConfiguration: {
           iceServers: config.stunServers.map((urls) => ({ urls })),
+          bundlePolicy: 'max-bundle',
+          rtcpMuxPolicy: 'require',
         },
       },
     };
@@ -87,8 +146,12 @@ export class AdvisorSipPhone {
     this.ua = new UserAgent(options);
     await this.ua.start();
 
+    await this.clearOtherSoftphones(this.ua);
+
     this.registerer = new Registerer(this.ua);
-    await this.registerer.register();
+    await waitRegisterResponse((delegate) =>
+      this.registerer!.register({ requestDelegate: delegate }),
+    );
 
     if (this.registerer.state !== RegistererState.Registered) {
       await new Promise<void>((resolve, reject) => {
@@ -111,18 +174,26 @@ export class AdvisorSipPhone {
   }
 
   async disconnect(): Promise<void> {
+    return this.enqueue(() => this.disconnectInternal());
+  }
+
+  private async disconnectInternal(): Promise<void> {
     try {
       await this.hangup();
     } catch {
       /* ignore */
     }
     if (this.registerer) {
+      const reg = this.registerer;
+      this.registerer = null;
       try {
-        await this.registerer.unregister();
+        await waitRegisterResponse((delegate) =>
+          reg.unregister({ requestDelegate: delegate }),
+        );
       } catch {
         /* ignore */
       }
-      this.registerer = null;
+      await reg.dispose();
     }
     if (this.ua) {
       try {
@@ -137,8 +208,19 @@ export class AdvisorSipPhone {
   }
 
   async call(dialString: string): Promise<void> {
-    if (!this.ua || !this.config || !this.localStream) {
+    if (!this.ua || !this.config) {
       throw new Error('Teléfono no conectado.');
+    }
+
+    if (
+      !this.localStream ||
+      this.localStream.getAudioTracks().length === 0 ||
+      this.localStream.getAudioTracks().every((t) => t.readyState === 'ended')
+    ) {
+      this.localStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
     }
 
     await this.hangup();
@@ -147,9 +229,13 @@ export class AdvisorSipPhone {
     const target = dialTargetUri(dialString, this.config.domain);
     if (!target) throw new Error('Destino de marcación inválido.');
 
+    this.callbacks?.onStatus(`Marcando ${dialString.slice(0, 24)}…`);
+
     const inviter = new Inviter(this.ua, target);
     this.session = inviter;
     this.bindSession(inviter);
+
+    let sipResponded = false;
 
     await new Promise<void>((resolve, reject) => {
       let settled = false;
@@ -163,16 +249,23 @@ export class AdvisorSipPhone {
         finish(() =>
           reject(
             new Error(
-              'Sin respuesta al marcar. Cierra MicroSIP si está abierto e intenta otra vez.',
+              sipResponded
+                ? 'Tiempo agotado sin conectar con el destino.'
+                : 'No se pudo iniciar la señal de llamada. Recarga con Ctrl+F5 e intenta de nuevo.',
             ),
           ),
         );
-      }, 65000);
+      }, 45000);
 
       inviter.stateChange.addListener((state) => {
         this.callbacks?.onSessionState(state);
+        if (state === SessionState.Establishing) {
+          sipResponded = true;
+          this.callbacks?.onStatus('Enviando señal al operador…');
+        }
         if (state === SessionState.Established) {
           window.clearTimeout(timeout);
+          this.callbacks?.onStatus('Conectado');
           finish(resolve);
         }
         if (state === SessionState.Terminated) {
@@ -184,7 +277,9 @@ export class AdvisorSipPhone {
           finish(() =>
             reject(
               new Error(
-                'La llamada no conectó. Verifica que MicroSIP no esté usando la misma línea.',
+                sipResponded
+                  ? 'La llamada terminó sin conectar. Revisa el código SIP en pantalla.'
+                  : 'No se pudo enviar la llamada (error de audio o red). Recarga con Ctrl+F5.',
               ),
             ),
           );
@@ -196,28 +291,61 @@ export class AdvisorSipPhone {
           sessionDescriptionHandlerOptions: {
             constraints: { audio: true, video: false },
           },
+          requestOptions: {
+            extraHeaders: [
+              `P-Asserted-Identity: <sip:${this.config!.username}@${this.config!.domain}>`,
+            ],
+          },
           requestDelegate: {
+            onTrying: () => {
+              sipResponded = true;
+              this.callbacks?.onStatus('100 Enviando llamada…');
+            },
             onProgress: (response) => {
+              sipResponded = true;
               const code = response.message.statusCode;
+              const reason = response.message.reasonPhrase ?? '';
+              this.callbacks?.onStatus(`${code} ${reason}`.trim());
               if (code === 180 || code === 183) {
                 this.callbacks?.onRinging();
+                void this.tryAttachEarlyMedia(inviter, response.message.body);
               }
             },
             onReject: (response) => {
+              sipResponded = true;
               window.clearTimeout(timeout);
               const code = response.message.statusCode;
               const reason = response.message.reasonPhrase ?? 'rechazada';
-              finish(() => reject(new Error(`Llamada rechazada (${code} ${reason})`)));
+              finish(() => reject(new Error(`Operador rechazó la llamada (${code} ${reason})`)));
+            },
+            onAccept: (response) => {
+              sipResponded = true;
+              this.callbacks?.onStatus(`Aceptada ${response.message.statusCode}`);
             },
           },
         })
         .catch((err: unknown) => {
           window.clearTimeout(timeout);
-          finish(() =>
-            reject(err instanceof Error ? err : new Error('Error al enviar la llamada.')),
-          );
+          const raw = err instanceof Error ? err.message : 'Error al enviar la llamada.';
+          const msg =
+            /getOffer|getDescription|MediaStream|audio/i.test(raw)
+              ? 'No se pudo preparar el audio. Recarga la página (Ctrl+F5) y permite el micrófono.'
+              : raw;
+          finish(() => reject(new Error(msg)));
         });
     });
+  }
+
+  private async tryAttachEarlyMedia(inviter: Inviter, body: string | undefined): Promise<void> {
+    if (!body || !this.remoteAudio) return;
+    const sdh = getBrowserSdh(inviter);
+    if (!sdh?.setDescription) return;
+    try {
+      await sdh.setDescription(body, 'answer');
+      this.attachRemoteStream(inviter);
+    } catch {
+      /* early media opcional */
+    }
   }
 
   async hangup(): Promise<void> {
@@ -283,7 +411,7 @@ export class AdvisorSipPhone {
   private attachRemoteStream(session: Session): void {
     if (!this.remoteAudio) return;
     const sdh = getBrowserSdh(session);
-    if (sdh?.remoteMediaStream) {
+    if (sdh?.remoteMediaStream && sdh.remoteMediaStream.getTracks().length > 0) {
       this.remoteAudio.srcObject = sdh.remoteMediaStream;
       void this.remoteAudio.play().catch(() => undefined);
       return;
@@ -294,6 +422,7 @@ export class AdvisorSipPhone {
     for (const receiver of pc.getReceivers()) {
       if (receiver.track) stream.addTrack(receiver.track);
     }
+    if (stream.getTracks().length === 0) return;
     this.remoteAudio.srcObject = stream;
     void this.remoteAudio.play().catch(() => undefined);
   }

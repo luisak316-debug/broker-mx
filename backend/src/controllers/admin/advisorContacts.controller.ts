@@ -4,6 +4,7 @@ import { listStaffByRole } from '../../repositories/staff.repository';
 import { listActiveManagerTeams } from '../../repositories/managerTeam.repository';
 import { maskContactPhoneE164 } from '../../lib/contactPhone';
 import { HttpError } from '../../middleware/errorHandler';
+import type { AdvisorContactRow } from '../../types/admin';
 
 function parseDateQuery(req: Request): { y: number; m: number; d: number; iso: string } {
   const year = req.query.year ? Number(req.query.year) : undefined;
@@ -15,6 +16,45 @@ function parseDateQuery(req: Request): { y: number; m: number; d: number; iso: s
   const d = Number.isFinite(day) ? day! : now.getUTCDate();
   const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   return { y, m, d, iso };
+}
+
+function mapAdvisorContactForClient(row: AdvisorContactRow) {
+  return {
+    id: row.id,
+    clientName: row.clientName,
+    phone: maskContactPhoneE164(row.phone),
+    email: row.email,
+    description: row.description,
+    assignedDate: row.assignedDate,
+    assignedByName: row.assignedByName,
+    createdAt: row.createdAt,
+  };
+}
+
+/** Historial completo de contactos asignados al asesor — agrupable en frontend. */
+export async function listMyContactHistory(req: Request, res: Response): Promise<void> {
+  const staff = req.staff!;
+  if (staff.role !== 'ADVISOR') {
+    throw new HttpError(403, 'Esta vista es solo para asesores.');
+  }
+
+  const year = req.query.year ? Number(req.query.year) : undefined;
+  const from = typeof req.query.from === 'string' ? req.query.from : undefined;
+  const to = typeof req.query.to === 'string' ? req.query.to : undefined;
+
+  const rows = await listAdvisorContacts({
+    advisorId: staff.sub,
+    year: Number.isFinite(year) ? year : undefined,
+    fromDate: from,
+    toDate: to,
+  });
+
+  res.json({
+    data: {
+      contacts: rows.map(mapAdvisorContactForClient),
+      total: rows.length,
+    },
+  });
 }
 
 /** Contactos del día para el asesor logueado — teléfonos enmascarados. */
@@ -34,14 +74,7 @@ export async function listMyAssignedContacts(req: Request, res: Response): Promi
   });
 
   res.json({
-    data: rows.map((row) => ({
-      id: row.id,
-      clientName: row.clientName,
-      phone: maskContactPhoneE164(row.phone),
-      email: row.email,
-      description: row.description,
-      assignedDate: row.assignedDate,
-    })),
+    data: rows.map(mapAdvisorContactForClient),
   });
 }
 

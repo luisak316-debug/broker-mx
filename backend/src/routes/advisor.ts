@@ -14,5 +14,6 @@ advisorRouter.use(requireAuth, requireRole('ADVISOR'));
 
 advisorRouter.get('/auth/me', asyncHandler(auth.me));
 advisorRouter.get('/my-contacts', asyncHandler(advisorContacts.listMyAssignedContacts));
+advisorRouter.get('/my-contacts/history', asyncHandler(advisorContacts.listMyContactHistory));
 advisorRouter.get('/telephony/webrtc-config', asyncHandler(telephony.getWebRtcConfig));
 advisorRouter.post('/contacts/:id/call-dial', asyncHandler(calls.getContactDialString));

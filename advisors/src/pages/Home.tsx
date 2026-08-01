@@ -55,9 +55,14 @@ export function Home() {
       </div>
 
       <Card title="Acceso rápido">
-        <Link to="/contactos" className="btn-primary inline-flex py-3 px-6">
-          Ver mis {count ?? 0} contacto{(count ?? 0) === 1 ? '' : 's'} de hoy
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/contactos" className="btn-primary inline-flex py-3 px-6">
+            Ver mis {count ?? 0} contacto{(count ?? 0) === 1 ? '' : 's'} de hoy
+          </Link>
+          <Link to="/contactos/historial" className="btn-ghost inline-flex py-3 px-6">
+            Historial de contactos
+          </Link>
+        </div>
       </Card>
     </div>
   );
