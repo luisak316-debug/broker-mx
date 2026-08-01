@@ -1,0 +1,37 @@
+---
+description: Memoria del proyecto — leer y mantener docs/PROJECT-BRAIN.md al retomar sesiones.
+alwaysApply: true
+---
+
+# Cerebro del proyecto INVERMAX LATAM
+
+## Al iniciar sesión sin historial de chat
+
+1. **Leer** `docs/PROJECT-BRAIN.md` antes de asumir contexto.
+2. Resumir al usuario **dónde estamos** (§4 y §5) si pregunta por el estado del proyecto.
+3. **No repetir** trabajo revertido: carrusel de noticias, Twilio llamadas, vidrio esmerilado en hero sin pedido explícito.
+
+## Al terminar trabajo importante
+
+Actualizar `docs/PROJECT-BRAIN.md`:
+
+- Fecha en cabecera
+- §4 Estado actual (hecho / pausa / pendiente)
+- §5 si el usuario tomó una decisión clara (aprobó, rechazó, pausó)
+- §6 si hay commit o tag relevante
+
+## Fuente rápida
+
+| Qué | Dónde |
+|-----|-------|
+| Memoria completa | `docs/PROJECT-BRAIN.md` |
+| Marca y correos | `backend/src/config/brand.ts` |
+| Respaldos landing | `docs/BACKUP-LANDING.md` + regla `landing-backup-on-approval.mdc` |
+| Respaldos portales | `docs/BACKUP-PORTALES.md` |
+| Ver cerebro en terminal | `CEREBRO.bat` o `scripts/project-brain.ps1` |
+
+## Reglas que conviven con este cerebro
+
+- **Landing backup:** solo con aprobación explícita del usuario (perfecto, me gustó, etc.).
+- **Commits:** solo cuando el usuario lo pida.
+- **Marca visible:** INVERMAX LATAM en las 3 webs; legacy `brokermx` solo en migración/API interna.
