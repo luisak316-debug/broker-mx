@@ -7,15 +7,17 @@ echo ============================================
 echo   INVERMAX LATAM - Desplegar Portal Asesores
 echo ============================================
 echo.
-echo URL produccion: https://brokermxadvisors.vercel.app/
-echo Proyecto Vercel: brokermx.advisors
+echo URL produccion: https://advisors-brown.vercel.app/
+echo Proyecto Vercel: advisors (alias advisors-brown)
+echo.
+echo   Tambien: https://brokermxadvisors.vercel.app/ (proyecto brokermx.advisors)
 echo.
 
 set API_URL=https://broker-mx-api.onrender.com
 
-call npx --yes vercel link --yes --project brokermx.advisors
+call npx --yes vercel link --yes --project advisors
 if errorlevel 1 (
-  echo Fallo al vincular proyecto. Creando brokermx.advisors...
+  echo Fallo al vincular proyecto advisors.
   call npx --yes vercel link --yes
 )
 
@@ -27,7 +29,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo Listo: https://brokermxadvisors.vercel.app/
+echo Listo: https://advisors-brown.vercel.app/
 echo Tambien en Render: https://broker-mx-api.onrender.com/asesores847/
 echo.
 pause
