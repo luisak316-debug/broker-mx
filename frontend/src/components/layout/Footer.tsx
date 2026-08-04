@@ -7,17 +7,17 @@ import { BRAND_NAME } from '../../data/brand';
 export function Footer() {
   const [open, setOpen] = useState(false);
   return (
-    <footer className="border-t border-ink-600/60 bg-ink-900/80 px-4 py-4 text-xs text-slate-400">
+    <footer className="app-chrome border-t border-white/10 px-4 py-4 text-xs text-slate-400">
       <div className="mx-auto max-w-7xl space-y-2">
         <p className="font-semibold text-slate-300">Aviso Legal y Términos de Uso</p>
         <p>
-          <strong className="text-brand-300">{BRAND_NAME}</strong> es una plataforma de{' '}
+          <strong className="text-emerald-200/90">{BRAND_NAME}</strong> es una plataforma de{' '}
           <strong>intermediación financiera profesional</strong> en Latinoamérica. La información y
           cotizaciones que visualiza tienen fines operativos e informativos y no constituyen
           asesoría personalizada de inversión ni recomendación de compra o venta de valores.
         </p>
         {open && (
-          <div className="space-y-2 rounded-lg border border-ink-600 bg-ink-800/60 p-3 text-slate-400">
+          <div className="space-y-2 rounded-lg border border-white/10 bg-zinc-900/50 p-3 text-slate-400 backdrop-blur-md">
             <p>
               Los mercados financieros —acciones, materias primas, divisas y criptoactivos—
               presentan variaciones naturales en el valor de los instrumentos. En {BRAND_NAME}
@@ -36,7 +36,7 @@ export function Footer() {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-3 pt-1">
-          <button onClick={() => setOpen((v) => !v)} className="text-brand-400 hover:underline">
+          <button onClick={() => setOpen((v) => !v)} className="text-emerald-300/90 hover:underline">
             {open ? 'Ocultar información legal' : 'Ver información legal completa'}
           </button>
           <span className="text-slate-600">·</span>

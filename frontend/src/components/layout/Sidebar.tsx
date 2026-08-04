@@ -13,7 +13,7 @@ const FUND_NAV = {
 export function MobileClientNav() {
   return (
     <nav
-      className="flex gap-1.5 overflow-x-auto border-b border-ink-600/60 bg-ink-900/50 px-2 py-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex gap-1.5 overflow-x-auto border-b border-white/10 app-chrome px-2 py-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       aria-label="Navegación principal"
     >
       <NavLink
@@ -21,7 +21,7 @@ export function MobileClientNav() {
         end
         className={({ isActive }) =>
           `inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium sm:px-3 ${
-            isActive ? 'bg-brand-600/30 text-brand-100' : 'text-slate-400 hover:text-slate-200'
+            isActive ? 'bg-emerald-900/35 text-emerald-50 ring-1 ring-emerald-500/25' : 'text-slate-400 hover:text-slate-200'
           }`
         }
       >
@@ -35,7 +35,7 @@ export function MobileClientNav() {
           to={item.to}
           className={({ isActive }) =>
             `inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium sm:px-3 ${
-              isActive ? 'bg-brand-600/30 text-brand-100' : 'text-slate-400 hover:text-slate-200'
+              isActive ? 'bg-emerald-900/35 text-emerald-50 ring-1 ring-emerald-500/25' : 'text-slate-400 hover:text-slate-200'
             }`
           }
         >
@@ -51,7 +51,7 @@ export function MobileClientNav() {
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-ink-600/60 bg-ink-900/80 p-4 lg:flex">
+    <aside className="app-chrome hidden w-64 shrink-0 flex-col border-r border-white/10 p-4 lg:flex">
       <div className="mb-6 flex items-center gap-2.5 px-2">
         <BrandMark size="md" />
         <div className="min-w-0">
@@ -83,7 +83,7 @@ export function Sidebar() {
 
         <FundSidebarNavLink label={FUND_NAV.label} />
       </nav>
-      <div className="mt-auto rounded-lg border border-brand-500/30 bg-brand-500/10 p-3 text-xs text-brand-100">
+      <div className="mt-auto rounded-lg border border-amber-500/25 bg-zinc-900/45 p-3 text-xs text-emerald-100/85 backdrop-blur-sm">
         Opera en divisas, materias primas, acciones, índices y cripto con respaldo profesional.
       </div>
     </aside>

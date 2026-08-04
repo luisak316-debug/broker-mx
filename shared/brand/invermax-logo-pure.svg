@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="INVERMAX LATAM">
+  <defs>
+    <linearGradient id="mark-bg" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#52525b"/>
+      <stop offset="22%" stop-color="#3f3f46"/>
+      <stop offset="55%" stop-color="#27272a"/>
+      <stop offset="82%" stop-color="#4a4035"/>
+      <stop offset="100%" stop-color="#6b5d45"/>
+    </linearGradient>
+    <linearGradient id="halo-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(251,191,36,0.78)"/>
+      <stop offset="40%" stop-color="rgba(245,158,11,0.55)"/>
+      <stop offset="100%" stop-color="rgba(217,119,6,0.38)"/>
+    </linearGradient>
+    <filter id="halo-blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="mark-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14" result="g1"/>
+      <feGaussianBlur stdDeviation="28" result="g2"/>
+      <feGaussianBlur stdDeviation="42" result="g3"/>
+      <feMerge>
+        <feMergeNode in="g3"/>
+        <feMergeNode in="g2"/>
+        <feMergeNode in="g1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Fondo transparente; halo difuso dorado (como ::after en CSS) -->
+  <rect x="96" y="96" width="320" height="320" rx="72" fill="url(#halo-bg)" filter="url(#halo-blur)" opacity="0.95"/>
+  <!-- Resplandor exterior -->
+  <rect x="128" y="128" width="256" height="256" rx="56" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.72" filter="url(#mark-glow)"/>
+  <!-- Cuadrado marca -->
+  <rect x="128" y="128" width="256" height="256" rx="56" fill="url(#mark-bg)" stroke="rgba(251,191,36,0.85)" stroke-width="4"/>
+  <rect x="132" y="132" width="248" height="8" rx="4" fill="rgba(255,236,179,0.22)"/>
+  <!-- Letra I -->
+  <text x="256" y="318" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="168" font-weight="700">I</text>
+</svg>

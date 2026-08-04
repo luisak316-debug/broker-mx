@@ -1,4 +1,4 @@
-package com.brokermx.cliente;
+package com.invermaxlatam.cliente;
 
 import com.getcapacitor.BridgeActivity;
 

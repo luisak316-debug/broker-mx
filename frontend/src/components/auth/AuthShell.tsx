@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { BRAND_NAME } from '../../data/brand';
+import { BrandMark } from '../brand/BrandMark';
 import { PortalAtmosphere } from './PortalAtmosphere';
 
 export function AuthShell({
@@ -19,11 +20,9 @@ export function AuthShell({
       <PortalAtmosphere />
       <div className="portal-shell relative z-10 grid min-h-screen lg:grid-cols-2">
         <aside className="auth-page__hero hidden flex-col justify-between p-10 lg:flex">
-          <Link to="/" className="flex items-center gap-3">
-            <span className="portal-brand-mark grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-900 font-bold text-white">
-              I
-            </span>
-            <span className="portal-title text-lg font-semibold">{BRAND_NAME}</span>
+          <Link to="/" className="landing-brand flex items-center gap-3">
+            <BrandMark size="md" />
+            <span className="landing-brand__name portal-title text-lg font-bold">{BRAND_NAME}</span>
           </Link>
           <div>
             <h2 className="portal-title text-3xl font-bold leading-tight">

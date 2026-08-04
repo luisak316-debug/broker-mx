@@ -213,7 +213,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
       setDepositSuccess(true);
       setDepositMsg(res.message);
       if (usesWizard) setStep(3);
-      window.dispatchEvent(new CustomEvent('brokermx:balance-updated'));
+      window.dispatchEvent(new CustomEvent('invermax:balance-updated'));
     } catch (e) {
       setDepositMsg(e instanceof Error ? e.message : 'No se pudo registrar tu depósito.');
       setDepositSuccess(false);
@@ -262,7 +262,7 @@ export function FundAccountPanel({ showWithdraw = true, embedded = false }: Prop
       resetWithdrawForm();
       setWithdrawSuccess(true);
       setWithdrawMsg('Contacta a tu asesor de inversiones.');
-      window.dispatchEvent(new CustomEvent('brokermx:balance-updated'));
+      window.dispatchEvent(new CustomEvent('invermax:balance-updated'));
     } catch (e) {
       setWithdrawMsg(e instanceof Error ? e.message : 'No se pudo enviar la transacción.');
       setWithdrawSuccess(false);

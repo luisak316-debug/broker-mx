@@ -3,8 +3,8 @@ import { api } from '../api/client';
 import { prefetchDepositAccount } from '../lib/depositAccountCache';
 import type { ClientSession } from '../types';
 
-const TOKEN_KEY = 'brokermx_client_token';
-const CLIENT_KEY = 'brokermx_client';
+const TOKEN_KEY = 'invermax_client_token';
+const CLIENT_KEY = 'invermax_client';
 
 interface ClientAuthState {
   client: ClientSession | null;

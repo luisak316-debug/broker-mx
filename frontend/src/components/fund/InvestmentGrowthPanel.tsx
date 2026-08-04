@@ -164,11 +164,11 @@ export function InvestmentGrowthPanel() {
     const id = window.setInterval(() => void refresh(), POLL_MS);
 
     const onBalance = () => void refresh();
-    window.addEventListener('brokermx:balance-updated', onBalance);
+    window.addEventListener('invermax:balance-updated', onBalance);
 
     return () => {
       window.clearInterval(id);
-      window.removeEventListener('brokermx:balance-updated', onBalance);
+      window.removeEventListener('invermax:balance-updated', onBalance);
     };
   }, [clientId, refresh]);
 

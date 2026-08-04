@@ -1,11 +1,24 @@
 import { Capacitor } from '@capacitor/core';
 
+const PRODUCTION_API = 'https://broker-mx-api.onrender.com';
+
+function isUsableApiUrl(url: string | undefined): url is string {
+  if (!url?.trim()) return false;
+  if (url.includes('TU_IP_LOCAL')) return false;
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 /** URL del servidor API (sin /api al final). Vacío en web con proxy de Vite. */
 export function getServerUrl(): string {
   const configured = import.meta.env.VITE_API_URL as string | undefined;
-  if (configured?.trim()) return configured.replace(/\/$/, '');
-  // Emulador Android: 10.0.2.2 apunta al localhost de tu PC.
-  if (Capacitor.isNativePlatform()) return 'http://10.0.2.2:4000';
+  if (isUsableApiUrl(configured)) return configured.replace(/\/$/, '');
+  // App nativa sin URL válida → producción (celular real no alcanza 10.0.2.2).
+  if (Capacitor.isNativePlatform()) return PRODUCTION_API;
   return '';
 }
 

@@ -53,23 +53,30 @@ export function CountryPhoneFields({
         <span className="auth-label mb-1 block text-sm">
           Teléfono celular ({phoneLengthHint(country)})
         </span>
-        <div className="flex gap-2">
-          <span className="auth-field flex shrink-0 items-center px-3 py-2.5 text-sm">
-            {country.dialCode}
-          </span>
+        <div className="auth-phone-row">
+          <span className="auth-phone-prefix">{country.dialCode}</span>
           <input
             type="tel"
             inputMode="numeric"
+            pattern="[0-9]*"
+            id="client-phone-national"
+            name="client-phone-national"
             value={phone}
             disabled={disabled}
             onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, '').slice(0, maxDigits))}
-            placeholder={country.phonePlaceholder}
-            autoComplete="tel-national"
-            className={`auth-field min-w-0 flex-1 ${phoneError ? 'auth-field--error' : ''}`}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-lpignore="true"
+            data-form-type="other"
+            aria-invalid={phoneError ? true : undefined}
+            aria-describedby={phoneError ? undefined : 'phone-hint'}
+            className={`auth-field auth-field--phone ${phoneError ? 'auth-field--error' : ''}`}
           />
         </div>
         {!phoneError && (
-          <span className="mt-1 block text-xs text-emerald-200/45">
+          <span id="phone-hint" className="mt-1 block text-xs text-emerald-200/45">
             Te enviaremos un código de verificación por SMS a este número.
           </span>
         )}

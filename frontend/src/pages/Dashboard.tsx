@@ -30,7 +30,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-brand-500/30 bg-gradient-to-r from-brand-600/20 to-ink-800 p-5">
+      <div className="landing-glass-emerald rounded-xl p-5">
         <h1 className="text-2xl font-bold text-white">
           ¡Bienvenido{client ? `, ${client.displayName}` : ''}!
         </h1>
@@ -70,11 +70,11 @@ export function Dashboard() {
           <Link
             key={m.to}
             to={m.to}
-            className={`card card--${m.cls} transition hover:border-brand-500/60 hover:bg-ink-700/60`}
+            className={`card card--${m.cls} transition hover:border-emerald-500/30 hover:bg-zinc-800/40`}
           >
             <p className="card-title">{m.title}</p>
             <p className="mt-1 text-sm text-slate-400">{m.desc}</p>
-            <p className="mt-3 text-sm text-brand-400">Abrir módulo →</p>
+            <p className="mt-3 text-sm text-emerald-300/90">Abrir módulo →</p>
           </Link>
         ))}
       </div>

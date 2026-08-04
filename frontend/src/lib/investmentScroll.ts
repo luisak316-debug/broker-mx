@@ -1,5 +1,5 @@
-export const INVESTMENT_SCROLL_KEY = 'brokermx:scroll-investment';
-export const INVESTMENT_READY_EVENT = 'brokermx:investment-panel-ready';
+export const INVESTMENT_SCROLL_KEY = 'invermax:scroll-investment';
+export const INVESTMENT_READY_EVENT = 'invermax:investment-panel-ready';
 
 export function requestInvestmentScroll(): void {
   sessionStorage.setItem(INVESTMENT_SCROLL_KEY, '1');

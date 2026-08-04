@@ -43,7 +43,7 @@ function ProfileAvatarDisplay({
 
   return (
     <span
-      className={`${box} grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-400/90 to-brand-600 font-semibold text-white ring-2 ring-amber-400/40`}
+      className={`${box} grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-400/90 to-emerald-700 font-semibold text-white ring-2 ring-amber-400/40`}
     >
       {initials}
     </span>
@@ -148,7 +148,7 @@ export function Topbar({ connected }: { connected: boolean }) {
   const clientId = client?.id ?? '';
 
   return (
-    <header className="w-full max-w-[100dvw] shrink-0 overflow-hidden border-b border-ink-600/60 bg-ink-900/60 backdrop-blur">
+    <header className="app-chrome w-full max-w-[100dvw] shrink-0 overflow-hidden border-b border-white/10">
       {/* Móvil */}
       <div className="md:hidden">
         <div className="flex items-center justify-between gap-2 px-3 py-2.5">
@@ -173,7 +173,7 @@ export function Topbar({ connected }: { connected: boolean }) {
           </button>
         </div>
 
-        <div className="border-t border-ink-600/40 px-3 py-2.5">
+        <div className="border-t border-white/10 px-3 py-2.5">
           <ProfileAccountCard
             photoUrl={client?.profilePhotoUrl}
             initials={initials}

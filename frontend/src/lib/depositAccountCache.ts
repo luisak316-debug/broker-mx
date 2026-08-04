@@ -1,6 +1,6 @@
 import type { DepositAccountInfo } from '../types';
 
-const PREFIX = 'brokermx:deposit-account:';
+const PREFIX = 'invermax:deposit-account:';
 
 export function readDepositAccountCache(clientId: string): DepositAccountInfo | null {
   try {
