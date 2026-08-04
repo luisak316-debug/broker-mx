@@ -1,7 +1,7 @@
 # Cerebro del proyecto — INVERMAX LATAM
 
 > **Memoria persistente** para retomar el contexto cuando se pierde el chat de Cursor  
-> **Última actualización:** 2026-08-01  
+> **Última actualización:** 2026-08-04  
 > **Mantenedor:** actualizar este archivo al cerrar sesiones importantes o cuando cambien decisiones clave.
 
 ---
@@ -63,12 +63,15 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 
 ---
 
-## 4. Dónde estamos ahora (estado al 2026-08-01)
+## 4. Dónde estamos ahora (estado al 2026-08-04)
 
 ### ✅ Hecho y desplegado
 
 | Tema | Detalle |
 |------|---------|
+| **App clientes Android** | Logo INVERMAX, tema negro/vidrio post-login, campo teléfono vacío + grid CSS, API → Render |
+| **Login app móvil** | `frontend/.env.android` → `https://broker-mx-api.onrender.com`; fallback en `apiConfig.ts` |
+| **Login/registro web** | Campo teléfono grid (+52 pequeño, input ancho); desplegado Vercel — usuario aprobó desktop |
 | Rebrand web | **4 portales** (clientes, admin, supervisores, **asesores**) — INVERMAX LATAM |
 | Logo `BrandMark` | «I» gradiente carbón→dorado + halo ámbar (**CSS**, no PNG recortado) |
 | Favicon pestañas | SVG + ICO en todos los portales; asesores en `advisors-brown.vercel.app` |
@@ -85,8 +88,8 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 | **Net2Phone** | ⏸ Esperando contrato |
 | **WebRTC PSTN** | Proveedor no enruta PSTN desde WebRTC ext. 21011 — usar MicroSIP |
 | **Play Store** | No publicar aún |
-| Android package IDs | Cambios locales `com.invermaxlatam.*` — revisar commit |
-| Otros cambios locales | Device wipe supervisores, scripts `.bat` personales — ver `git status` |
+| Android Play Store | No publicar aún (APK debug instalado por USB) |
+| Otros cambios locales | Device wipe supervisores, scripts `.bat` personales — ver `git status` (sin commit aún) |
 
 ### 🔄 Respaldo aprobado (1 ago 2026)
 
@@ -134,6 +137,22 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 - **Salinas Pliego** va **dentro** de `#quienes` (Quiénes Somos).
 - Orden: Menú → Hero → Quiénes Somos → Mercados → Testimonios → CTA + Footer.
 
+### App Android clientes — errores que NO repetir
+
+1. **API en celular físico:** `frontend/.env.android` debe apuntar a **`https://broker-mx-api.onrender.com`**.  
+   - ❌ `TU_IP_LOCAL`, ❌ `10.0.2.2` (solo emulador). Sin URL válida → login imposible en celular real.
+2. **Tras cambiar frontend Android:** siempre `npm run android:sync` + reinstalar APK en el teléfono (USB). La app instalada **no se actualiza sola**.
+3. **Campo teléfono:** layout con **CSS Grid** (`.auth-phone-row`), no flex + `width:100%` en ambos hijos — rompe desktop y móvil.
+4. **Sin número de ejemplo:** eliminado `phonePlaceholder` / `5512345678`; campo empieza vacío.
+
+### Datos operativos (clientes, asesores, gerencias) — NO confundir
+
+1. **Fuente de verdad en producción:** PostgreSQL en Render (`broker-mx-db`). Cambios de UI/app **no borran** esa base.
+2. **Modo legacy local:** API sin `DATABASE_URL` → datos en memoria; **se pierden al reiniciar**. No es producción.
+3. **Gerentes ≠ asesores en Supervisores:** cuentas `gerente1@invermaxlatam.com` … `gerente4@` (rol MANAGER) **no** aparecen en la tabla «Asesores»; van en **Gerencias**.
+4. **Deploy Render:** el build ejecuta `prisma db push --accept-data-loss` — cambios de esquema destructivos pueden **perder filas**. Antes de push grande, backup en Render o migración controlada.
+5. **Si «desaparecen» datos:** verificar `GET /api/health` → `storage: postgres`; portal en `brokermxsupervisors.vercel.app`; no asumir borrado por commits de frontend.
+
 ### Llamadas (MicroSIP en PC del asesor)
 
 - Softphone: `tools/MicroSIP/MicroSIP.exe` (credenciales SIP ya en MicroSIP).
@@ -148,6 +167,7 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 ## 6. Commits y tags recientes (referencia git)
 
 ```
+472c36c  App cliente: tema negro/vidrio, logo Android, login móvil, teléfono vacío
 c66d742  Admin: quitar logo duplicado topbar; deploy asesores → advisors-brown
 25d566c  Favicon asesores (favicon.ico + rewrite Vercel)
 eb02647  Restaurar BrandMark original (no PNG recortado)
@@ -168,6 +188,8 @@ eb42416  Historial contactos asesores + favicons portales
 
 | Área | Archivos |
 |------|----------|
+| App Android clientes | `frontend/.env.android`, `frontend/src/lib/apiConfig.ts`, `frontend/capacitor.config.ts` |
+| Login teléfono | `frontend/src/components/auth/CountryPhoneFields.tsx`, `.auth-phone-row` en `index.css` |
 | Marca | `backend/src/config/brand.ts`, `frontend/src/data/brand.ts` |
 | Logo | `*/src/components/brand/BrandMark.tsx`, `.invermax-brand-mark` en CSS |
 | Asesores | `advisors/src/pages/ContactHistoryPage.tsx`, `advisors/src/lib/contactHistoryGroups.ts` |
@@ -188,6 +210,8 @@ eb42416  Historial contactos asesores + favicons portales
 | Scripts útiles | `LANZAR_WEB.bat`, `DESPLEGAR_RENDER.bat` |
 
 Variable API en prod: `VITE_API_URL=https://broker-mx-api.onrender.com`
+
+**Android (celular físico):** copiar `frontend/.env.android.example` → `.env.android` con la misma URL Render. Luego `npm run android:sync` + instalar APK.
 
 ---
 
@@ -220,10 +244,9 @@ CEREBRO.bat
 
 ## 10. Próximos pasos sugeridos (no obligatorios)
 
-1. Commitear cambios pendientes de logo + Android si el usuario confirma.
-2. Integrar Net2Phone cuando llegue el contrato (solo admin, salientes).
-3. Noticias: solo tocar si el usuario pide un enfoque **distinto** al carrusel revertido.
-4. Configurar DNS definitivo de `invermaxlatam.com` si aún no apunta a Vercel.
+1. Integrar Net2Phone cuando llegue el contrato (solo admin, salientes).
+2. Noticias: solo tocar si el usuario pide un enfoque **distinto** al carrusel revertido.
+3. Configurar DNS definitivo de `invermaxlatam.com` si aún no apunta a Vercel.
 
 ---
 

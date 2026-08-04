@@ -9,7 +9,7 @@ alwaysApply: true
 
 1. **Leer** `docs/PROJECT-BRAIN.md` antes de asumir contexto.
 2. Resumir al usuario **dónde estamos** (§4 y §5) si pregunta por el estado del proyecto.
-3. **No repetir** trabajo revertido: carrusel de noticias, Twilio llamadas, vidrio esmerilado en hero sin pedido explícito.
+3. **No repetir** errores documentados en §5: carrusel noticias, Twilio, vidrio hero, **API Android sin Render**, **confundir BD local con producción**.
 
 ## Al terminar trabajo importante
 

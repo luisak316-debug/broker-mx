@@ -42,6 +42,11 @@ async function http<T>(path: string, init?: HttpOptions): Promise<T> {
         'El servidor tardó demasiado en responder. Espera unos segundos e intenta de nuevo.',
       );
     }
+    if (err instanceof TypeError) {
+      throw new Error(
+        'No se pudo conectar con el servidor. Revisa tu internet e intenta otra vez (la primera conexión puede tardar hasta 30 segundos).',
+      );
+    }
     throw err;
   } finally {
     clearTimeout(timer);
