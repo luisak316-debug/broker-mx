@@ -12,11 +12,13 @@ export type RequestStatus = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
 export interface Staff {
   id: string;
   email: string;
+  loginAccess?: string | null;
   passwordHash: string;
   displayName: string;
   role: StaffRole;
   managerTeam?: number | null;
   phone?: string | null;
+  computerId?: string | null;
   hireDate?: string | null;
   inactiveDate?: string | null;
   active: boolean;

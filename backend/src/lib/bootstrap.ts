@@ -7,9 +7,9 @@ import { purgeAllDemoClients } from './purgeDemoClients';
 import { prisma } from './prisma';
 import {
   ensureManagerTeamsSeeded,
-  ensureDefaultAdvisorsSeeded,
   reassignOrphanedClientAdvisors,
 } from '../repositories/staff.repository';
+import { syncRealAdvisorsIfConfigured } from '../services/syncRealAdvisors.service';
 import { hashPassword } from '../services/security.service';
 import { ALL_INSTRUMENTS } from '../data/instruments';
 import {
@@ -239,7 +239,7 @@ async function seedStaff(): Promise<void> {
   }
 
   await ensureManagerTeamsSeeded(demoHash);
-  await ensureDefaultAdvisorsSeeded();
+  await syncRealAdvisorsIfConfigured();
 }
 
 export async function pingDatabase(): Promise<boolean> {

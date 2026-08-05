@@ -1,7 +1,7 @@
 # Cerebro del proyecto — INVERMAX LATAM
 
 > **Memoria persistente** para retomar el contexto cuando se pierde el chat de Cursor  
-> **Última actualización:** 2026-08-04  
+> **Última actualización:** 2026-08-05 (tarde — Narayana multi-cuenta + despliegue laptops)  
 > **Mantenedor:** actualizar este archivo al cerrar sesiones importantes o cuando cambien decisiones clave.
 
 ---
@@ -77,7 +77,8 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 | Favicon pestañas | SVG + ICO en todos los portales; asesores en `advisors-brown.vercel.app` |
 | Admin topbar | Logo **solo en sidebar** (sin duplicado en barra superior) — aprobado usuario |
 | Portal asesores | Historial contactos por periodo + **Volver a llamar** en contactos viejos |
-| Llamadas asesores | Modo MicroSIP (Windows) o WebRTC; scripts `tools/invermax-call/` |
+| Llamadas asesores | Modo MicroSIP oculto (Windows) o WebRTC; **fix 2026-08-04:** sin CMD/MicroSIP visible, sync colgado |
+| **Seguridad plataformas (2026-08-05)** | JWT firmado clientes, rutas portfolio/perfil protegidas, rate limit logins, CORS lista cerrada, puente llamadas con token + handshake, `plainPassword` fuera del listado admin |
 | API historial | `GET /api/advisor/my-contacts/history` |
 
 ### ⏸ En pausa / pendiente
@@ -90,6 +91,11 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 | **Play Store** | No publicar aún |
 | Android Play Store | No publicar aún (APK debug instalado por USB) |
 | Otros cambios locales | Device wipe supervisores, scripts `.bat` personales — ver `git status` (sin commit aún) |
+| **Deploy seguridad API** | Cambios backend en código local — **pendiente `git push` a Render** para activar JWT clientes en prod |
+| **Agente llamadas post-seguridad** | Re-ejecutar `INSTALAR_LAPTOP_ASESOR.bat` en cada laptop (token puente + scripts nuevos) |
+| **Narayana — cuentas SIP extra** | Comprar **1 cuenta SIP por PC/laptop** que llame; principal hoy: **21011** (PC ASUS `DESKTOP-SAMEJOJ`) |
+| **HP Pavilion (prueba)** | Cuenta SIP **`372810444417924`** (Narayana); MicroSIP ya configurado en laptop; instalar agente INVERMAX desde USB |
+| **Paquete portable** | `tools/invermax-call/CREAR_PAQUETE_PARA_OTRA_PC.bat` → `PAQUETE_LINEA_INVERMAX` |
 
 ### 🔄 Respaldo aprobado (1 ago 2026)
 
@@ -124,6 +130,40 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 - URL principal: **advisors-brown.vercel.app** (proyecto Vercel `advisors`, no solo `brokermx.advisors`).
 - Desplegar con `DESPLEGAR_ASESORES.bat`.
 - Historial + llamadas: commits `eb42416` … `c66d742`.
+
+### Llamadas (marca blanca INVERMAX)
+
+- **Usuarios** (asesores, admin, supervisores, clientes) solo ven **INVERMAX** — nunca MicroSIP, Narayana ni credenciales.
+- **Servidor (Render):** variables `SIP_*` — la API arma la marcacion; en modo desktop **no** envia contraseñas al navegador.
+- **Cada PC o laptop Windows** que llame: instalador `INSTALAR_LAPTOP_ASESOR.bat` (soporte/IT, una vez) → `C:\ProgramData\InvermaxCall`.
+- Portal comprueba conector local; si falta: «Pide a soporte INVERMAX que configure tu laptop».
+- **Puente local (2026-08-05):** solo `127.0.0.1:18765`; CORS whitelist de portales INVERMAX; `/handshake` entrega token de sesión; `/dial` y `/hangup` exigen `Authorization: Bearer`. Token en `C:\ProgramData\InvermaxCall\bridge-token` (no en git).
+
+### Narayana — líneas telefónicas (decisión 2026-08-05)
+
+- **Proveedor SIP:** Narayana (`rdx.narayana.im`). Panel: https://narayana.im/dashboard → **SIP accounts** (no hay “extensiones” aparte; cada cuenta SIP **es** una línea).
+- **Cuenta principal actual:** **`21011`** — en la **PC grande ASUS** (`DESKTOP-SAMEJOJ`).
+- **Regla crítica:** la **misma** cuenta SIP (ej. 21011) solo puede estar **registrada en UNA máquina a la vez**. Por eso MicroSIP “solo” falla en otra laptop si la PC grande ya usa esa línea.
+- **Decisión aprobada por usuario:** login asesores con **acceso numérico único** + contraseña (sin correos reales). Fuente: `ACCESOS ASESORES INVERMAX.txt`. Import: `backend/scripts/import-advisor-accesses.ts`.
+- Primer asesor: **Javier Hernandez** — acceso `372810444417924`.
+- **WebRTC (opción futura):** Narayana expone WSS; hoy PSTN no enruta bien desde WebRTC ext. 21011 — seguir con conector desktop hasta que Narayana lo habilite o haya extensión dedicada.
+- **Mediano plazo:** mapear en BD qué asesor usa qué cuenta SIP (hoy Render usa una sola `SIP_USERNAME` global).
+- **Hardware despliegue:** memoria USB dedicada **`D:\INVERMAX_LINEA`** (ago 2026) — misma memoria para instalar en cada laptop/PC asesor; primera prueba HP Pavilion.
+
+### Continuidad del proyecto (filosofía del usuario, 2026-08-05)
+
+- **No empezar de cero:** siempre apoyarse en `docs/PROJECT-BRAIN.md` y la experiencia acumulada.
+- Usuario expresa **compromiso fuerte** con INVERMAX LATAM — aprender, iterar y mantener el ritmo es parte del objetivo.
+- Registrar decisiones aquí para que futuros chats retomen contexto sin repetir trabajo revertido.
+
+### Seguridad API (2026-08-05)
+
+- **Clientes:** token JWT HMAC (`signClientToken`); rutas `/portfolio`, `/profile`, `/cash-requests`, `/orders` exigen `Authorization: Bearer`.
+- **Staff:** rate limit 15 intentos / 15 min en login admin, asesor, supervisor.
+- **CORS:** solo orígenes explícitos en `env.corsOrigin` — sin wildcard `*.vercel.app`.
+- **Producción:** `JWT_SECRET` (mín. 32 chars) y `DEVICE_ENROLLMENT_SECRET` obligatorios en Render.
+- **Marcación:** `dialString` enmascarado solo desde backend autenticado; credenciales SIP nunca al navegador en modo desktop.
+- **Listado admin clientes:** sin campo `plainPassword` en respuesta API.
 
 ### Landing — hero y vidrio esmerilado
 
@@ -194,6 +234,8 @@ eb42416  Historial contactos asesores + favicons portales
 | Logo | `*/src/components/brand/BrandMark.tsx`, `.invermax-brand-mark` en CSS |
 | Asesores | `advisors/src/pages/ContactHistoryPage.tsx`, `advisors/src/lib/contactHistoryGroups.ts` |
 | Llamadas | `advisors/src/call/`, `tools/invermax-call/`, `backend/src/config/sipTelephony.ts` |
+| Paquete línea otra PC | `tools/invermax-call/CREAR_PAQUETE_PARA_OTRA_PC.bat`, `PAQUETE_LINEA_INVERMAX/` |
+| Detectar PCs en Wi-Fi | `tools/invermax-call/DETECTAR_PC_EN_RED.bat` |
 | Respaldos portales | `docs/BACKUP-PORTALES.md`, `backups/portales-2026-08-01/RESTORE.ps1` |
 | Respaldos landing | `docs/BACKUP-LANDING.md`, `backups/landing-*/RESTORE.ps1` |
 

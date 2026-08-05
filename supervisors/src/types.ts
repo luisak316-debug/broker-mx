@@ -22,10 +22,11 @@ export interface ClientSummary {
 
 export interface AdvisorRow {
   id: string;
-  email: string;
+  access: string;
   displayName: string;
   managerTeam?: number | null;
   phone?: string | null;
+  computerId?: string | null;
   hireDate?: string | null;
   inactiveDate?: string | null;
   lastLoginAt?: string;
@@ -42,8 +43,23 @@ export interface AdvisorPhoneHistoryRow {
 export interface ManagerTeamRow {
   team: number;
   displayName: string;
+  whatsappNumber?: string | null;
   managerId?: string;
   advisorCount: number;
+}
+
+export interface AdvisorDeviceRow {
+  id: string;
+  computerId: string;
+  advisorId: string | null;
+  advisorName: string | null;
+  hostname: string | null;
+  osVersion: string | null;
+  lastSeenAt: string | null;
+  enrolledAt: string;
+  pendingWipe: boolean;
+  lastWipeStatus: string | null;
+  lastWipeAt: string | null;
 }
 
 export interface ContactRow {

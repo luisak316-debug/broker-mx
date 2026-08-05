@@ -47,6 +47,10 @@ services:
         value: "false"
       - key: SIP_STUN_SERVERS
         value: stun:stun.l.google.com:19302
+      - key: SYNC_REAL_ADVISORS
+        value: "true"
+      - key: ADVISOR_BOOTSTRAP_PASSWORD
+        sync: false
 
 databases:
   - name: broker-mx-db

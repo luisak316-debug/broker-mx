@@ -3,10 +3,11 @@ import { z } from 'zod';
 import {
   createStaff,
   deactivateStaff,
-  findStaffByEmail,
+  findStaffByLoginAccess,
   listAdvisorPhoneHistory,
   listStaffByRole,
   updateAdvisorAccess,
+  updateAdvisorComputerId,
   updateAdvisorDates,
   updateAdvisorPhone,
 } from '../../repositories/staff.repository';
@@ -15,6 +16,7 @@ import { hashPassword } from '../../services/security.service';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
+import { advisorPublicAccess, normalizeAdvisorLoginAccess, titleCaseName } from '../../lib/advisorAccess';
 
 const phoneSchema = z
   .string()
@@ -29,7 +31,10 @@ const dateSchema = z
   .optional();
 
 const createSchema = z.object({
-  email: z.string().email('Correo inválido.'),
+  access: z
+    .string()
+    .trim()
+    .transform((v) => normalizeAdvisorLoginAccess(v)),
   displayName: z.string().trim().min(2, 'Nombre requerido.'),
   managerTeam: z.number().int().min(1).optional().nullable(),
   phone: z.preprocess(
@@ -37,6 +42,13 @@ const createSchema = z.object({
     phoneSchema.nullable().optional(),
   ),
   hireDate: dateSchema,
+  computerId: z
+    .string()
+    .trim()
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/, 'Identificador de PC inválido.')
+    .optional()
+    .nullable(),
   password: z
     .string()
     .min(8, 'Mínimo 8 caracteres.')
@@ -61,21 +73,26 @@ const passwordSchema = z
 
 const updateAccessSchema = z
   .object({
-    email: z.string().email('Correo inválido.').optional(),
+    access: z
+      .string()
+      .trim()
+      .transform((v) => normalizeAdvisorLoginAccess(v))
+      .optional(),
     displayName: z.string().trim().min(2, 'Nombre requerido.').optional(),
     password: passwordSchema.optional(),
   })
-  .refine((v) => v.email || v.displayName || v.password, {
-    message: 'Indica nombre, correo o contraseña para actualizar.',
+  .refine((v) => v.access || v.displayName || v.password, {
+    message: 'Indica nombre, acceso o contraseña para actualizar.',
   });
 
 function mapAdvisor(a: Awaited<ReturnType<typeof listStaffByRole>>[number]) {
   return {
     id: a.id,
-    email: a.email,
+    access: advisorPublicAccess(a),
     displayName: a.displayName,
     managerTeam: a.managerTeam ?? null,
     phone: a.phone ?? null,
+    computerId: a.computerId ?? null,
     hireDate: a.hireDate ?? null,
     inactiveDate: a.inactiveDate ?? null,
     lastLoginAt: a.lastLoginAt,
@@ -90,8 +107,8 @@ export async function listAdvisors(_req: Request, res: Response): Promise<void> 
 
 export async function createAdvisor(req: Request, res: Response): Promise<void> {
   const body = createSchema.parse(req.body);
-  const existing = await findStaffByEmail(body.email);
-  if (existing) throw new HttpError(409, 'Ya existe personal con ese correo.');
+  const existing = await findStaffByLoginAccess(body.access);
+  if (existing) throw new HttpError(409, 'Ya existe un asesor con ese acceso.');
 
   if (body.managerTeam != null) {
     const team = await findManagerTeamById(body.managerTeam);
@@ -99,19 +116,20 @@ export async function createAdvisor(req: Request, res: Response): Promise<void> 
   }
 
   const advisor = await createStaff({
-    email: body.email,
-    displayName: body.displayName,
+    loginAccess: body.access,
+    displayName: titleCaseName(body.displayName),
     role: 'ADVISOR',
     passwordHash: hashPassword(body.password),
     managerTeam: body.managerTeam ?? null,
     phone: body.phone ?? null,
+    computerId: body.computerId ?? null,
     hireDate: body.hireDate ?? null,
   });
 
   await record({
     actor: req.staff!,
     action: 'ADVISOR_CREATE',
-    description: `Supervisor creó asesor ${advisor.displayName} (${advisor.email}).`,
+    description: `Supervisor creó asesor ${advisor.displayName} (acceso ${advisorPublicAccess(advisor)}).`,
     ip: clientIp(req),
   });
 
@@ -164,20 +182,55 @@ export async function updateAdvisorAccessHandler(req: Request, res: Response): P
 
   try {
     const advisor = await updateAdvisorAccess(req.params.id, {
-      email: body.email,
-      displayName: body.displayName,
+      loginAccess: body.access,
+      displayName: body.displayName ? titleCaseName(body.displayName) : undefined,
       passwordHash: body.password ? hashPassword(body.password) : undefined,
     });
     await record({
       actor: req.staff!,
       action: 'ADVISOR_ACCESS_UPDATE',
-      description: `Supervisor actualizó acceso del asesor ${advisor.displayName} (${advisor.email}).`,
+      description: `Supervisor actualizó acceso del asesor ${advisor.displayName} (acceso ${advisorPublicAccess(advisor)}).`,
       ip: clientIp(req),
     });
     res.json({ data: mapAdvisor(advisor) });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'No se pudo actualizar.';
-    throw new HttpError(msg.includes('correo') ? 409 : 400, msg);
+    throw new HttpError(msg.includes('acceso') ? 409 : 400, msg);
+  }
+}
+
+const updateComputerSchema = z.object({
+  computerId: z
+    .string()
+    .trim()
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/, 'Identificador de PC inválido.')
+    .nullable()
+    .optional(),
+});
+
+export async function updateAdvisorComputerIdHandler(req: Request, res: Response): Promise<void> {
+  const body = updateComputerSchema.parse(req.body);
+  const advisors = await listStaffByRole('ADVISOR');
+  if (!advisors.some((a) => a.id === req.params.id)) {
+    throw new HttpError(404, 'Asesor no encontrado.');
+  }
+
+  try {
+    const advisor = await updateAdvisorComputerId(
+      req.params.id,
+      body.computerId?.trim() ? body.computerId.trim() : null,
+    );
+    await record({
+      actor: req.staff!,
+      action: 'ADVISOR_COMPUTER_ID_UPDATE',
+      description: `Supervisor asignó PC ${advisor.computerId ?? '—'} a ${advisor.displayName}.`,
+      ip: clientIp(req),
+    });
+    res.json({ data: mapAdvisor(advisor) });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'No se pudo actualizar.';
+    throw new HttpError(msg.includes('en uso') || msg.includes('asignado') ? 409 : 400, msg);
   }
 }
 

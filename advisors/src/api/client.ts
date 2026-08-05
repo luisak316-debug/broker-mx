@@ -32,10 +32,10 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  login: (email: string, password: string) =>
+  login: (access: string, password: string) =>
     http<{ token: string; staff: StaffSession }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ access, password }),
     }),
   me: () => http<StaffSession>('/auth/me'),
   myContacts: (params?: { year?: number; month?: number; day?: number }) => {
@@ -60,13 +60,13 @@ export const api = {
     ),
   telephonyConfig: () =>
     http<{
-      wssUrl: string;
-      bridgeMode: 'provider' | 'embedded' | 'custom';
       callMode?: 'microsip' | 'webrtc';
-      domain: string;
-      username: string;
-      authorizationPassword: string;
-      displayName: string;
-      stunServers: string[];
+      displayName?: string;
+      wssUrl?: string;
+      bridgeMode?: 'provider' | 'embedded' | 'custom';
+      domain?: string;
+      username?: string;
+      authorizationPassword?: string;
+      stunServers?: string[];
     }>('/telephony/webrtc-config'),
 };

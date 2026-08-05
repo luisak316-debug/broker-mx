@@ -5,7 +5,7 @@ import type { StaffSession } from '../types';
 interface AuthState {
   staff: StaffSession | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (access: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -34,8 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       staff,
       loading,
-      login: async (email, password) => {
-        const { token, staff: s } = await api.login(email, password);
+      login: async (access, password) => {
+        const { token, staff: s } = await api.login(access, password);
         tokenStore.set(token);
         setStaff(s);
       },

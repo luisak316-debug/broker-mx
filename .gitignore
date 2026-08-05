@@ -39,3 +39,10 @@ Thumbs.db
 # Uploads (documentos KYC)
 backend/uploads/
 uploads/
+
+# Credenciales SIP locales (nunca en git)
+tools/MicroSIP/MicroSIP.ini
+tools/MicroSIP/*.db
+tools/MicroSIP/bridge-token
+**/bridge-token
+ACCESOS ASESORES INVERMAX.txt

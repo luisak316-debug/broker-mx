@@ -8,7 +8,7 @@ import { BRAND_NAME } from '../data/brand';
 export function Login() {
   const { staff, login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [access, setAccess] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -20,7 +20,7 @@ export function Login() {
     setBusy(true);
     setError(null);
     try {
-      await login(email, password);
+      await login(access.replace(/\s+/g, ''), password);
       navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión.');
@@ -43,13 +43,14 @@ export function Login() {
 
         <form onSubmit={submit} className="card space-y-4">
           <div>
-            <label className="label">Correo del asesor</label>
+            <label className="label">Acceso</label>
             <input
-              type="email"
-              className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu.correo@invermaxlatam.com"
+              type="text"
+              inputMode="numeric"
+              className="input font-mono"
+              value={access}
+              onChange={(e) => setAccess(e.target.value.replace(/\D/g, ''))}
+              placeholder="Tu número de acceso"
               autoComplete="username"
               required
             />
@@ -72,7 +73,7 @@ export function Login() {
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-500">
-          Usa el correo y contraseña que te asignó supervisión.
+          Usa el acceso y contraseña que te asignó supervisión.
         </p>
       </div>
     </div>

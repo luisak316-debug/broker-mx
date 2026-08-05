@@ -71,11 +71,15 @@ model User {
 model Staff {
   id            String     @id @default(cuid())
   email         String     @unique
+  /// Acceso numérico único para portal asesores (sin correo real).
+  loginAccess   String?    @unique
   passwordHash  String
   displayName   String
   role          StaffRole  @default(ADVISOR)
   /// Equipo de gerencia (id en tabla ManagerTeam).
   managerTeam   Int?
+  /// Identificador de laptop/PC (ej. LAP-001) — solo escritorio, no móvil.
+  computerId    String?    @unique
   /// Teléfono actual del asesor (10 dígitos).
   phone         String?
   /// Fecha de ingreso a la empresa.
@@ -95,16 +99,20 @@ model Staff {
   assignedContacts AdvisorContact[] @relation("AssignedContacts")
   phoneHistory  AdvisorPhoneHistory[] @relation("AdvisorPhoneHistory")
   phoneChangesMade AdvisorPhoneHistory[] @relation("PhoneHistoryChangedBy")
+  advisorDevices AdvisorDevice[] @relation("AdvisorDevices")
+  wipeRequests   DeviceWipeCommand[] @relation("WipeRequests")
 }
 
 /// Equipos de gerencia (nombres personalizables: Los Tiburones, Los Tigres, etc.).
 model ManagerTeam {
-  id          Int      @id @default(autoincrement())
-  displayName String
-  sortOrder   Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  displayName    String
+  /// WhatsApp real de la gerencia (E.164, ej. +525551234567).
+  whatsappNumber String?
+  sortOrder      Int      @default(0)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 /// Historial de teléfonos que tuvo un asesor (números anteriores al actual).
@@ -118,6 +126,49 @@ model AdvisorPhoneHistory {
   replacedBy   Staff?   @relation("PhoneHistoryChangedBy", fields: [replacedById], references: [id])
 
   @@index([advisorId, replacedAt])
+}
+
+/// Laptop de asesor registrada con agente INVERMAX (solo escritorio).
+model AdvisorDevice {
+  id              String   @id @default(cuid())
+  computerId      String   @unique
+  advisorId       String?
+  advisor         Staff?   @relation("AdvisorDevices", fields: [advisorId], references: [id], onDelete: SetNull)
+  deviceTokenHash String
+  hostname        String?
+  osVersion       String?
+  lastSeenAt      DateTime?
+  enrolledAt      DateTime @default(now())
+  wipeCommands    DeviceWipeCommand[]
+
+  @@index([advisorId])
+}
+
+enum DeviceWipeStatus {
+  PENDING
+  ACKNOWLEDGED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+/// Orden de borrado forense remoto para una laptop.
+model DeviceWipeCommand {
+  id             String           @id @default(cuid())
+  deviceId       String
+  device         AdvisorDevice    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  status         DeviceWipeStatus @default(PENDING)
+  requestedById  String
+  requestedBy    Staff            @relation("WipeRequests", fields: [requestedById], references: [id])
+  requestedAt    DateTime         @default(now())
+  acknowledgedAt DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  failureReason  String?
+
+  @@index([deviceId, status])
+  @@index([requestedAt])
 }
 
 /// Contacto/prospecto asignado por un supervisor a un asesor (llamadas diarias).

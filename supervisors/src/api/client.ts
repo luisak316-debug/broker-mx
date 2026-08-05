@@ -62,7 +62,7 @@ export const api = {
   removeManagerTeam: (id: number) =>
     http<import('../types').ManagerTeamRow[]>(`/managers/${id}`, { method: 'DELETE' }),
   createAdvisor: (payload: {
-    email: string;
+    access: string;
     displayName: string;
     password: string;
     managerTeam?: number | null;
@@ -89,7 +89,7 @@ export const api = {
     }),
   updateAdvisorAccess: (
     id: string,
-    payload: { email?: string; displayName?: string; password?: string },
+    payload: { access?: string; displayName?: string; password?: string },
   ) =>
     http<import('../types').AdvisorRow>(`/advisors/${id}/access`, {
       method: 'PATCH',

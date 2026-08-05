@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../../api/client';
+import { LaptopRemotePanel } from './LaptopRemotePanel';
 import { fmtDate } from '../../lib/format';
-import type { AdvisorPhoneHistoryRow, AdvisorRow } from '../../types';
+import type { AdvisorDeviceRow, AdvisorPhoneHistoryRow, AdvisorRow } from '../../types';
 
 type Props = {
   advisor: AdvisorRow;
@@ -11,9 +12,10 @@ type Props = {
 
 export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
   const [displayName, setDisplayName] = useState(advisor.displayName);
-  const [email, setEmail] = useState(advisor.email);
+  const [access, setAccess] = useState(advisor.access);
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState(advisor.phone ?? '');
+  const [computerId, setComputerId] = useState(advisor.computerId ?? '');
   const [hireDate, setHireDate] = useState(advisor.hireDate ?? '');
   const [inactiveDate, setInactiveDate] = useState(advisor.inactiveDate ?? '');
   const [history, setHistory] = useState<AdvisorPhoneHistoryRow[]>([]);
@@ -21,14 +23,19 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
   const [busyPhone, setBusyPhone] = useState(false);
   const [busyDates, setBusyDates] = useState(false);
   const [busyAccess, setBusyAccess] = useState(false);
+  const [busyComputer, setBusyComputer] = useState(false);
+  const [device, setDevice] = useState<AdvisorDeviceRow | null>(null);
+  const [loadingDevice, setLoadingDevice] = useState(true);
+  const [busyWipe, setBusyWipe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
 
   useEffect(() => {
     setDisplayName(advisor.displayName);
-    setEmail(advisor.email);
+    setAccess(advisor.access);
     setPassword('');
     setPhone(advisor.phone ?? '');
+    setComputerId(advisor.computerId ?? '');
     setHireDate(advisor.hireDate ?? '');
     setInactiveDate(advisor.inactiveDate ?? '');
   }, [advisor]);
@@ -42,17 +49,44 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
       .finally(() => setLoadingHistory(false));
   }, [advisor.id, advisor.phone]);
 
+  function loadDevice() {
+    setLoadingDevice(true);
+    api
+      .advisorDevice(advisor.id)
+      .then(setDevice)
+      .catch(() => setDevice(null))
+      .finally(() => setLoadingDevice(false));
+  }
+
+  useEffect(() => {
+    loadDevice();
+  }, [advisor.id, advisor.computerId]);
+
+  async function onWipeLaptop(confirmComputerId: string) {
+    setBusyWipe(true);
+    setError(null);
+    setOk(null);
+    try {
+      await api.wipeAdvisorDevice(advisor.id, confirmComputerId);
+      setOk('Orden de borrado enviada. La laptop ejecutará el reset al recibir la señal.');
+      loadDevice();
+      onUpdated();
+    } finally {
+      setBusyWipe(false);
+    }
+  }
+
   async function onUpdateAccess(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setOk(null);
 
-    const payload: { email?: string; displayName?: string; password?: string } = {};
+    const payload: { access?: string; displayName?: string; password?: string } = {};
     if (displayName.trim() !== advisor.displayName) payload.displayName = displayName.trim();
-    if (email.trim().toLowerCase() !== advisor.email.toLowerCase()) payload.email = email.trim();
+    if (access.trim() !== advisor.access) payload.access = access.trim();
     if (password.trim()) payload.password = password.trim();
 
-    if (!payload.displayName && !payload.email && !payload.password) {
+    if (!payload.displayName && !payload.access && !payload.password) {
       setError('No hay cambios en el acceso al portal de asesores.');
       return;
     }
@@ -67,6 +101,22 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
       setError(err instanceof Error ? err.message : 'No se pudo actualizar el acceso.');
     } finally {
       setBusyAccess(false);
+    }
+  }
+
+  async function onUpdateComputer(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setOk(null);
+    setBusyComputer(true);
+    try {
+      await api.updateAdvisorComputerId(advisor.id, computerId.trim() || null);
+      setOk('Identificador de laptop guardado.');
+      onUpdated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el identificador de PC.');
+    } finally {
+      setBusyComputer(false);
     }
   }
 
@@ -126,7 +176,7 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
       <form onSubmit={onUpdateAccess} className="space-y-3 rounded-lg border border-amber-500/20 bg-amber-950/10 p-4">
         <p className="text-sm font-medium text-amber-100/90">Acceso al portal de asesores</p>
         <p className="text-xs text-slate-500">
-          Correo y contraseña para entrar en la página de asesores (contactos y llamadas).
+          Acceso numérico y contraseña para entrar en la página de asesores (contactos y llamadas).
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -139,12 +189,13 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
             />
           </div>
           <div>
-            <label className="label">Correo (usuario)</label>
+            <label className="label">Acceso</label>
             <input
-              type="email"
-              className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              inputMode="numeric"
+              className="input font-mono"
+              value={access}
+              onChange={(e) => setAccess(e.target.value.replace(/\D/g, ''))}
               required
             />
           </div>
@@ -164,6 +215,36 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
           {busyAccess ? 'Guardando…' : 'Guardar acceso'}
         </button>
       </form>
+
+      <form
+        onSubmit={onUpdateComputer}
+        className="space-y-3 rounded-lg border border-sky-500/20 bg-sky-950/10 p-4"
+      >
+        <p className="text-sm font-medium text-sky-100/90">Identificador de laptop</p>
+        <p className="text-xs text-slate-500">
+          Código único del equipo donde marca (solo PC + diadema). Ej. LAP-TIBURONES-01, PC-003.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <input
+            className="input max-w-xs font-mono uppercase"
+            value={computerId}
+            onChange={(e) => setComputerId(e.target.value.toUpperCase())}
+            placeholder="LAP-001"
+          />
+          <button type="submit" className="btn-primary text-sm" disabled={busyComputer}>
+            {busyComputer ? 'Guardando…' : 'Guardar ID de PC'}
+          </button>
+        </div>
+      </form>
+
+      <LaptopRemotePanel
+        computerId={advisor.computerId}
+        device={device}
+        loading={loadingDevice}
+        busy={busyWipe}
+        onRefresh={loadDevice}
+        onWipe={onWipeLaptop}
+      />
 
       <form onSubmit={onUpdatePhone} className="space-y-3">
         <p className="text-sm font-medium text-slate-300">Teléfono actual</p>

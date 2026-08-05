@@ -27,7 +27,7 @@ export function Home() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-white">Hola, {staff?.displayName?.split(' ')[0]}</h1>
+        <h1 className="text-2xl font-bold text-white">Hola, {staff?.displayName}</h1>
         <p className="text-sm text-slate-400">
           {teamLabel} · {fmtDate(today)}
         </p>
@@ -48,7 +48,7 @@ export function Home() {
               <strong className="text-emerald-300">Llamar</strong>
             </li>
             <li>
-              Aparece la ventana flotante: altavoz, silencio, teclado y finalizar — sin MicroSIP
+              Aparece la ventana flotante INVERMAX: altavoz, silencio, teclado y finalizar
             </li>
           </ol>
         </Card>

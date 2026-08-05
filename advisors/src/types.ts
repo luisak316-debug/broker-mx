@@ -2,7 +2,7 @@ export type StaffRole = 'ADVISOR';
 
 export interface StaffSession {
   id: string;
-  email: string;
+  access: string;
   displayName: string;
   role: StaffRole;
   managerTeam?: number | null;

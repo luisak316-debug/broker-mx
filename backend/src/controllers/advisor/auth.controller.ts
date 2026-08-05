@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
-  findStaffByEmail,
   findStaffById,
+  findStaffByLoginAccess,
   normalizeStaffDisplay,
   touchStaffLogin,
 } from '../../repositories/staff.repository';
@@ -11,17 +11,18 @@ import { signToken, verifyPassword } from '../../services/security.service';
 import { record } from '../../services/audit.service';
 import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
+import { advisorPublicAccess } from '../../lib/advisorAccess';
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  access: z.string().trim().min(1, 'Acceso requerido.'),
   password: z.string().min(1),
 });
 
 export async function login(req: Request, res: Response): Promise<void> {
-  const { email, password } = loginSchema.parse(req.body);
-  const staff = await findStaffByEmail(email);
+  const { access, password } = loginSchema.parse(req.body);
+  const staff = await findStaffByLoginAccess(access);
   if (!staff || !staff.active || !verifyPassword(password, staff.passwordHash)) {
-    throw new HttpError(401, 'Credenciales inválidas.');
+    throw new HttpError(401, 'Acceso o contraseña incorrectos.');
   }
   if (staff.role !== 'ADVISOR') {
     throw new HttpError(403, 'Acceso reservado para asesores.');
@@ -49,7 +50,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       token,
       staff: {
         id: staff.id,
-        email: staff.email,
+        access: advisorPublicAccess(staff),
         displayName: staff.displayName,
         role: staff.role,
         managerTeam: staff.managerTeam ?? null,
@@ -70,7 +71,7 @@ export async function me(req: Request, res: Response): Promise<void> {
   res.json({
     data: {
       id: staff.id,
-      email: staff.email,
+      access: advisorPublicAccess(staff),
       displayName: staff.displayName,
       role: staff.role,
       managerTeam: staff.managerTeam ?? null,
