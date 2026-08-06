@@ -13,27 +13,32 @@ const REAL_ADVISOR_ROWS = [
   { access: '372810444417924', name: 'Javier Hernandez' },
 ] as const;
 
-async function removeAllAdvisors(): Promise<number> {
-  const advisors = await prisma.staff.findMany({
-    where: { role: 'ADVISOR' },
-    select: { id: true },
+async function removeAdvisorsNotInList(keepAccess: string[]): Promise<number> {
+  const stale = await prisma.staff.findMany({
+    where: {
+      role: 'ADVISOR',
+      OR: [{ loginAccess: null }, { loginAccess: { notIn: keepAccess } }],
+    },
+    select: { id: true, displayName: true },
   });
-  if (advisors.length === 0) return 0;
+  if (stale.length === 0) return 0;
 
-  const ids = advisors.map((a) => a.id);
+  const ids = stale.map((a) => a.id);
   await prisma.user.updateMany({
     where: { advisorId: { in: ids } },
     data: { advisorId: null },
   });
-
-  const deleted = await prisma.staff.deleteMany({ where: { role: 'ADVISOR' } });
+  const deleted = await prisma.staff.deleteMany({ where: { id: { in: ids } } });
+  for (const a of stale) {
+    console.log(`[broker.mx] Asesor demo eliminado: ${a.displayName}`);
+  }
   return deleted.count;
 }
 
 /**
- * Elimina asesores demo y crea los reales del bloc INVERMAX.
+ * Garantiza que los asesores reales del bloc existan en PostgreSQL.
  * Requiere ADVISOR_BOOTSTRAP_PASSWORD en Render (misma contraseña inicial del bloc).
- * Activar con SYNC_REAL_ADVISORS=true (una vez o tras cada cambio de lista).
+ * Activar con SYNC_REAL_ADVISORS=true.
  */
 export async function syncRealAdvisorsIfConfigured(): Promise<void> {
   if (!isDatabaseEnabled()) return;
@@ -45,16 +50,10 @@ export async function syncRealAdvisorsIfConfigured(): Promise<void> {
     return;
   }
 
-  const force = process.env.FORCE_SYNC_REAL_ADVISORS === 'true';
-  const existingReal = await prisma.staff.count({
-    where: { role: 'ADVISOR', loginAccess: { not: null }, active: true },
-  });
-  if (!force && existingReal >= REAL_ADVISOR_ROWS.length) {
-    return;
+  const keepAccess = REAL_ADVISOR_ROWS.map((row) => normalizeAdvisorLoginAccess(row.access));
+  if (process.env.FORCE_SYNC_REAL_ADVISORS === 'true') {
+    await removeAdvisorsNotInList(keepAccess);
   }
-
-  const removed = await removeAllAdvisors();
-  console.log(`[broker.mx] Asesores demo eliminados: ${removed}`);
 
   const passwordHash = hashPassword(password);
   for (const row of REAL_ADVISOR_ROWS) {
@@ -62,12 +61,19 @@ export async function syncRealAdvisorsIfConfigured(): Promise<void> {
     const displayName = titleCaseName(row.name);
     const email = advisorInternalEmail(access);
 
-    await prisma.staff.create({
-      data: {
+    await prisma.staff.upsert({
+      where: { email },
+      create: {
         email,
         loginAccess: access,
         displayName,
         role: 'ADVISOR',
+        passwordHash,
+        active: true,
+      },
+      update: {
+        loginAccess: access,
+        displayName,
         passwordHash,
         active: true,
       },
