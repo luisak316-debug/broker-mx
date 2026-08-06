@@ -7,7 +7,7 @@ import {
 } from '../lib/advisorAccess';
 import { hashPassword } from './security.service';
 
-/** Asesores reales — acceso numérico + nombre (contraseña vía env). */
+/** Semilla inicial — solo si aún no existen en BD (no sustituye altas desde supervisores). */
 const REAL_ADVISOR_ROWS = [
   { access: '21011', name: 'Francisco Medina' },
   { access: '372810444417924', name: 'Javier Hernandez' },
@@ -36,9 +36,9 @@ async function removeAdvisorsNotInList(keepAccess: string[]): Promise<number> {
 }
 
 /**
- * Garantiza que los asesores reales del bloc existan en PostgreSQL.
- * Requiere ADVISOR_BOOTSTRAP_PASSWORD en Render (misma contraseña inicial del bloc).
- * Activar con SYNC_REAL_ADVISORS=true.
+ * Crea asesores del bloc INVERMAX solo si faltan en PostgreSQL.
+ * ADVISOR_BOOTSTRAP_PASSWORD en Render = contraseña inicial única (Francisco/Javier).
+ * Después de eso, altas y cambios van solo por portal supervisores — no Render.
  */
 export async function syncRealAdvisorsIfConfigured(): Promise<void> {
   if (!isDatabaseEnabled()) return;
@@ -50,8 +50,9 @@ export async function syncRealAdvisorsIfConfigured(): Promise<void> {
     return;
   }
 
+  const force = process.env.FORCE_SYNC_REAL_ADVISORS === 'true';
   const keepAccess = REAL_ADVISOR_ROWS.map((row) => normalizeAdvisorLoginAccess(row.access));
-  if (process.env.FORCE_SYNC_REAL_ADVISORS === 'true') {
+  if (force) {
     await removeAdvisorsNotInList(keepAccess);
   }
 
@@ -61,9 +62,28 @@ export async function syncRealAdvisorsIfConfigured(): Promise<void> {
     const displayName = titleCaseName(row.name);
     const email = advisorInternalEmail(access);
 
-    await prisma.staff.upsert({
-      where: { email },
-      create: {
+    const existing = await prisma.staff.findFirst({
+      where: { OR: [{ loginAccess: access }, { email }] },
+    });
+
+    if (existing) {
+      await prisma.staff.update({
+        where: { id: existing.id },
+        data: {
+          loginAccess: access,
+          email,
+          displayName,
+          active: true,
+          role: 'ADVISOR',
+          ...(force ? { passwordHash } : {}),
+        },
+      });
+      console.log(`[broker.mx] Asesor ya existía (sin tocar contraseña): ${displayName}`);
+      continue;
+    }
+
+    await prisma.staff.create({
+      data: {
         email,
         loginAccess: access,
         displayName,
@@ -71,13 +91,7 @@ export async function syncRealAdvisorsIfConfigured(): Promise<void> {
         passwordHash,
         active: true,
       },
-      update: {
-        loginAccess: access,
-        displayName,
-        passwordHash,
-        active: true,
-      },
     });
-    console.log(`[broker.mx] Asesor activo: ${displayName} (acceso ${access})`);
+    console.log(`[broker.mx] Asesor creado en arranque: ${displayName} (acceso ${access})`);
   }
 }
