@@ -165,6 +165,8 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 
 ### Seguridad API (2026-08-05)
 
+- **Checklist operativo:** `docs/SECURITY-CHECKLIST.md` (prioridad máxima ago 2026 — GitHub/Render/2FA/contraseñas prod).
+
 - **Clientes:** token JWT HMAC (`signClientToken`); rutas `/portfolio`, `/profile`, `/cash-requests`, `/orders` exigen `Authorization: Bearer`.
 - **Staff:** rate limit 15 intentos / 15 min en login admin, asesor, supervisor.
 - **CORS:** solo orígenes explícitos en `env.corsOrigin` — sin wildcard `*.vercel.app`.
