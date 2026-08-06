@@ -401,18 +401,36 @@ export async function updateAdvisorComputerId(
 
 export async function updateAdvisorPhone(
   advisorId: string,
-  phone: string,
+  phone: string | null,
   changedById: string,
 ): Promise<Staff> {
   if (!isDatabaseEnabled()) {
     throw new Error('Actualizar teléfono requiere PostgreSQL.');
   }
 
-  const normalized = normalizeAdvisorPhone(phone);
   const current = await prisma.staff.findFirst({
     where: { id: advisorId, role: 'ADVISOR', active: true },
   });
   if (!current) throw new Error('Asesor no encontrado.');
+
+  if (phone === null) {
+    if (current.phone) {
+      await prisma.advisorPhoneHistory.create({
+        data: {
+          advisorId,
+          phone: current.phone,
+          replacedById: changedById,
+        },
+      });
+    }
+    const row = await prisma.staff.update({
+      where: { id: advisorId },
+      data: { phone: null },
+    });
+    return mapStaff(row);
+  }
+
+  const normalized = normalizeAdvisorPhone(phone);
 
   if (current.phone && current.phone !== normalized) {
     await prisma.advisorPhoneHistory.create({

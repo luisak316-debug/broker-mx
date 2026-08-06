@@ -271,7 +271,7 @@ export function AdvisorsPage() {
               onChange={(e) =>
                 setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
               }
-              placeholder="5512345678"
+              placeholder="10 dígitos (opcional)"
             />
           </div>
           <div>

@@ -63,7 +63,10 @@ const createSchema = z.object({
 });
 
 const updatePhoneSchema = z.object({
-  phone: phoneSchema,
+  phone: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : val),
+    phoneSchema.nullable(),
+  ),
 });
 
 const updateDatesSchema = z.object({

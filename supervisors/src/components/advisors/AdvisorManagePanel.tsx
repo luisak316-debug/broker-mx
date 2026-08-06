@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../../api/client';
 import { LaptopRemotePanel } from './LaptopRemotePanel';
+import { PasswordField } from '../common/PasswordField';
 import { fmtDate } from '../../lib/format';
 import type { AdvisorDeviceRow, AdvisorPhoneHistoryRow, AdvisorRow } from '../../types';
 
@@ -200,17 +201,14 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
             />
           </div>
         </div>
-        <div>
-          <label className="label">Nueva contraseña (opcional)</label>
-          <input
-            type="password"
-            className="input max-w-md"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Dejar vacío para no cambiar"
-            autoComplete="new-password"
-          />
-        </div>
+        <PasswordField
+          label="Nueva contraseña (opcional)"
+          value={password}
+          onChange={setPassword}
+          placeholder="Dejar vacío para no cambiar"
+          autoComplete="new-password"
+          optional
+        />
         <button type="submit" className="btn-primary text-sm" disabled={busyAccess}>
           {busyAccess ? 'Guardando…' : 'Guardar acceso'}
         </button>
@@ -254,7 +252,7 @@ export function AdvisorManagePanel({ advisor, onUpdated, onClose }: Props) {
             inputMode="numeric"
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="5512345678"
+            placeholder="10 dígitos (opcional)"
           />
           <button type="submit" className="btn-primary text-sm" disabled={busyPhone}>
             {busyPhone ? 'Guardando…' : 'Actualizar teléfono'}
