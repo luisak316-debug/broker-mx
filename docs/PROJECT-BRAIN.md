@@ -1,7 +1,7 @@
 # Cerebro del proyecto — INVERMAX LATAM
 
 > **Memoria persistente** para retomar el contexto cuando se pierde el chat de Cursor  
-> **Última actualización:** 2026-08-05 (tarde — Narayana multi-cuenta + despliegue laptops)  
+> **Última actualización:** 2026-08-06 (noche — login acceso numérico asesores + fixes supervisores)  
 > **Mantenedor:** actualizar este archivo al cerrar sesiones importantes o cuando cambien decisiones clave.
 
 ---
@@ -80,6 +80,8 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 | Llamadas asesores | Modo MicroSIP oculto (Windows) o WebRTC; **fix 2026-08-04:** sin CMD/MicroSIP visible, sync colgado |
 | **Seguridad plataformas (2026-08-05)** | JWT firmado clientes, rutas portfolio/perfil protegidas, rate limit logins, CORS lista cerrada, puente llamadas con token + handshake, `plainPassword` fuera del listado admin |
 | API historial | `GET /api/advisor/my-contacts/history` |
+| **Login asesores por acceso** | Numérico único 4–24 dígitos; portal `advisors-brown.vercel.app`; supervisores crean/editan |
+| **Asesores reales (ago 2026)** | Francisco Medina `21011` · Javier Hernandez `372810444417924` — contraseña en bloc (gitignored) |
 
 ### ⏸ En pausa / pendiente
 
@@ -130,6 +132,11 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 - URL principal: **advisors-brown.vercel.app** (proyecto Vercel `advisors`, no solo `brokermx.advisors`).
 - Desplegar con `DESPLEGAR_ASESORES.bat`.
 - Historial + llamadas: commits `eb42416` … `c66d742`.
+- **Login:** acceso numérico + contraseña (no correo). Mismo acceso que en supervisores.
+- **Regla acceso:** 4–24 dígitos, único por asesor activo; corto (`21011`) o largo (`372810444417924`).
+- **Teléfono:** opcional; **nunca** guardar `5512345678` (solo placeholder UI). Vacío = `null` en BD.
+- **Al desactivar asesor:** liberar `loginAccess` + archivar email; reactivar con mismo acceso permitido.
+- **Altas/bajas:** solo portal **supervisores** — no Render por cada usuario. Ver `.cursor/rules/advisor-access-supervisors.mdc`.
 
 ### Llamadas (marca blanca INVERMAX)
 
@@ -207,11 +214,13 @@ Migración automática en bootstrap: correos `@brokermx.com` → `@invermaxlatam
 ## 6. Commits y tags recientes (referencia git)
 
 ```
+73d14c6  Asesores: quitar teléfono ejemplo; borrar teléfono; reglas acceso
+954fcde  Desactivar libera acceso; reactivar al volver a crear
+44e6cff  Acceso 4–24 dígitos; login numérico asesores
+b080a78  Fix build Render (TelephonyConfig)
+1faa196  Login asesores por acceso numérico + sync bloc INVERMAX
 472c36c  App cliente: tema negro/vidrio, logo Android, login móvil, teléfono vacío
 c66d742  Admin: quitar logo duplicado topbar; deploy asesores → advisors-brown
-25d566c  Favicon asesores (favicon.ico + rewrite Vercel)
-eb02647  Restaurar BrandMark original (no PNG recortado)
-eb42416  Historial contactos asesores + favicons portales
 ```
 
 **Tags aprobados portales:**

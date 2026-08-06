@@ -1,0 +1,31 @@
+# Asesores — acceso, altas y datos reales
+
+## Acceso (login portal asesores)
+
+- Campo **numérico único** por asesor activo (`loginAccess` en BD).
+- Acepta **4–24 dígitos** — corto (`21011`) o largo (`372810444417924`) tal cual.
+- **Mismo valor** en supervisores al crear y en portal asesores al iniciar sesión.
+- Email interno `{acceso}@access.invermax.internal` — no mostrar al usuario.
+
+## Altas y bajas (solo portal supervisores)
+
+- **Crear / editar / eliminar** asesores desde supervisores — **no Render** ni scripts manuales con datos de ejemplo.
+- Al **desactivar**: liberar `loginAccess`, archivar email, limpiar `computerId`.
+- Al **reactivar** con mismo acceso: `createOrReactivateAdvisor` — no error 409.
+- **Teléfono opcional** — si está vacío, guardar `null`. **Nunca** usar `5512345678` (placeholder UI).
+
+## Formulario supervisores
+
+- `autoComplete="off"` en acceso, teléfono, ID laptop.
+- ID laptop: solo `[A-Za-z0-9._-]` — filtrar `@` (autofill correo).
+- Placeholder teléfono: `10 dígitos (opcional)` — **sin número real de ejemplo**.
+
+## Bootstrap Render (una sola vez)
+
+- `SYNC_REAL_ADVISORS` + `ADVISOR_BOOTSTRAP_PASSWORD` solo semilla inicial.
+- Bootstrap **no** pone teléfono ni pisa contraseña de asesores existentes.
+
+## Prohibido en scripts/API de prueba
+
+- No crear asesores en producción con `phone: '5512345678'`.
+- No usar placeholders del formulario como datos reales en BD.

@@ -7,6 +7,7 @@ import {
   advisorInternalEmail,
   advisorPublicAccess,
   normalizeAdvisorLoginAccess,
+  rejectExampleAdvisorPhone,
 } from '../lib/advisorAccess';
 import { hashPassword } from '../services/security.service';
 import {
@@ -279,6 +280,7 @@ export async function createStaff(data: {
   }
 
   const computerId = data.computerId != null ? normalizeComputerId(data.computerId) : null;
+  rejectExampleAdvisorPhone(data.phone);
   if (computerId) {
     const taken = await prisma.staff.findFirst({ where: { computerId } });
     if (taken) throw new Error(`El identificador de PC «${computerId}» ya está en uso.`);
@@ -316,6 +318,7 @@ export async function createOrReactivateAdvisor(data: {
 
   const loginAccess = normalizeAdvisorLoginAccess(data.loginAccess);
   const email = advisorInternalEmail(loginAccess);
+  rejectExampleAdvisorPhone(data.phone);
 
   const activeConflict = await prisma.staff.findFirst({
     where: { role: 'ADVISOR', active: true, loginAccess },
@@ -431,6 +434,7 @@ export async function updateAdvisorPhone(
   }
 
   const normalized = normalizeAdvisorPhone(phone);
+  rejectExampleAdvisorPhone(normalized);
 
   if (current.phone && current.phone !== normalized) {
     await prisma.advisorPhoneHistory.create({

@@ -1,7 +1,22 @@
 /** Acceso numérico del portal asesores (sin correos reales). Único por asesor activo. */
 
-const ACCESS_EMAIL_DOMAIN = 'access.invermax.internal';export const ADVISOR_ACCESS_MIN_DIGITS = 4;
+const ACCESS_EMAIL_DOMAIN = 'access.invermax.internal';
+
+/** Nunca guardar en BD — solo placeholder de UI. */
+export const ADVISOR_EXAMPLE_PHONE = '5512345678';
+
+export const ADVISOR_ACCESS_MIN_DIGITS = 4;
 export const ADVISOR_ACCESS_MAX_DIGITS = 24;
+
+export function rejectExampleAdvisorPhone(phone: string | null | undefined): void {
+  if (!phone) return;
+  const digits = phone.replace(/\D/g, '').slice(-10);
+  if (digits === ADVISOR_EXAMPLE_PHONE) {
+    throw new Error(
+      'Ese teléfono es solo un ejemplo del formulario. Usa el número real del asesor o déjalo vacío.',
+    );
+  }
+}
 
 export function normalizeAdvisorLoginAccess(raw: string): string {
   const access = raw.replace(/\s+/g, '').trim();
