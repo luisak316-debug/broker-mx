@@ -1,9 +1,8 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
-  createStaff,
+  createOrReactivateAdvisor,
   deactivateStaff,
-  findStaffByLoginAccess,
   listAdvisorPhoneHistory,
   listStaffByRole,
   updateAdvisorAccess,
@@ -114,24 +113,27 @@ export async function listAdvisors(_req: Request, res: Response): Promise<void> 
 
 export async function createAdvisor(req: Request, res: Response): Promise<void> {
   const body = createSchema.parse(req.body);
-  const existing = await findStaffByLoginAccess(body.access);
-  if (existing) throw new HttpError(409, 'Ya existe un asesor con ese acceso.');
 
   if (body.managerTeam != null) {
     const team = await findManagerTeamById(body.managerTeam);
     if (!team) throw new HttpError(400, 'Gerencia no válida.');
   }
 
-  const advisor = await createStaff({
-    loginAccess: body.access,
-    displayName: titleCaseName(body.displayName),
-    role: 'ADVISOR',
-    passwordHash: hashPassword(body.password),
-    managerTeam: body.managerTeam ?? null,
-    phone: body.phone ?? null,
-    computerId: body.computerId ?? null,
-    hireDate: body.hireDate ?? null,
-  });
+  let advisor;
+  try {
+    advisor = await createOrReactivateAdvisor({
+      loginAccess: body.access,
+      displayName: titleCaseName(body.displayName),
+      passwordHash: hashPassword(body.password),
+      managerTeam: body.managerTeam ?? null,
+      phone: body.phone ?? null,
+      computerId: body.computerId ?? null,
+      hireDate: body.hireDate ?? null,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'No se pudo crear el asesor.';
+    throw new HttpError(msg.includes('acceso') || msg.includes('PC') ? 409 : 400, msg);
+  }
 
   await record({
     actor: req.staff!,

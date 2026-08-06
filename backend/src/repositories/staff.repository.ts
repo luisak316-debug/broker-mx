@@ -80,10 +80,15 @@ export async function findStaffByLoginAccess(access: string): Promise<Staff | un
 
   const row = await prisma.staff.findFirst({
     where: {
+      active: true,
       OR: [{ loginAccess: normalized }, { email: advisorInternalEmail(normalized) }],
     },
   });
   return row ? mapStaff(row) : undefined;
+}
+
+function archivedAdvisorEmail(staffId: string): string {
+  return `archived.${staffId}@access.invermax.internal`;
 }
 
 export async function findStaffByEmail(email: string): Promise<Staff | undefined> {
@@ -265,7 +270,9 @@ export async function createStaff(data: {
     if (!data.loginAccess) throw new Error('Acceso numérico requerido para asesores.');
     loginAccess = normalizeAdvisorLoginAccess(data.loginAccess);
     email = advisorInternalEmail(loginAccess);
-    const takenAccess = await prisma.staff.findFirst({ where: { loginAccess } });
+    const takenAccess = await prisma.staff.findFirst({
+      where: { loginAccess, active: true },
+    });
     if (takenAccess) throw new Error('Ya existe un asesor con ese acceso.');
   } else if (!email) {
     throw new Error('Correo requerido.');
@@ -291,6 +298,77 @@ export async function createStaff(data: {
     },
   });
   return mapStaff(row);
+}
+
+/** Crea asesor nuevo o reactiva uno desactivado con el mismo acceso. */
+export async function createOrReactivateAdvisor(data: {
+  loginAccess: string;
+  displayName: string;
+  passwordHash: string;
+  managerTeam?: number | null;
+  phone?: string | null;
+  computerId?: string | null;
+  hireDate?: string | null;
+}): Promise<Staff> {
+  if (!isDatabaseEnabled()) {
+    throw new Error('Crear asesores requiere PostgreSQL.');
+  }
+
+  const loginAccess = normalizeAdvisorLoginAccess(data.loginAccess);
+  const email = advisorInternalEmail(loginAccess);
+
+  const activeConflict = await prisma.staff.findFirst({
+    where: { role: 'ADVISOR', active: true, loginAccess },
+  });
+  if (activeConflict) throw new Error('Ya existe un asesor con ese acceso.');
+
+  const inactive = await prisma.staff.findFirst({
+    where: {
+      role: 'ADVISOR',
+      active: false,
+      OR: [{ loginAccess }, { email }],
+    },
+  });
+
+  const computerId = data.computerId != null ? normalizeComputerId(data.computerId) : null;
+  if (computerId) {
+    const taken = await prisma.staff.findFirst({
+      where: { computerId, active: true },
+    });
+    if (taken && (!inactive || taken.id !== inactive.id)) {
+      throw new Error(`El identificador de PC «${computerId}» ya está en uso.`);
+    }
+  }
+
+  if (inactive) {
+    const row = await prisma.staff.update({
+      where: { id: inactive.id },
+      data: {
+        active: true,
+        loginAccess,
+        email,
+        displayName: data.displayName.trim(),
+        passwordHash: data.passwordHash,
+        managerTeam: data.managerTeam ?? null,
+        phone: data.phone ? normalizeAdvisorPhone(data.phone) : null,
+        computerId,
+        hireDate: parseDateOnly(data.hireDate ?? undefined) ?? inactive.hireDate,
+        inactiveDate: null,
+      },
+    });
+    return mapStaff(row);
+  }
+
+  return createStaff({
+    loginAccess,
+    displayName: data.displayName,
+    role: 'ADVISOR',
+    passwordHash: data.passwordHash,
+    managerTeam: data.managerTeam,
+    phone: data.phone,
+    computerId: data.computerId,
+    hireDate: data.hireDate,
+  });
 }
 
 export async function updateAdvisorComputerId(
@@ -370,7 +448,7 @@ export async function updateAdvisorAccess(
   if (data.loginAccess) {
     nextAccess = normalizeAdvisorLoginAccess(data.loginAccess);
     const conflict = await prisma.staff.findFirst({
-      where: { loginAccess: nextAccess, id: { not: advisorId } },
+      where: { loginAccess: nextAccess, active: true, id: { not: advisorId } },
     });
     if (conflict) throw new Error('Ya existe un asesor con ese acceso.');
   }
@@ -444,6 +522,9 @@ export async function deactivateStaff(id: string, inactiveDate?: string | null):
     data: {
       active: false,
       inactiveDate: date ?? undefined,
+      loginAccess: null,
+      email: archivedAdvisorEmail(id),
+      computerId: null,
     },
   });
 
