@@ -35,7 +35,7 @@ export const api = {
   login: (access: string, password: string) =>
     http<{ token: string; staff: StaffSession }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ access, password }),
+      body: JSON.stringify({ access, email: access, password }),
     }),
   me: () => http<StaffSession>('/auth/me'),
   myContacts: (params?: { year?: number; month?: number; day?: number }) => {

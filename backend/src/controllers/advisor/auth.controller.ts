@@ -13,13 +13,21 @@ import { clientIp } from '../../middleware/auth';
 import { HttpError } from '../../middleware/errorHandler';
 import { advisorPublicAccess } from '../../lib/advisorAccess';
 
-const loginSchema = z.object({
-  access: z.string().trim().min(1, 'Acceso requerido.'),
-  password: z.string().min(1),
-});
+const loginSchema = z
+  .object({
+    access: z.string().trim().min(1).optional(),
+    email: z.string().trim().min(1).optional(),
+    password: z.string().min(1),
+  })
+  .refine((body) => Boolean(body.access || body.email), {
+    message: 'Acceso requerido.',
+    path: ['access'],
+  });
 
 export async function login(req: Request, res: Response): Promise<void> {
-  const { access, password } = loginSchema.parse(req.body);
+  const parsed = loginSchema.parse(req.body);
+  const access = (parsed.access ?? parsed.email ?? '').trim();
+  const { password } = parsed;
   const staff = await findStaffByLoginAccess(access);
   if (!staff || !staff.active || !verifyPassword(password, staff.passwordHash)) {
     throw new HttpError(401, 'Acceso o contraseña incorrectos.');
