@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { PortalAtmosphere } from '../components/portal/PortalAtmosphere';
 import { BrandMark } from '../components/brand/BrandMark';
+import { PasswordField } from '../components/common/PasswordField';
 import { BRAND_NAME } from '../data/brand';
 
 export function Login() {
@@ -49,23 +50,19 @@ export function Login() {
               inputMode="numeric"
               className="input font-mono"
               value={access}
-              onChange={(e) => setAccess(e.target.value.replace(/\D/g, ''))}
-              placeholder="Tu número de acceso"
+              onChange={(e) => setAccess(e.target.value.replace(/\D/g, '').slice(0, 24))}
+              placeholder="Tu número de acceso (único)"
               autoComplete="username"
               required
             />
           </div>
-          <div>
-            <label className="label">Contraseña</label>
-            <input
-              type="password"
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </div>
+          <PasswordField
+            label="Contraseña"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            required
+          />
           {error && <p className="rounded-lg bg-danger/15 px-3 py-2 text-sm text-danger">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {busy ? 'Validando…' : 'Iniciar sesión'}

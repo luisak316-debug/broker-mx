@@ -251,10 +251,16 @@ export function AdvisorsPage() {
               inputMode="numeric"
               className="input font-mono"
               value={form.access}
-              onChange={(e) => setForm({ ...form, access: e.target.value.replace(/\D/g, '') })}
+              onChange={(e) =>
+                setForm({ ...form, access: e.target.value.replace(/\D/g, '').slice(0, 24) })
+              }
+              placeholder="Ej. 21011 o 372810444417924"
               autoComplete="off"
               required
             />
+            <p className="mt-1 text-xs text-slate-500">
+              Numérico, único por asesor. Corto o largo — se guarda tal cual y es lo que usa para entrar.
+            </p>
           </div>
           <div>
             <label className="label">Teléfono (10 dígitos)</label>
