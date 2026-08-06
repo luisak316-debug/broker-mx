@@ -20,7 +20,10 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (res.status === 401) {
+    const body = await res.json().catch(() => ({}));
     tokenStore.clear();
+    const msg = typeof body.error === 'string' ? body.error : 'Sesión expirada. Vuelve a iniciar sesión.';
+    if (path === '/auth/login') throw new Error(msg);
     throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
   }
   if (!res.ok) {

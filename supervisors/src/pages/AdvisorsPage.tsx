@@ -47,7 +47,14 @@ export function AdvisorsPage() {
     setLoading(true);
     api
       .advisors()
-      .then(setRows)
+      .then((data) => {
+        setRows(data);
+        setError(null);
+      })
+      .catch((err) => {
+        setRows([]);
+        setError(err instanceof Error ? err.message : 'No se pudo cargar la lista de asesores.');
+      })
       .finally(() => setLoading(false));
   }
 
@@ -103,7 +110,7 @@ export function AdvisorsPage() {
         hireDate: '',
       });
       setOk('Asesor agregado correctamente.');
-      reloadAll();
+      await api.advisors().then(setRows);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear asesor.');
     } finally {
