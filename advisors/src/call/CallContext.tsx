@@ -14,7 +14,7 @@ import { dialViaMicrosip, hangupMicrosip } from '../lib/microsipCall';
 import { isMicrosipCallMode } from './callMode';
 import { AdvisorSipPhone, sessionStateToPhase } from './sipPhone';
 import { startRingback, stopRingback } from './ringback';
-import type { CallUiState, TelephonyConfig } from './types';
+import type { CallUiState } from './types';
 
 const initialState: CallUiState = {
   phase: 'idle',
@@ -92,7 +92,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const config: TelephonyConfig = await api.telephonyConfig();
+        const config = await api.telephonyConfig();
         if (cancelled || connectGen !== connectGenRef.current) return;
 
         const backend: CallBackend = isMicrosipCallMode(config) ? 'microsip' : 'webrtc';
@@ -111,9 +111,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
         if (!navigator.mediaDevices?.getUserMedia) {
           throw new Error('Tu navegador no soporta micrófono web.');
         }
+        if (
+          !config.wssUrl ||
+          !config.domain ||
+          !config.username ||
+          !config.authorizationPassword
+        ) {
+          throw new Error('Línea telefónica no disponible. Contacta a soporte INVERMAX.');
+        }
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         if (cancelled || connectGen !== connectGenRef.current) return;
-        await phone.connect(config, stream);
+        await phone.connect(
+          {
+            wssUrl: config.wssUrl,
+            bridgeMode: config.bridgeMode,
+            domain: config.domain,
+            username: config.username,
+            authorizationPassword: config.authorizationPassword,
+            displayName: config.displayName ?? 'Asesor',
+            stunServers: config.stunServers ?? [],
+          },
+          stream,
+        );
         if (cancelled || connectGen !== connectGenRef.current) return;
         setPhoneReady(true);
         setPhoneError(null);
