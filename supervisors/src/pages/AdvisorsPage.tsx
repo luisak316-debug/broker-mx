@@ -6,6 +6,7 @@ import { GerenciasRenameDialog } from '../components/advisors/GerenciasRenameDia
 import { GerenciasWhatsappDialog } from '../components/advisors/GerenciasWhatsappDialog';
 import { WipeAllLaptopsDialog } from '../components/advisors/WipeAllLaptopsDialog';
 import { Card } from '../components/ui/Card';
+import { PasswordField } from '../components/common/PasswordField';
 import { fmtDate } from '../lib/format';
 import type { AdvisorDeviceRow, AdvisorRow, ManagerTeamRow } from '../types';
 
@@ -89,7 +90,7 @@ export function AdvisorsPage() {
         password: form.password,
         managerTeam: form.managerTeam ? Number(form.managerTeam) : null,
         phone: form.phone ? form.phone.replace(/\D/g, '').slice(-10) : null,
-        computerId: form.computerId.trim() || null,
+        computerId: form.computerId.replace(/[^A-Za-z0-9._-]/g, '').trim() || null,
         hireDate: form.hireDate || null,
       });
       setForm({
@@ -225,13 +226,14 @@ export function AdvisorsPage() {
       </header>
 
       <Card title="Agregar asesor">
-        <form onSubmit={onCreate} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={onCreate} className="grid gap-4 sm:grid-cols-2" autoComplete="off">
           <div>
             <label className="label">Nombre completo</label>
             <input
               className="input"
               value={form.displayName}
               onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+              autoComplete="off"
               required
             />
           </div>
@@ -243,6 +245,7 @@ export function AdvisorsPage() {
               className="input font-mono"
               value={form.access}
               onChange={(e) => setForm({ ...form, access: e.target.value.replace(/\D/g, '') })}
+              autoComplete="off"
               required
             />
           </div>
@@ -267,17 +270,13 @@ export function AdvisorsPage() {
               onChange={(e) => setForm({ ...form, hireDate: e.target.value })}
             />
           </div>
-          <div>
-            <label className="label">Contraseña inicial</label>
-            <input
-              type="password"
-              className="input max-w-md"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Ej. INVERMAX1997 (misma para todos por ahora)"
-              required
-            />
-          </div>
+          <PasswordField
+            label="Contraseña inicial"
+            value={form.password}
+            onChange={(v) => setForm({ ...form, password: v })}
+            placeholder="Ej. INVERMAX1997 (misma para todos por ahora)"
+            required
+          />
           <div>
             <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
               <label className="label mb-0">Equipo de gerencia</label>
@@ -323,9 +322,17 @@ export function AdvisorsPage() {
             <input
               className="input max-w-md font-mono uppercase"
               value={form.computerId}
-              onChange={(e) => setForm({ ...form, computerId: e.target.value.toUpperCase() })}
-              placeholder="LAP-001"
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  computerId: e.target.value.replace(/[^A-Za-z0-9._-]/g, '').toUpperCase().slice(0, 32),
+                })
+              }
+              placeholder="LAP-001 (opcional)"
+              autoComplete="off"
+              name="advisor-laptop-id"
             />
+            <p className="mt-1 text-xs text-slate-500">Opcional. Solo letras, números, punto o guion.</p>
           </div>
           {error && <p className="sm:col-span-2 text-sm text-danger">{error}</p>}
           {ok && <p className="sm:col-span-2 text-sm text-ok">{ok}</p>}

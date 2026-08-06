@@ -42,13 +42,20 @@ const createSchema = z.object({
     phoneSchema.nullable().optional(),
   ),
   hireDate: dateSchema,
-  computerId: z
-    .string()
-    .trim()
-    .max(32)
-    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/, 'Identificador de PC inválido.')
-    .optional()
-    .nullable(),
+  computerId: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return null;
+      const s = String(val).trim();
+      if (!s) return null;
+      return s;
+    },
+    z
+      .string()
+      .max(32)
+      .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/, 'Usa un ID de laptop (ej. LAP-001), no un correo.')
+      .nullable()
+      .optional(),
+  ),
   password: z
     .string()
     .min(8, 'Mínimo 8 caracteres.')
