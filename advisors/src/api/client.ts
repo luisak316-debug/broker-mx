@@ -1,5 +1,6 @@
 import type { AssignedContact, ContactHistoryResponse, StaffSession } from '../types';
 import { getApiBase } from '../lib/apiConfig';
+import { advisorInternalEmail } from '../lib/advisorAccess';
 
 const TOKEN_KEY = 'invermax_advisor_token';
 
@@ -32,11 +33,14 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  login: (access: string, password: string) =>
-    http<{ token: string; staff: StaffSession }>('/auth/login', {
+  login: (access: string, password: string) => {
+    const normalized = access.replace(/\s+/g, '').trim();
+    const email = advisorInternalEmail(normalized);
+    return http<{ token: string; staff: StaffSession }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ access, email: access, password }),
-    }),
+      body: JSON.stringify({ access: normalized, email, password }),
+    });
+  },
   me: () => http<StaffSession>('/auth/me'),
   myContacts: (params?: { year?: number; month?: number; day?: number }) => {
     const qs = new URLSearchParams();

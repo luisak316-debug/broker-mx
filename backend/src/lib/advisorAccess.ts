@@ -4,8 +4,8 @@ const ACCESS_EMAIL_DOMAIN = 'access.invermax.internal';
 
 export function normalizeAdvisorLoginAccess(raw: string): string {
   const access = raw.replace(/\s+/g, '').trim();
-  if (!/^\d{6,20}$/.test(access)) {
-    throw new Error('El acceso debe ser numérico (6–20 dígitos).');
+  if (!/^\d{5,20}$/.test(access)) {
+    throw new Error('El acceso debe ser numérico (5–20 dígitos).');
   }
   return access;
 }
